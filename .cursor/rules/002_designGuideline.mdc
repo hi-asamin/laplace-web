@@ -1,0 +1,157 @@
+---
+description: 
+globs: 
+---
+---
+title: "Laplace — Design Guidelines"
+description: プロダクトのデザインガイドライン
+globs: *
+alwaysApply: true
+---
+
+# 目次
+
+1. ブランド & トーン
+2. 色 (Color Tokens)
+3. タイポグラフィ
+4. グリッド & レイアウト
+5. コンポーネントスタイル
+6. アイコン & イラスト
+7. チャート & データビジュアライゼーション
+8. モーション
+9. アクセシビリティ補足
+10. ダークモード
+
+---
+
+## 1. ブランド & トーン
+
+* **ブランド 3 語**: *Trustable・Playful・Clarity*
+* **Voice & Tone**
+  * テキストは平易な日本語 + 必要に応じて金融用語の英語併記。
+  * マイクロコピーは 18 字以内で行動を促す。(例: 「シミュレーションする」)
+* **ビジュアルのキーワード**: *Pill‑shape・Soft Shadow・Pastel Tint*
+* 初心者が迷わず使える直感的な UI と、インタラクティブな即時フィードバック。
+* 「シンプル」「ミニマル」「情報は一目で」「ガイド付きナビゲーション」
+
+## 2. 色 (Color Tokens)
+
+> **アクセントカラー:** `#5965FF` (Indigo 500)
+
+| Token                  | HEX     | 用途                      |
+| ---------------------- | ------- | ----------------------- |
+| `--color-primary`      | #5965FF | CTA ボタン、選択タブ下線、アクティブラベル |
+| `--color-primary-dark` | #414DFF | プレス状態、フォーカスリング          |
+| `--color-success`      | #16A34A | 上昇値、成功トースト              |
+| `--color-danger`       | #DC2626 | 下落値、エラー                 |
+| `--color-list-bg`      | #ECF9F3 | リストアイテム背景 (検索履歴など)      |
+| `--color-icon-bg`      | #E2F1EA | アイコン円背景                 |
+| `--color-gray-900`     | #0F172A | 見出しテキスト                 |
+| `--color-gray-700`     | #334155 | 本文テキスト                  |
+| `--color-gray-400`     | #94A3B8 | 境界線、無効ラベル               |
+| `--color-surface`      | #FFFFFF | カード・主要背景                |
+| `--color-surface-alt`  | #F7FAFC | ページ背景                   |
+
+### 配色ルール
+
+* 主要 CTA は画面に 1 箇所だけ。セカンダリ操作はアウトライン。
+* Green/Red のみで情報を伝えない。矢印アイコン + ラベルを併用。
+* リストアイテムは `--color-list-bg` をベース、ホバーで `brightness(0.97)`。
+* グラフの折れ線は `--color-success`、陰影 16% 不透明塗りで帯域を表現。
+
+## 3. タイポグラフィ
+
+| スタイル       | フォント           | サイズ   | 行間    | 文字間    |
+| ---------- | -------------- | ----- | ----- | ------ |
+| `Display`  | Inter Bold     | 34 px | 42 px | -1 %   |
+| `Headline` | Inter SemiBold | 26 px | 34 px | -0.5 % |
+| `Subhead`  | Inter Medium   | 18 px | 28 px | 0 %    |
+| `Body`     | Inter Regular  | 16 px | 24 px | 0 %    |
+| `Caption`  | Inter Regular  | 12 px | 18 px | 0.4 %  |
+
+* 数字は *Menlo* (等幅) を使用し、三桁区切りは国際標準表記。
+
+## 4. グリッド & レイアウト
+
+* **Mobile (基準デバイス幅 390 px)**: 4‑column grid, gutter 12 px。
+* **Content Padding**: 左右 16 px。リストアイテムは左右 12 px インセット。
+* **Pill Card**: full‑width, padding 12 px 16 px, border‑radius 28 px, shadow `0 1px 4px rgba(0,0,0,0.06)`。
+* セクション間スペースは 8 pt スケール (8 / 16 / 24 / 32)。
+
+## 5. コンポーネントスタイル
+
+### タブバー
+
+| 状態     | スタイル                                               |
+| ------ | -------------------------------------------------- |
+| アクティブ  | テキスト `--color-gray-900`, 下線 2 px `--color-primary` |
+| 非アクティブ | テキスト `--color-gray-400`                            |
+
+### ボタン
+
+| 種類        | 背景                                     | テキスト                     | シャドウ                             |
+| --------- | -------------------------------------- | ------------------------ | -------------------------------- |
+| Primary   | `--color-primary`                      | #FFFFFF                  | `0 2px 6px rgba(89,101,255,0.3)` |
+| Secondary | transparent / 1 px `--color-primary` 枠 | `--color-primary`        | none                             |
+| Ghost     | transparent                            | `--color-gray-900`       | none                             |
+| Disabled  | `--color-primary` 40% 透過               | `--color-surface` 60% 透過 | none                             |
+
+### 入力フィールド
+
+* 角丸 12 px、height 44 px。
+* デフォルト枠 `--color-gray-400`、フォーカス `--color-primary` 2 px outline。
+* クリアボタンは `lucide:x` アイコン、タップ領域 44×44 px。
+
+### リストアイテム (検索/閲覧履歴)
+
+* コンテナ: `--color-list-bg`, radius 28 px, padding 12 px 16 px。
+* ステータスアイコン: 28 px 円、背景 `--color-icon-bg`、Icon stroke 1.5。
+* プライス情報: 成功なら `--color-success`, 下落なら `--color-danger`。
+* 末尾アクション: ゴースト丸ボタン 28 px, Icon `ChevronRight`。
+
+### 情報カード (統計パネル)
+
+* Width 48% (2‑col グリッド)。
+* 枠線 1 px `--color-gray-200`、radius 16 px、padding 16 px。
+* ラベルは `Caption`, 値は `Subhead` Bold。
+
+## 6. アイコン & イラスト
+
+* アイコンは `lucide-react`、stroke‑width 1.8, default 20 px。
+* イラストは *unDraw* 風、線幅 2 px、ブランドカラー 20 % 淡色をサブカラーに。
+* アバター・アイコン円背景は `--color-icon-bg` を共通化。
+
+## 7. チャート & データビジュアライゼーション
+
+* **ライブラリ**: Recharts。
+* 折れ線: `--color-success`。リファレンスライン: `--color-gray-400` 点線。
+* y 軸: 通貨単位を prefix、少数 0 桁、三桁区切り。
+* 期間タブ: 1D / 1W / 1M / … 選択時、背景 `--color-primary` 16% 透過フィル。
+* ツールチップ: Card radius 16 px, shadow `0 1px 6px rgba(0,0,0,0.08)`。
+
+## 8. モーション
+
+* **Durations**: 入力→結果 220 ms / ホバー 120 ms / ページ遷移 280 ms。
+* **Easing**: `cubic-bezier(0.4,0,0.2,1)`。
+* リストアイテムはタップ時に `scale(0.98)` + shadow 消失で押し込み感を演出。
+* チャート描画は `react-spring` で 450 ms フェード + Path‑length アニメーション。
+
+## 9. アクセシビリティ補足
+
+* コントラスト比 4.5:1 以上 (Primary と Surface で 4.68:1)。
+* VoiceOver 対策として、期間タブ・グラフを `aria-controls` で関連付け。
+* タップ領域は最小 44×44 px を確保。
+
+## 10. ダークモード
+
+| Token                 | Light   | Dark    |
+| --------------------- | ------- | ------- |
+| `--color-surface`     | #FFFFFF | #0F172A |
+| `--color-surface-alt` | #F7FAFC | #1E293B |
+| `--color-list-bg`     | #ECF9F3 | #15362B |
+| `--color-icon-bg`     | #E2F1EA | #1E4335 |
+| `--color-gray-900`    | #0F172A | #F8FAFC |
+| `--color-gray-700`    | #334155 | #CBD5E1 |
+
+* `--color-primary` を 90% 彩度に抑え `#525EFF` を基調。
+* シャドウは `rgba(0,0,0,0.5)`、ペーパー感よりフラットに。

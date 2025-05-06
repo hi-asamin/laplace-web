@@ -23,16 +23,40 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // 検索履歴の取得
+  // 検索履歴の取得とsetShowResultsの設定
   useEffect(() => {
     const history = localStorage.getItem('market-search-history');
     if (history) {
       try {
-        setSearchHistory(JSON.parse(history));
+        const parsedHistory = JSON.parse(history);
+        setSearchHistory(parsedHistory);
+        // 検索履歴があれば自動的に結果を表示
+        if (parsedHistory.length > 0) {
+          setShowResults(true);
+        }
       } catch (e) {
         localStorage.removeItem('market-search-history');
       }
     }
+  }, []);
+
+  // クリック時のハンドリング（検索結果の外側をクリックした時に結果を閉じる）
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        resultsRef.current &&
+        !resultsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, []);
 
   // 検索履歴の保存
@@ -55,13 +79,111 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
     setIsLoading(true);
     try {
       const response = await searchMarkets(searchQuery);
-      setResults(response.results);
+      const query = searchQuery.toLowerCase().trim();
+
+      // APIから返された結果をスコアで降順ソート（高スコアが上位）
+      const sortedResults = [...response.results].sort((a, b) => b.score - a.score);
+
+      // 「Apple」のような一般的な検索クエリの場合、特別処理
+      if (query.length >= 3 && isCommonCompanyName(query)) {
+        // 大手テック企業や有名企業の一般的な名前（Apple, Microsoft, Google, Amazon等）の場合
+        // 完全一致または前方一致を優先
+        const priorityMatches = sortedResults.filter(
+          (result) =>
+            result.name.toLowerCase() === query ||
+            result.name.toLowerCase().startsWith(query) ||
+            result.symbol.toLowerCase() === query
+        );
+
+        if (priorityMatches.length > 0) {
+          setResults(priorityMatches);
+          return;
+        }
+      }
+
+      // 検索クエリが短すぎる場合（3文字未満）は厳格なフィルタリングを行わない
+      if (query.length < 3) {
+        setResults(sortedResults);
+        return;
+      }
+
+      // 検索結果の処理: 完全一致、前方一致、単語一致、部分一致の順に優先度を付ける
+
+      // 1. 完全一致: 企業名またはシンボルが検索クエリと完全に一致
+      const exactMatches = sortedResults.filter(
+        (result) => result.name.toLowerCase() === query || result.symbol.toLowerCase() === query
+      );
+
+      // 完全一致があればそれだけを表示
+      if (exactMatches.length > 0) {
+        setResults(exactMatches);
+        return;
+      }
+
+      // 2. 前方一致: 企業名またはシンボルが検索クエリで始まる
+      const prefixMatches = sortedResults.filter(
+        (result) =>
+          result.name.toLowerCase().startsWith(query) ||
+          result.symbol.toLowerCase().startsWith(query)
+      );
+
+      // 前方一致があればそれだけを表示
+      if (prefixMatches.length > 0) {
+        setResults(prefixMatches);
+        return;
+      }
+
+      // 3. 単語一致: 企業名の単語が検索クエリと一致（例: "Apple Computer Inc."内の"Apple"）
+      const wordMatches = sortedResults.filter((result) => {
+        const name = result.name.toLowerCase();
+        const words = name.split(/\s+/); // スペースで単語分割
+        return words.some((word) => word === query);
+      });
+
+      // 単語一致があればそれだけを表示
+      if (wordMatches.length > 0) {
+        setResults(wordMatches);
+        return;
+      }
+
+      // 4. その他の部分一致（スコアでソート済みの結果を使用）
+      setResults(sortedResults);
     } catch (error) {
       console.error('検索エラー:', error);
       setResults([]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // 一般的な企業名かどうかをチェック
+  const isCommonCompanyName = (query: string): boolean => {
+    const commonCompanyNames = [
+      'apple',
+      'microsoft',
+      'amazon',
+      'google',
+      'facebook',
+      'meta',
+      'netflix',
+      'tesla',
+      'nvidia',
+      'adobe',
+      'oracle',
+      'ibm',
+      'intel',
+      'amd',
+      'cisco',
+      'toyota',
+      'honda',
+      'sony',
+      'samsung',
+      'lg',
+      'xiaomi',
+      'alibaba',
+      'tencent',
+    ];
+    return commonCompanyNames.includes(query.toLowerCase());
   };
 
   // クエリの変更時に検索実行（デバウンス処理）
@@ -138,7 +260,12 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
   };
 
   // 企業ロゴを取得する関数（ロゴがない場合は市場に応じた国旗を表示）
-  const getCompanyLogo = (symbol: string, market?: string): string => {
+  const getCompanyLogo = (result: SearchResult): string => {
+    // logoUrlが存在する場合はそれを優先的に使用
+    if (result.logoUrl) {
+      return result.logoUrl;
+    }
+
     // ダミーのロゴ画像を返す
     // 実際のプロジェクトでは、symbol を使って適切なロゴを取得する仕組みが必要
     const companies: Record<string, string> = {
@@ -154,7 +281,10 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
     };
 
     // 企業ロゴがある場合はそれを返す、なければ市場に応じた国旗を返す
-    return companies[symbol] || (market ? getFlagIcon(market) : '/placeholder-logo.svg');
+    return (
+      companies[result.symbol] ||
+      (result.market ? getFlagIcon(result.market) : '/placeholder-logo.svg')
+    );
   };
 
   return (
@@ -208,7 +338,7 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
                         >
                           <div className="flex items-center space-x-3">
                             <img
-                              src={getCompanyLogo(result.symbol, result.market)}
+                              src={getCompanyLogo(result)}
                               alt={result.name}
                               className="w-6 h-6 rounded-full"
                               onError={(e) => {
@@ -271,7 +401,7 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
                         >
                           <div className="flex items-center space-x-3">
                             <img
-                              src={getCompanyLogo(result.symbol, result.market)}
+                              src={getCompanyLogo(result)}
                               alt={result.name}
                               className="w-6 h-6 rounded-full"
                               onError={(e) => {

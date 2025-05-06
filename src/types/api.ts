@@ -163,6 +163,7 @@ export interface SearchResult {
   price?: string; // 現在価格（例: "$150.50", "¥2,120"）
   change_percent?: string; // 前日比（例: "+1.2%", "-0.5%"）
   score: number; // 検索スコア（完全一致: 100, 先頭一致: 90, 部分一致: 80）
+  logoUrl?: string; // 企業ロゴのURL
 }
 
 /**

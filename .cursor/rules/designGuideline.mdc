@@ -1,6 +1,7 @@
 ---
 description: 
-globs: 
+globs: *.tsx
+alwaysApply: false
 ---
 ---
 title: "Laplace — Design Guidelines"

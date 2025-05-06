@@ -17,46 +17,23 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showResults, setShowResults] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchResult[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // 検索履歴の取得とsetShowResultsの設定
+  // 検索履歴の取得
   useEffect(() => {
     const history = localStorage.getItem('market-search-history');
     if (history) {
       try {
         const parsedHistory = JSON.parse(history);
         setSearchHistory(parsedHistory);
-        // 検索履歴があれば自動的に結果を表示
-        if (parsedHistory.length > 0) {
-          setShowResults(true);
-        }
       } catch (e) {
         localStorage.removeItem('market-search-history');
       }
     }
-  }, []);
-
-  // クリック時のハンドリング（検索結果の外側をクリックした時に結果を閉じる）
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        resultsRef.current &&
-        !resultsRef.current.contains(event.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        setShowResults(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
   }, []);
 
   // 検索履歴の保存
@@ -172,18 +149,12 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
   const handleSelect = (result: SearchResult) => {
     saveToHistory(result);
     setQuery('');
-    setShowResults(false);
     if (onSelect) {
       onSelect(result);
     }
 
     // 詳細ページに遷移
     router.push(`/markets/${encodeURIComponent(result.symbol)}`);
-  };
-
-  // 検索窓フォーカス時
-  const handleFocus = () => {
-    setShowResults(true);
   };
 
   // 検索窓クリア
@@ -257,7 +228,7 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
   };
 
   return (
-    <div className="relative w-full">
+    <div ref={searchContainerRef} className="relative w-full">
       {/* 検索入力フィールド - 添付画像に合わせたスタイル */}
       <div className="relative flex items-center w-full rounded-full border border-[var(--color-gray-400)] bg-[var(--color-surface)] transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:border-transparent">
         <Search
@@ -269,7 +240,6 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={handleFocus}
           placeholder="銘柄を検索"
           className="w-full h-[44px] py-3 pl-12 pr-10 outline-none rounded-full bg-transparent text-[var(--color-gray-900)]"
           aria-label="銘柄を検索"
@@ -286,144 +256,142 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
         )}
       </div>
 
-      {/* 検索結果表示 - 枠なし */}
-      {showResults && (
-        <div ref={resultsRef} className="absolute z-10 w-full mt-2">
-          {isLoading ? (
-            <div className="p-4 text-center text-[var(--color-gray-400)]">検索中...</div>
-          ) : (
-            <>
-              {query ? (
-                // 検索結果表示
-                <div>
-                  <h3 className="px-4 py-2 text-xs text-[var(--color-gray-700)]">候補</h3>
-                  {results.length > 0 ? (
-                    <ul>
-                      {results.map((result) => (
-                        <li
-                          key={result.symbol}
-                          onClick={() => handleSelect(result)}
-                          className="flex items-center justify-between px-4 py-3 bg-[var(--color-list-bg)] cursor-pointer hover:brightness-[0.97] active:scale-[0.98] transition-all duration-120 mb-1 rounded-xl"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <img
-                              src={getCompanyLogo(result)}
-                              alt={result.name}
-                              className="w-6 h-6 rounded-full"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = result.market
-                                  ? getFlagIcon(result.market)
-                                  : '/placeholder-logo.svg';
-                              }}
+      {/* 検索結果表示 */}
+      <div ref={resultsRef} className="absolute z-10 w-full mt-2">
+        {isLoading ? (
+          <div className="p-4 text-center text-[var(--color-gray-400)]">検索中...</div>
+        ) : (
+          <>
+            {query ? (
+              // 検索結果表示
+              <div>
+                <h3 className="px-4 py-2 text-xs text-[var(--color-gray-700)]">候補</h3>
+                {results.length > 0 ? (
+                  <ul>
+                    {results.map((result) => (
+                      <li
+                        key={result.symbol}
+                        onClick={() => handleSelect(result)}
+                        className="flex items-center justify-between px-4 py-3 bg-[var(--color-list-bg)] cursor-pointer hover:brightness-[0.97] active:scale-[0.98] transition-all duration-120 mb-1 rounded-xl"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={getCompanyLogo(result)}
+                            alt={result.name}
+                            className="w-6 h-6 rounded-full"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = result.market
+                                ? getFlagIcon(result.market)
+                                : '/placeholder-logo.svg';
+                            }}
+                          />
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <p className="font-medium text-[var(--color-gray-900)]">
+                                {result.name}
+                              </p>
+                              <span className="text-xs text-[var(--color-gray-400)]">
+                                ({result.symbol})
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          {result.price && (
+                            <div className="text-right mr-3">
+                              <p className="font-medium text-[var(--color-gray-900)]">
+                                {result.price}
+                              </p>
+                              {result.change_percent && (
+                                <p className={`text-xs ${getChangeColor(result.change_percent)}`}>
+                                  {result.change_percent}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            <ChevronRight
+                              className="h-4 w-4 text-[var(--color-gray-700)]"
+                              strokeWidth={1.8}
                             />
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <p className="font-medium text-[var(--color-gray-900)]">
-                                  {result.name}
-                                </p>
-                                <span className="text-xs text-[var(--color-gray-400)]">
-                                  ({result.symbol})
-                                </span>
-                              </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-4 text-center text-[var(--color-gray-400)] rounded-xl">
+                    結果がありません
+                  </div>
+                )}
+              </div>
+            ) : (
+              // 検索履歴表示
+              <div>
+                <h3 className="px-4 py-2 text-xs text-[var(--color-gray-700)]">検索履歴</h3>
+                {searchHistory.length > 0 ? (
+                  <ul>
+                    {searchHistory.map((result) => (
+                      <li
+                        key={result.symbol}
+                        onClick={() => handleSelect(result)}
+                        className="flex items-center justify-between px-4 py-3 bg-[var(--color-list-bg)] cursor-pointer hover:brightness-[0.97] active:scale-[0.98] transition-all duration-120 mb-1 rounded-xl"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={getCompanyLogo(result)}
+                            alt={result.name}
+                            className="w-6 h-6 rounded-full"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = result.market
+                                ? getFlagIcon(result.market)
+                                : '/placeholder-logo.svg';
+                            }}
+                          />
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <p className="font-medium text-[var(--color-gray-900)]">
+                                {result.name}
+                              </p>
+                              <span className="text-xs text-[var(--color-gray-400)]">
+                                ({result.symbol})
+                              </span>
                             </div>
                           </div>
-                          <div className="flex items-center">
-                            {result.price && (
-                              <div className="text-right mr-3">
-                                <p className="font-medium text-[var(--color-gray-900)]">
-                                  {result.price}
+                        </div>
+                        <div className="flex items-center">
+                          {result.price && (
+                            <div className="text-right mr-3">
+                              <p className="font-medium text-[var(--color-gray-900)]">
+                                {result.price}
+                              </p>
+                              {result.change_percent && (
+                                <p className={`text-xs ${getChangeColor(result.change_percent)}`}>
+                                  {result.change_percent}
                                 </p>
-                                {result.change_percent && (
-                                  <p className={`text-xs ${getChangeColor(result.change_percent)}`}>
-                                    {result.change_percent}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                            <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              <ChevronRight
-                                className="h-4 w-4 text-[var(--color-gray-700)]"
-                                strokeWidth={1.8}
-                              />
+                              )}
                             </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="p-4 text-center text-[var(--color-gray-400)] rounded-xl">
-                      結果がありません
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // 検索履歴表示
-                <div>
-                  <h3 className="px-4 py-2 text-xs text-[var(--color-gray-700)]">検索履歴</h3>
-                  {searchHistory.length > 0 ? (
-                    <ul>
-                      {searchHistory.map((result) => (
-                        <li
-                          key={result.symbol}
-                          onClick={() => handleSelect(result)}
-                          className="flex items-center justify-between px-4 py-3 bg-[var(--color-list-bg)] cursor-pointer hover:brightness-[0.97] active:scale-[0.98] transition-all duration-120 mb-1 rounded-xl"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <img
-                              src={getCompanyLogo(result)}
-                              alt={result.name}
-                              className="w-6 h-6 rounded-full"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = result.market
-                                  ? getFlagIcon(result.market)
-                                  : '/placeholder-logo.svg';
-                              }}
+                          )}
+                          <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            <ChevronRight
+                              className="h-4 w-4 text-[var(--color-gray-700)]"
+                              strokeWidth={1.8}
                             />
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <p className="font-medium text-[var(--color-gray-900)]">
-                                  {result.name}
-                                </p>
-                                <span className="text-xs text-[var(--color-gray-400)]">
-                                  ({result.symbol})
-                                </span>
-                              </div>
-                            </div>
                           </div>
-                          <div className="flex items-center">
-                            {result.price && (
-                              <div className="text-right mr-3">
-                                <p className="font-medium text-[var(--color-gray-900)]">
-                                  {result.price}
-                                </p>
-                                {result.change_percent && (
-                                  <p className={`text-xs ${getChangeColor(result.change_percent)}`}>
-                                    {result.change_percent}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                            <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              <ChevronRight
-                                className="h-4 w-4 text-[var(--color-gray-700)]"
-                                strokeWidth={1.8}
-                              />
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="p-4 text-center text-[var(--color-gray-400)] rounded-xl">
-                      検索履歴がありません
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-4 text-center text-[var(--color-gray-400)] rounded-xl">
+                    検索履歴がありません
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

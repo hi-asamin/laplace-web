@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { ArrowLeft, Bookmark, ChevronRight, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import Tooltip from '@/components/tooltip';
@@ -130,6 +130,9 @@ export default function MarketDetailPage() {
     y: number;
   } | null>(null);
 
+  // チャート参照用のrefを作成
+  const chartRef = useRef<SVGSVGElement>(null);
+
   // データ状態
   const [marketData, setMarketData] = useState<MarketDetails | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -175,6 +178,22 @@ export default function MarketDetailPage() {
     setSelectedPeriod(period);
     loadChartData(decodedSymbol, period);
   };
+
+  // チャート外部をクリックしたときの処理
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // chartRefがnullでない、かつクリックした要素がチャート内の要素でない場合
+      if (chartRef.current && !chartRef.current.contains(event.target as Node)) {
+        setSelectedPoint(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     // API呼び出しでデータを取得
@@ -316,8 +335,8 @@ export default function MarketDetailPage() {
           </div>
         )}
 
-        {/* 期間選択タブ - チャートの直前に移動 */}
-        <div className="flex space-x-2 mb-4 overflow-x-auto no-scrollbar">
+        {/* 期間選択タブ */}
+        <div className="flex justify-between w-full mb-4 overflow-x-auto no-scrollbar">
           {PERIOD_OPTIONS.map((option) => (
             <button
               key={option.value}
@@ -342,6 +361,7 @@ export default function MarketDetailPage() {
             chartData.data.length >= 2 &&
             !chartData.data.some((p) => isNaN(p.close)) ? (
               <svg
+                ref={chartRef}
                 className="w-full h-full"
                 viewBox="0 0 400 160"
                 preserveAspectRatio="none"

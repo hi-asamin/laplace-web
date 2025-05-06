@@ -247,11 +247,11 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
         {query && (
           <button
             onClick={clearSearch}
-            className="absolute right-3 p-2 bg-gray-200 rounded-full text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)]"
+            className="absolute right-3 p-1 bg-gray-100 rounded-full text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)] hover:bg-gray-200 transition-colors"
             style={{ touchAction: 'manipulation' }}
             aria-label="検索をクリア"
           >
-            <X className="h-4 w-4" strokeWidth={1.8} />
+            <X className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
         )}
       </div>

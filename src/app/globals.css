@@ -57,3 +57,26 @@ body {
     scrollbar-width: none; /* Firefox */
   }
 }
+
+/* チャートアニメーション用キーフレーム */
+@keyframes chart-line-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes chart-area-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+/* バーチャートのアニメーション */
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}

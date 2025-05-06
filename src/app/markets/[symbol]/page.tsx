@@ -123,6 +123,12 @@ export default function MarketDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('1D');
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [selectedPoint, setSelectedPoint] = useState<{
+    price: number;
+    date: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
   // データ状態
   const [marketData, setMarketData] = useState<MarketDetails | null>(null);
@@ -275,7 +281,7 @@ export default function MarketDetailPage() {
               alt={marketData?.name}
               className="w-8 h-8 rounded-full"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/flags/global.svg';
+                (e.target as HTMLImageElement).src = getFlagIcon(marketData?.market || 'global');
               }}
             />
             <h1 className="text-[22px] font-semibold text-[var(--color-gray-900)]">
@@ -335,14 +341,63 @@ export default function MarketDetailPage() {
             {chartData?.data &&
             chartData.data.length >= 2 &&
             !chartData.data.some((p) => isNaN(p.close)) ? (
-              <svg className="w-full h-full" viewBox="0 0 400 160" preserveAspectRatio="none">
+              <svg
+                className="w-full h-full"
+                viewBox="0 0 400 160"
+                preserveAspectRatio="none"
+                onClick={(e) => {
+                  if (!chartData?.data) return;
+
+                  // クリック位置を取得
+                  const svg = e.currentTarget;
+                  const rect = svg.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 400;
+
+                  // x座標に最も近いデータポイントを見つける
+                  const chartWidth = 400 - 20; // パディングを考慮
+                  const pointWidth = chartWidth / (chartData.data.length - 1);
+                  const dataIndex = Math.round((x - 10) / pointWidth); // パディングを考慮して調整
+
+                  // 範囲チェック
+                  const validIndex = Math.max(0, Math.min(dataIndex, chartData.data.length - 1));
+                  const point = chartData.data[validIndex];
+
+                  if (point) {
+                    const values = chartData.data.map((p) => p.close);
+                    const min = Math.min(...values);
+                    const max = Math.max(...values);
+                    const valueMargin = (max - min) * 0.1;
+                    const effectiveMin = min - valueMargin;
+                    const effectiveMax = max + valueMargin;
+                    const valueRange = effectiveMax - effectiveMin;
+
+                    // Y座標を計算
+                    const chartHeight = 160 - 20; // パディングを考慮
+                    const y =
+                      10 + chartHeight - ((point.close - effectiveMin) / valueRange) * chartHeight;
+
+                    setSelectedPoint({
+                      price: point.close,
+                      date: point.date,
+                      x: 10 + validIndex * pointWidth,
+                      y,
+                    });
+                  }
+                }}
+              >
                 {/* チャートの線 */}
                 {chartPaths.linePath && (
                   <path
                     d={chartPaths.linePath}
                     fill="none"
-                    stroke={marketData?.isPositive ? 'var(--color-success)' : 'var(--color-danger)'}
+                    stroke="var(--color-primary)"
                     strokeWidth="2"
+                    className="chart-line-animation"
+                    style={{
+                      strokeDasharray: '1000',
+                      strokeDashoffset: '1000',
+                      animation: 'chart-line-draw 1.5s ease-in-out forwards',
+                    }}
                   />
                 )}
 
@@ -350,15 +405,61 @@ export default function MarketDetailPage() {
                 {chartPaths.areaPath && (
                   <path
                     d={chartPaths.areaPath}
-                    fill={
-                      marketData?.isPositive ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)'
-                    }
+                    fill="rgba(89, 101, 255, 0.1)"
+                    className="chart-area-animation"
+                    style={{
+                      opacity: 0,
+                      animation: 'chart-area-fade 0.5s ease-in-out 1s forwards',
+                    }}
                   />
+                )}
+
+                {/* 選択したポイントのマーカー */}
+                {selectedPoint && (
+                  <>
+                    {/* 垂直線 */}
+                    <line
+                      x1={selectedPoint.x}
+                      y1="10"
+                      x2={selectedPoint.x}
+                      y2="150"
+                      stroke="var(--color-primary)"
+                      strokeWidth="1"
+                      strokeDasharray="3,3"
+                    />
+                    {/* ポイントマーカー */}
+                    <circle
+                      cx={selectedPoint.x}
+                      cy={selectedPoint.y}
+                      r="4"
+                      fill="var(--color-primary)"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  </>
                 )}
               </svg>
             ) : (
               <div className="flex items-center justify-center h-full text-[var(--color-gray-400)] text-sm">
                 この期間のチャートデータはありません
+              </div>
+            )}
+
+            {/* 選択したポイントの情報表示 */}
+            {selectedPoint && (
+              <div
+                className="absolute left-1/2 top-0 bg-[var(--color-surface)] px-3 py-2 rounded-lg shadow-md text-center transform -translate-x-1/2 -translate-y-[calc(100%+5px)]"
+                style={{
+                  left: `${(selectedPoint.x / 400) * 100}%`,
+                  maxWidth: '150px',
+                }}
+              >
+                <div className="text-xs text-[var(--color-gray-400)]">
+                  {new Date(selectedPoint.date).toLocaleDateString()}
+                </div>
+                <div className="text-sm font-medium text-[var(--color-gray-900)]">
+                  {selectedPoint.price.toLocaleString()}
+                </div>
               </div>
             )}
           </div>
@@ -432,7 +533,7 @@ export default function MarketDetailPage() {
             <>
               {/* 四半期業績推移 */}
               <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center">
                     <span className="text-sm font-medium text-[var(--color-gray-900)]">
                       四半期業績推移
@@ -446,7 +547,7 @@ export default function MarketDetailPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-end space-x-2 h-[120px]">
+                <div className="flex justify-between items-end space-x-2 h-[100px]">
                   {(fundamentalData?.quarterlyEarnings || [])
                     .slice(0, 4)
                     .reverse() // 配列を反転して新しい四半期から表示
@@ -461,18 +562,25 @@ export default function MarketDetailPage() {
                       const max = Math.max(...values);
                       const range = max - min;
 
-                      // 値から高さを計算（最小40px、最大100px）
+                      // 値から高さを計算（最小30px、最大80px）
                       const value = parseFloat(earning.value.replace(/[$,]/g, ''));
                       const height =
                         range === 0
-                          ? 70 // すべて同じ値の場合
-                          : 40 + ((value - min) / range) * 60;
+                          ? 60 // すべて同じ値の場合
+                          : 30 + ((value - min) / range) * 50;
 
                       return (
                         <div key={index} className="flex flex-col items-center flex-1">
                           <div
-                            className="w-full bg-[var(--color-primary)] bg-opacity-15 rounded-t-sm"
-                            style={{ height: `${height}px` }}
+                            className="w-full bg-[var(--color-primary)] bg-opacity-15 rounded-t-lg"
+                            style={{
+                              height: `${height}px`,
+                              background:
+                                'linear-gradient(180deg, var(--color-primary) 0%, rgba(89, 101, 255, 0.6) 100%)',
+                              boxShadow: '0 2px 6px rgba(89, 101, 255, 0.2)',
+                              transform: 'scaleY(0)',
+                              animation: `bar-grow 0.8s ease-out ${index * 0.1}s forwards`,
+                            }}
                           ></div>
                           <div className="mt-2 text-xs text-[var(--color-gray-400)]">
                             {earning.quarter}

@@ -3,13 +3,6 @@ description:
 globs: *.tsx
 alwaysApply: false
 ---
----
-title: "Laplace — Design Guidelines"
-description: プロダクトのデザインガイドライン
-globs: *
-alwaysApply: true
----
-
 # 目次
 
 1. ブランド & トーン
@@ -75,9 +68,11 @@ alwaysApply: true
 ## 4. グリッド & レイアウト
 
 * **Mobile (基準デバイス幅 390 px)**: 4‑column grid, gutter 12 px。
-* **Content Padding**: 左右 16 px。リストアイテムは左右 12 px インセット。
-* **Pill Card**: full‑width, padding 12 px 16 px, border‑radius 28 px, shadow `0 1px 4px rgba(0,0,0,0.06)`。
-* セクション間スペースは 8 pt スケール (8 / 16 / 24 / 32)。
+* **Content Padding**: 左右 8-12 px。リストアイテムは左右 10-12 px インセット。
+* **コンテナ幅**: モバイル画面では max-w-lg (32rem = 512px)。
+* **Pill Card**: full‑width, padding 12 px、border‑radius 28 px, shadow `0 1px 4px rgba(0,0,0,0.06)`。
+* **カード内パディング**: カード内部の余白 12px、情報表示に集中。
+* セクション間スペースは 8 pt スケール (8 / 16 / 24)、垂直方向の余白は最小限。
 
 ## 5. コンポーネントスタイル
 
@@ -125,7 +120,7 @@ alwaysApply: true
 ## 7. チャート & データビジュアライゼーション
 
 * **ライブラリ**: Recharts。
-* 折れ線: `--color-success`。リファレンスライン: `--color-gray-400` 点線。
+* 折れ線: `--color-primary`。リファレンスライン: `--color-gray-400` 点線。
 * y 軸: 通貨単位を prefix、少数 0 桁、三桁区切り。
 * 期間タブ: 1D / 1W / 1M / … 選択時、背景 `--color-primary` 16% 透過フィル。
 * ツールチップ: Card radius 16 px, shadow `0 1px 6px rgba(0,0,0,0.08)`。

@@ -1,0 +1,143 @@
+'use client';
+
+import { ReactNode, useState, useEffect } from 'react';
+import { Info, X } from 'lucide-react';
+
+type TooltipProps = {
+  children: ReactNode;
+  content: string;
+  title?: string;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+};
+
+export default function Tooltip({ children, content, title, position = 'top' }: TooltipProps) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) {
+      setIsAnimating(true);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isVisible]);
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVisible(!isVisible);
+  };
+
+  const handleClose = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVisible(false);
+  };
+
+  const renderFormattedContent = () => {
+    if (!content) return null;
+
+    const paragraphs = content.split('\n\n');
+
+    return (
+      <div className="space-y-4">
+        {paragraphs.map((paragraph, i) => {
+          if (paragraph.startsWith('【') && paragraph.includes('】')) {
+            const headingEnd = paragraph.indexOf('】') + 1;
+            const heading = paragraph.substring(0, headingEnd);
+            const restContent = paragraph.substring(headingEnd).trim();
+
+            return (
+              <div key={i} className="mt-3">
+                <h4 className="text-sm font-semibold text-[var(--color-primary)] mb-1">
+                  {heading}
+                </h4>
+                <div className="text-sm">
+                  {restContent.split('\n').map((line, j) => (
+                    <div key={j} className={line.startsWith('•') ? 'pl-4 relative mb-1' : ''}>
+                      {line.startsWith('•') ? (
+                        <>
+                          <span className="absolute left-0 top-0">•</span>
+                          <span>{line.substring(1).trim()}</span>
+                        </>
+                      ) : (
+                        line
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <p key={i} className="text-sm">
+              {paragraph.split('\n').map((line, j) => (
+                <span key={j} className="block">
+                  {line}
+                </span>
+              ))}
+            </p>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <div className="relative inline-flex items-center">
+      <div className="cursor-pointer flex items-center">
+        {children}
+        <button
+          onClick={handleToggle}
+          className="ml-1 flex items-center justify-center"
+          aria-label="用語の説明を表示"
+        >
+          <Info className="h-3.5 w-3.5 text-[var(--color-gray-400)]" />
+        </button>
+      </div>
+
+      {isVisible && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-gray-500/10 backdrop-blur-[1px]"
+            onClick={handleClose}
+            aria-hidden="true"
+          />
+
+          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div
+              className={`bg-white/95 backdrop-blur-sm rounded-xl max-w-xs w-[90%] max-h-[80vh] overflow-y-auto pointer-events-auto 
+                shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100
+                ${isAnimating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} 
+                transition-all duration-200 ease-out`}
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: '400px' }}
+            >
+              <div className="flex justify-between items-center p-4 border-b border-gray-100">
+                <h3 className="text-base font-medium text-[var(--color-gray-900)]">
+                  {title || '用語説明'}
+                </h3>
+                <button
+                  onClick={handleClose}
+                  className="p-1 rounded-full hover:bg-[var(--color-gray-400)] hover:bg-opacity-10 transition-colors"
+                  aria-label="閉じる"
+                >
+                  <X className="h-4 w-4 text-[var(--color-gray-700)]" />
+                </button>
+              </div>
+              <div className="p-4 text-sm text-[var(--color-gray-700)]">
+                {renderFormattedContent()}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

@@ -3,9 +3,21 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
 
-@theme inline {
+  /* Color Tokens */
+  --color-primary: #5965ff;
+  --color-primary-dark: #414dff;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-list-bg: #ecf9f3;
+  --color-icon-bg: #e2f1ea;
+  --color-gray-900: #0f172a;
+  --color-gray-700: #334155;
+  --color-gray-400: #94a3b8;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7fafc;
+
+  /* UI Variables */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -16,6 +28,15 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    /* Dark mode color tokens */
+    --color-surface: #0f172a;
+    --color-surface-alt: #1e293b;
+    --color-list-bg: #15362b;
+    --color-icon-bg: #1e4335;
+    --color-gray-900: #f8fafc;
+    --color-gray-700: #cbd5e1;
+    --color-primary: #525eff;
   }
 }
 
@@ -23,4 +44,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* スクロールバーを非表示にするクラス */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }

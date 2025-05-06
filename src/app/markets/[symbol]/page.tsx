@@ -447,38 +447,42 @@ export default function MarketDetailPage() {
                 </div>
 
                 <div className="flex justify-between items-end space-x-2 h-[120px]">
-                  {(fundamentalData?.quarterlyEarnings || []).slice(0, 4).map((earning, index) => {
-                    // データポイントの値から高さを計算
-                    const values = (fundamentalData?.quarterlyEarnings || [])
-                      .slice(0, 4)
-                      .map((e) => parseFloat(e.value.replace(/[$,]/g, '')));
+                  {(fundamentalData?.quarterlyEarnings || [])
+                    .slice(0, 4)
+                    .reverse() // 配列を反転して新しい四半期から表示
+                    .map((earning, index) => {
+                      // データポイントの値から高さを計算
+                      const values = (fundamentalData?.quarterlyEarnings || [])
+                        .slice(0, 4)
+                        .reverse() // 配列を反転
+                        .map((e) => parseFloat(e.value.replace(/[$,]/g, '')));
 
-                    const min = Math.min(...values);
-                    const max = Math.max(...values);
-                    const range = max - min;
+                      const min = Math.min(...values);
+                      const max = Math.max(...values);
+                      const range = max - min;
 
-                    // 値から高さを計算（最小40px、最大100px）
-                    const value = parseFloat(earning.value.replace(/[$,]/g, ''));
-                    const height =
-                      range === 0
-                        ? 70 // すべて同じ値の場合
-                        : 40 + ((value - min) / range) * 60;
+                      // 値から高さを計算（最小40px、最大100px）
+                      const value = parseFloat(earning.value.replace(/[$,]/g, ''));
+                      const height =
+                        range === 0
+                          ? 70 // すべて同じ値の場合
+                          : 40 + ((value - min) / range) * 60;
 
-                    return (
-                      <div key={index} className="flex flex-col items-center flex-1">
-                        <div
-                          className="w-full bg-[var(--color-primary)] bg-opacity-15 rounded-t-sm"
-                          style={{ height: `${height}px` }}
-                        ></div>
-                        <div className="mt-2 text-xs text-[var(--color-gray-400)]">
-                          {earning.quarter}
+                      return (
+                        <div key={index} className="flex flex-col items-center flex-1">
+                          <div
+                            className="w-full bg-[var(--color-primary)] bg-opacity-15 rounded-t-sm"
+                            style={{ height: `${height}px` }}
+                          ></div>
+                          <div className="mt-2 text-xs text-[var(--color-gray-400)]">
+                            {earning.quarter}
+                          </div>
+                          <div className="text-xs font-medium text-[var(--color-gray-900)]">
+                            {earning.value}
+                          </div>
                         </div>
-                        <div className="text-xs font-medium text-[var(--color-gray-900)]">
-                          {earning.value}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               </div>
 

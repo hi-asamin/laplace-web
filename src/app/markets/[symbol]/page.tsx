@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { ArrowLeft, Bookmark, ChevronRight, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Bookmark, ChevronRight, TrendingUp, Search } from 'lucide-react';
 import Link from 'next/link';
 import Tooltip from '@/components/tooltip';
 import { getMarketDetails, getChartData, getFundamentalData, getRelatedMarkets } from '@/lib/api';
@@ -41,6 +41,24 @@ const TERM_EXPLANATIONS = {
 • 安定成長企業: 前年同期比5〜15%程度の成長
 • 高成長企業: 前年同期比20%以上の成長
 • 成熟企業: 0〜5%程度の安定した成長`,
+  },
+  avgVolume: {
+    title: '平均出来高 (Average Volume)',
+    description: `特定の期間（通常は30日間）における1日あたりの平均取引量を表します。株式の流動性や取引活発度を示す重要な指標です。
+
+【見方のポイント】
+• 高い出来高: 株式の流動性が高く、売買が活発に行われている
+• 低い出来高: 株式の流動性が低く、大口注文で価格が大きく変動する可能性がある
+• 通常より高い出来高: 企業に何らかのニュースや大きな動きがある可能性を示唆
+
+【評価基準】
+• 大型株: 日平均100万株以上は高流動性
+• 中型株: 日平均10万〜50万株が一般的
+• 小型株: 日平均1万株未満は低流動性の可能性
+
+【注意点】
+• 出来高の急増は、企業の重要なニュースや機関投資家の大口取引を示すことがある
+• 出来高が著しく低い株は、売買スプレッドが広く、ポジションの構築や解消に時間がかかることがある`,
   },
   eps: {
     title: 'EPS（一株当たり利益）',
@@ -269,8 +287,8 @@ export default function MarketDetailPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-alt)] p-4">
-      <div className="max-w-md mx-auto py-4">
+    <div className="min-h-screen bg-[var(--color-surface-alt)] p-2">
+      <div className="max-w-lg mx-auto py-3">
         {/* ヘッダー: 戻るボタンとブックマークボタン */}
         <div className="flex justify-between items-center mb-6">
           <button
@@ -279,12 +297,17 @@ export default function MarketDetailPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <button
-            onClick={toggleBookmark}
-            className={`text-[var(--color-gray-700)] ${isBookmarked ? 'text-[var(--color-primary)]' : ''}`}
-          >
-            <Bookmark className="w-5 h-5" fill={isBookmarked ? 'var(--color-primary)' : 'none'} />
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={toggleBookmark}
+              className={`text-[var(--color-gray-700)] ${isBookmarked ? 'text-[var(--color-primary)]' : ''}`}
+            >
+              <Bookmark className="w-5 h-5" fill={isBookmarked ? 'var(--color-primary)' : 'none'} />
+            </button>
+            <button onClick={() => router.push('/search')} className="text-[var(--color-gray-700)]">
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* 銘柄情報ヘッダー */}
@@ -487,7 +510,7 @@ export default function MarketDetailPage() {
 
         {/* ニュースエリア */}
         {!isLoading && (
-          <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <h3 className="text-base font-medium text-[var(--color-gray-900)] mb-2">
               {marketData?.name} share price {marketData?.isPositive ? 'up' : 'down'}{' '}
               {marketData?.changePercent?.replace('-', '').replace('+', '') || '0%'} in a week
@@ -508,11 +531,11 @@ export default function MarketDetailPage() {
         )}
 
         {/* 取引情報 */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-3 mb-6">
           {(isLoading ? Array(4).fill(null) : tradingInfoItems).map((info, index) => (
             <div
               key={index}
-              className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+              className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
             >
               {isLoading ? (
                 <div className="animate-pulse">
@@ -521,7 +544,17 @@ export default function MarketDetailPage() {
                 </div>
               ) : (
                 <>
-                  <div className="text-xs text-[var(--color-gray-400)] mb-1">{info?.label}</div>
+                  <div className="flex items-center mb-1">
+                    <span className="text-xs text-[var(--color-gray-400)]">{info?.label}</span>
+                    {info?.label === 'AVG VOLUME' && (
+                      <Tooltip
+                        content={TERM_EXPLANATIONS.avgVolume.description}
+                        title={TERM_EXPLANATIONS.avgVolume.title}
+                      >
+                        <span className="sr-only">平均出来高の説明</span>
+                      </Tooltip>
+                    )}
+                  </div>
                   <div className="text-base font-semibold text-[var(--color-gray-900)]">
                     {info?.value}
                   </div>
@@ -532,8 +565,8 @@ export default function MarketDetailPage() {
         </div>
 
         {/* ファンダメンタル分析セクション */}
-        <div className="mb-8">
-          <div className="flex items-center mb-4">
+        <div className="mb-6">
+          <div className="flex items-center mb-3">
             <TrendingUp className="h-5 w-5 mr-2 text-[var(--color-gray-900)]" />
             <h2 className="text-base font-medium text-[var(--color-gray-900)]">
               ファンダメンタル分析
@@ -543,7 +576,7 @@ export default function MarketDetailPage() {
           {isLoading ? (
             <div className="animate-pulse space-y-4">
               <div className="h-40 bg-gray-200 rounded-xl"></div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="h-20 bg-gray-200 rounded-xl"></div>
                 <div className="h-20 bg-gray-200 rounded-xl"></div>
                 <div className="h-20 bg-gray-200 rounded-xl"></div>
@@ -552,8 +585,8 @@ export default function MarketDetailPage() {
           ) : (
             <>
               {/* 四半期業績推移 */}
-              <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <div className="flex items-center justify-between mb-6">
+              <div className="bg-[var(--color-surface)] rounded-xl p-3 mb-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     <span className="text-sm font-medium text-[var(--color-gray-900)]">
                       四半期業績推移
@@ -615,9 +648,9 @@ export default function MarketDetailPage() {
               </div>
 
               {/* その他のファンダメンタル指標 */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {/* EPS (一株当たり利益) */}
-                <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                   <div className="flex items-center mb-1">
                     <span className="text-xs text-[var(--color-gray-400)]">EPS</span>
                     <Tooltip
@@ -633,7 +666,7 @@ export default function MarketDetailPage() {
                 </div>
 
                 {/* ROE (自己資本利益率) */}
-                <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                   <div className="flex items-center mb-1">
                     <span className="text-xs text-[var(--color-gray-400)]">ROE</span>
                     <Tooltip
@@ -649,7 +682,7 @@ export default function MarketDetailPage() {
                 </div>
 
                 {/* 一株当たり配当金額 */}
-                <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                   <div className="flex items-center mb-1">
                     <span className="text-xs text-[var(--color-gray-400)]">配当 / 株</span>
                     <Tooltip
@@ -679,7 +712,7 @@ export default function MarketDetailPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {(isLoading ? Array(2).fill(null) : relatedMarkets.slice(0, 2)).map((stock, index) => (
               <div
                 key={stock?.symbol || index}

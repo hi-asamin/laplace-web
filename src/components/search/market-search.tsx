@@ -81,72 +81,41 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
       const response = await searchMarkets(searchQuery);
       const query = searchQuery.toLowerCase().trim();
 
-      // APIから返された結果をスコアで降順ソート（高スコアが上位）
-      const sortedResults = [...response.results].sort((a, b) => b.score - a.score);
-
-      // 「Apple」のような一般的な検索クエリの場合、特別処理
-      if (query.length >= 3 && isCommonCompanyName(query)) {
-        // 大手テック企業や有名企業の一般的な名前（Apple, Microsoft, Google, Amazon等）の場合
-        // 完全一致または前方一致を優先
-        const priorityMatches = sortedResults.filter(
-          (result) =>
-            result.name.toLowerCase() === query ||
-            result.name.toLowerCase().startsWith(query) ||
-            result.symbol.toLowerCase() === query
-        );
-
-        if (priorityMatches.length > 0) {
-          setResults(priorityMatches);
-          return;
-        }
-      }
-
-      // 検索クエリが短すぎる場合（3文字未満）は厳格なフィルタリングを行わない
-      if (query.length < 3) {
-        setResults(sortedResults);
-        return;
-      }
-
-      // 検索結果の処理: 完全一致、前方一致、単語一致、部分一致の順に優先度を付ける
-
-      // 1. 完全一致: 企業名またはシンボルが検索クエリと完全に一致
-      const exactMatches = sortedResults.filter(
-        (result) => result.name.toLowerCase() === query || result.symbol.toLowerCase() === query
-      );
-
-      // 完全一致があればそれだけを表示
-      if (exactMatches.length > 0) {
-        setResults(exactMatches);
-        return;
-      }
-
-      // 2. 前方一致: 企業名またはシンボルが検索クエリで始まる
-      const prefixMatches = sortedResults.filter(
-        (result) =>
-          result.name.toLowerCase().startsWith(query) ||
-          result.symbol.toLowerCase().startsWith(query)
-      );
-
-      // 前方一致があればそれだけを表示
-      if (prefixMatches.length > 0) {
-        setResults(prefixMatches);
-        return;
-      }
-
-      // 3. 単語一致: 企業名の単語が検索クエリと一致（例: "Apple Computer Inc."内の"Apple"）
-      const wordMatches = sortedResults.filter((result) => {
+      // 検索結果に優先度スコアを割り当てる
+      const enhancedResults = response.results.map((result) => {
         const name = result.name.toLowerCase();
-        const words = name.split(/\s+/); // スペースで単語分割
-        return words.some((word) => word === query);
+        const symbol = result.symbol.toLowerCase();
+        let priorityScore = result.score || 0;
+
+        // 優先度スコアの計算
+        // 完全一致: 最優先（+100）
+        if (name === query || symbol === query) {
+          priorityScore += 100;
+        }
+        // 前方一致: 次に優先（+50）
+        else if (name.startsWith(query) || symbol.startsWith(query)) {
+          priorityScore += 50;
+        }
+        // 単語一致: その次（+25）
+        else if (name.split(/\s+/).some((word) => word === query)) {
+          priorityScore += 25;
+        }
+        // 部分一致: 最後（+10）
+        else if (name.includes(query) || symbol.includes(query)) {
+          priorityScore += 10;
+        }
+
+        // 「Apple」のような一般的な企業名には追加スコア（+15）
+        if (isCommonCompanyName(name)) {
+          priorityScore += 15;
+        }
+
+        return { ...result, priorityScore };
       });
 
-      // 単語一致があればそれだけを表示
-      if (wordMatches.length > 0) {
-        setResults(wordMatches);
-        return;
-      }
+      // 優先度スコアで降順ソート
+      const sortedResults = enhancedResults.sort((a, b) => b.priorityScore - a.priorityScore);
 
-      // 4. その他の部分一致（スコアでソート済みの結果を使用）
       setResults(sortedResults);
     } catch (error) {
       console.error('検索エラー:', error);

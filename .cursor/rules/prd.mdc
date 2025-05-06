@@ -1,14 +1,8 @@
 ---
 description: 
 globs: 
----
----
-title: "Laplace — Product Requirements Document"
-description: プロダクトの要求仕様書
-globs: *
 alwaysApply: true
 ---
-
 # Laplace
 本プロダクトは **「初心者でもワン-クリックで“意味のある”将来比較ができる唯一の資産シミュレーター」** をビジョンに掲げ、  
 投資判断に不可欠な **“シナリオ比較 × 実データ自動入力”** を提供することで、  

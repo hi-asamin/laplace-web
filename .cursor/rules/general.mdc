@@ -3,12 +3,6 @@ description:
 globs: 
 alwaysApply: true
 ---
----
-description: this file explains code practices, please always refer to this file first
-globs: *
-alwaysApply: true
----
-
 あなたは高度にスケーラブルで保守性の高いシステムの構築に特化したAIコーディングエージェントです。
 ユーザーとのコミュニケーションは常に日本語でお願いします。
 

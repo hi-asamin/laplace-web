@@ -497,6 +497,76 @@ export default function MarketDetailPage() {
                   />
                 )}
 
+                {/* 最高値・最安値マーカー */}
+                {(() => {
+                  const data = chartData.data;
+                  if (!data || data.length === 0) return null;
+                  const closeValues = data.map((d) => d.close);
+                  const max = Math.max(...closeValues);
+                  const min = Math.min(...closeValues);
+                  const maxIndex = closeValues.indexOf(max);
+                  const minIndex = closeValues.indexOf(min);
+                  // パディング・スケール計算
+                  const padding = 10;
+                  const chartWidth = 400 - 2 * padding;
+                  const chartHeight = 160 - 2 * padding;
+                  const valueMargin = (max - min) * 0.1;
+                  const effectiveMin = min - valueMargin;
+                  const effectiveMax = max + valueMargin;
+                  const valueRange = effectiveMax - effectiveMin;
+                  // X,Y座標
+                  const getXY = (i: number, value: number) => ({
+                    x: padding + (i / (data.length - 1)) * chartWidth,
+                    y: padding + chartHeight - ((value - effectiveMin) / valueRange) * chartHeight,
+                  });
+                  const maxPt = getXY(maxIndex, max);
+                  const minPt = getXY(minIndex, min);
+                  return (
+                    <>
+                      {/* 最高値マーカー（同系色・控えめサイズ） */}
+                      <circle
+                        cx={maxPt.x}
+                        cy={maxPt.y}
+                        r="4"
+                        fill="var(--color-primary)"
+                        stroke="white"
+                        strokeWidth="1.5"
+                      />
+                      <text
+                        x={maxPt.x}
+                        y={maxPt.y - 8}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="var(--color-primary)"
+                        fontWeight="bold"
+                        style={{ pointerEvents: 'none', opacity: 0.7 }}
+                      >
+                        {max.toLocaleString()}
+                      </text>
+                      {/* 最安値マーカー（同系色・控えめサイズ・淡色） */}
+                      <circle
+                        cx={minPt.x}
+                        cy={minPt.y}
+                        r="4"
+                        fill="#BFC6FF" // --color-primaryの淡色
+                        stroke="white"
+                        strokeWidth="1.5"
+                      />
+                      <text
+                        x={minPt.x}
+                        y={minPt.y + 16}
+                        textAnchor="middle"
+                        fontSize="11"
+                        fill="#BFC6FF"
+                        fontWeight="bold"
+                        style={{ pointerEvents: 'none', opacity: 0.7 }}
+                      >
+                        {min.toLocaleString()}
+                      </text>
+                    </>
+                  );
+                })()}
+
                 {/* 選択したポイントのマーカー */}
                 {selectedPoint && (
                   <>
@@ -547,6 +617,16 @@ export default function MarketDetailPage() {
             )}
           </div>
         )}
+
+        {/* シミュレーションページ遷移ボタン */}
+        <button
+          className="w-full h-12 mt-2 mb-6 rounded-full bg-[var(--color-primary)] text-white font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition"
+          onClick={() => router.push(`/markets/${symbol}/simulation`)}
+          aria-label={`${marketData?.name || ''}の資産シミュレーションページへ遷移`}
+        >
+          <TrendingUp className="w-5 h-5" />
+          この銘柄でシミュレーション
+        </button>
 
         {/* ニュースエリア */}
         {!isLoading && (

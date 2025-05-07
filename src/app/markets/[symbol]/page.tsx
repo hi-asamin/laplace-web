@@ -320,13 +320,14 @@ export default function MarketDetailPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-alt)] p-2">
-      <div className="max-w-lg mx-auto py-3">
+    <div className="min-h-screen bg-[var(--color-surface-alt)] p-2 sm:p-4">
+      <div className="max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto py-3 px-2 sm:px-4">
         {/* ヘッダー: 戻るボタンとブックマークボタン */}
         <div className="flex justify-between items-center mb-6">
           <button
             onClick={() => router.back()}
             className="flex items-center text-[var(--color-gray-700)]"
+            style={{ minWidth: 44, minHeight: 44 }}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -334,10 +335,15 @@ export default function MarketDetailPage() {
             <button
               onClick={toggleBookmark}
               className={`text-[var(--color-gray-700)] ${isBookmarked ? 'text-[var(--color-primary)]' : ''}`}
+              style={{ minWidth: 44, minHeight: 44 }}
             >
               <Bookmark className="w-5 h-5" fill={isBookmarked ? 'var(--color-primary)' : 'none'} />
             </button>
-            <button onClick={() => router.push('/search')} className="text-[var(--color-gray-700)]">
+            <button
+              onClick={() => router.push('/search')}
+              className="text-[var(--color-gray-700)]"
+              style={{ minWidth: 44, minHeight: 44 }}
+            >
               <Search className="w-5 h-5" />
             </button>
           </div>
@@ -392,16 +398,17 @@ export default function MarketDetailPage() {
         )}
 
         {/* 期間選択タブ */}
-        <div className="flex justify-between w-full mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex justify-between w-full mb-4 overflow-x-auto no-scrollbar gap-1 sm:gap-2">
           {PERIOD_OPTIONS.map((option) => (
             <button
               key={option.value}
-              className={`px-3 py-1 rounded-full text-sm ${
+              className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 min-w-[56px] sm:min-w-[72px] lg:min-w-[88px] ${
                 selectedPeriod === option.value
                   ? 'bg-[var(--color-primary)] bg-opacity-10 text-white font-medium'
                   : 'text-[var(--color-gray-400)]'
               }`}
               onClick={() => handlePeriodChange(option.value)}
+              style={{ minHeight: 44 }}
             >
               {option.label}
             </button>
@@ -410,9 +417,9 @@ export default function MarketDetailPage() {
 
         {/* チャート */}
         {isLoading ? (
-          <div className="h-[200px] bg-gray-200 rounded-md mb-6 animate-pulse"></div>
+          <div className="h-[200px] sm:h-[260px] lg:h-[320px] bg-gray-200 rounded-md mb-6 animate-pulse"></div>
         ) : (
-          <div className="relative h-[200px] mb-6 rounded-lg">
+          <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg">
             {chartData?.data &&
             chartData.data.length >= 2 &&
             !chartData.data.some((p) => isNaN(p.close)) ? (
@@ -543,7 +550,7 @@ export default function MarketDetailPage() {
 
         {/* ニュースエリア */}
         {!isLoading && (
-          <div className="bg-[var(--color-surface)] rounded-xl p-3 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
             <h3 className="text-base font-medium text-[var(--color-gray-900)] mb-2">
               {marketData?.name} share price {marketData?.isPositive ? 'up' : 'down'}{' '}
               {marketData?.changePercent?.replace('-', '').replace('+', '') || '0%'} in a week
@@ -626,7 +633,7 @@ export default function MarketDetailPage() {
           ) : (
             <>
               {/* 四半期業績推移 */}
-              <div className="bg-[var(--color-surface)] rounded-xl p-3 mb-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+              <div className="bg-[var(--color-surface)] rounded-xl p-3 mb-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     <span className="text-sm font-medium text-[var(--color-gray-900)]">

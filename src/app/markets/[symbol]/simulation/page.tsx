@@ -3,7 +3,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, TrendingUp, DollarSign, PieChart } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  PieChart as RePieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import { generateChartPath } from '@/utils/chart';
 import { ChartDataPoint } from '@/types/api';
 
@@ -464,34 +475,101 @@ export default function SimulationPage() {
               配当金の貢献度分析
             </h2>
           </div>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-[var(--color-gray-700)]">配当金の累積額</span>
-                <span className="font-medium text-[var(--color-gray-900)]">
-                  ¥
-                  {Math.round(
-                    (calculateTotalDividends(simulationData.baseScenario) * investmentAmount) / 100
-                  ).toLocaleString()}
-                </span>
+          {/* インフォグラフィックス（円グラフ） */}
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            {/* 円グラフ */}
+            <RePieChart width={120} height={120}>
+              <Pie
+                data={(() => {
+                  const totalDiv =
+                    (calculateTotalDividends(simulationData.baseScenario) * investmentAmount) / 100;
+                  const last = simulationData.baseScenario[simulationData.baseScenario.length - 1];
+                  const totalAsset = last ? (last.total * investmentAmount) / 100 : 0;
+                  const divRatio = totalAsset > 0 ? totalDiv / totalAsset : 0;
+                  return [
+                    { name: '配当金累積', value: totalDiv },
+                    { name: 'その他', value: Math.max(totalAsset - totalDiv, 0) },
+                  ];
+                })()}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={40}
+                outerRadius={55}
+                fill="#16A34A"
+                stroke="none"
+              >
+                <Cell fill="#16A34A" />
+                <Cell fill="#5965FF" />
+              </Pie>
+            </RePieChart>
+            {/* 数値・ラベル */}
+            <div className="flex-1 space-y-4 w-full">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-[var(--color-gray-700)]">配当金の累積額</span>
+                  <span className="font-medium text-[var(--color-gray-900)]">
+                    ¥
+                    {Math.round(
+                      (calculateTotalDividends(simulationData.baseScenario) * investmentAmount) /
+                        100
+                    ).toLocaleString()}
+                  </span>
+                </div>
+                <div className="h-2 bg-[var(--color-gray-200)] rounded-full">
+                  <div
+                    className="h-full bg-[var(--color-success)] rounded-full"
+                    style={{
+                      width: `${(() => {
+                        const totalDiv =
+                          (calculateTotalDividends(simulationData.baseScenario) *
+                            investmentAmount) /
+                          100;
+                        const last =
+                          simulationData.baseScenario[simulationData.baseScenario.length - 1];
+                        const totalAsset = last ? (last.total * investmentAmount) / 100 : 0;
+                        const divRatio = totalAsset > 0 ? (totalDiv / totalAsset) * 100 : 0;
+                        return divRatio.toFixed(1);
+                      })()}%`,
+                    }}
+                  ></div>
+                </div>
               </div>
-              <div className="h-2 bg-[var(--color-gray-200)] rounded-full">
-                <div
-                  className="h-full bg-[var(--color-success)] rounded-full"
-                  style={{ width: '25%' }}
-                ></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-[var(--color-gray-700)]">資産総額に占める割合</span>
-                <span className="font-medium text-[var(--color-gray-900)]">25%</span>
-              </div>
-              <div className="h-2 bg-[var(--color-gray-200)] rounded-full">
-                <div
-                  className="h-full bg-[var(--color-primary)] rounded-full"
-                  style={{ width: '25%' }}
-                ></div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-[var(--color-gray-700)]">資産総額に占める割合</span>
+                  <span className="font-medium text-[var(--color-gray-900)]">
+                    {(() => {
+                      const totalDiv =
+                        (calculateTotalDividends(simulationData.baseScenario) * investmentAmount) /
+                        100;
+                      const last =
+                        simulationData.baseScenario[simulationData.baseScenario.length - 1];
+                      const totalAsset = last ? (last.total * investmentAmount) / 100 : 0;
+                      const divRatio = totalAsset > 0 ? (totalDiv / totalAsset) * 100 : 0;
+                      return `${divRatio.toFixed(1)}%`;
+                    })()}
+                  </span>
+                </div>
+                <div className="h-2 bg-[var(--color-gray-200)] rounded-full">
+                  <div
+                    className="h-full bg-[var(--color-primary)] rounded-full"
+                    style={{
+                      width: `${(() => {
+                        const totalDiv =
+                          (calculateTotalDividends(simulationData.baseScenario) *
+                            investmentAmount) /
+                          100;
+                        const last =
+                          simulationData.baseScenario[simulationData.baseScenario.length - 1];
+                        const totalAsset = last ? (last.total * investmentAmount) / 100 : 0;
+                        const divRatio = totalAsset > 0 ? (totalDiv / totalAsset) * 100 : 0;
+                        return divRatio.toFixed(1);
+                      })()}%`,
+                    }}
+                  ></div>
+                </div>
               </div>
             </div>
           </div>

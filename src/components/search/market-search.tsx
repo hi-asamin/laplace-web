@@ -148,7 +148,6 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
   // 結果選択時の処理
   const handleSelect = (result: SearchResult) => {
     saveToHistory(result);
-    setQuery('');
     if (onSelect) {
       onSelect(result);
     }

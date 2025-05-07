@@ -60,6 +60,39 @@ const TERM_EXPLANATIONS = {
 • 出来高の急増は、企業の重要なニュースや機関投資家の大口取引を示すことがある
 • 出来高が著しく低い株は、売買スプレッドが広く、ポジションの構築や解消に時間がかかることがある`,
   },
+  peRatio: {
+    title: 'P/E RATIO（株価収益率）',
+    description: `Price to Earnings Ratio（株価収益率）は、株価を1株当たり利益（EPS）で割った値です。企業の収益性に対する株価の割高・割安を判断する重要な指標です。
+
+【計算式】
+P/E RATIO = 株価 ÷ 1株当たり利益（EPS）
+
+【見方のポイント】
+• 一般的に低いほど割安、高いほど割高とされる
+• 業種によって適正水準は大きく異なる
+• 同業他社との比較が重要
+• 成長率を考慮する必要がある
+
+【基準値の目安】
+• 成長企業: 20〜30倍程度
+• 安定企業: 10〜15倍程度
+• 成熟企業: 5〜10倍程度
+
+【高いP/E RATIOの解釈】
+• 将来の成長期待が高い
+• 一時的な収益低下の可能性
+• 過大評価の可能性
+
+【低いP/E RATIOの解釈】
+• 割安の可能性
+• 収益性に課題がある可能性
+• 一時的な収益増加の可能性
+
+【注意点】
+• 業種特性を考慮する必要がある
+• 一時的な要因による変動に注意
+• 将来の成長性も考慮する必要がある`,
+  },
   eps: {
     title: 'EPS（一株当たり利益）',
     description: `Earnings Per Share（一株当たり利益）は、企業の純利益を発行済み株式数で割った数値です。株式投資の際の収益性を示す重要な指標です。
@@ -552,6 +585,14 @@ export default function MarketDetailPage() {
                         title={TERM_EXPLANATIONS.avgVolume.title}
                       >
                         <span className="sr-only">平均出来高の説明</span>
+                      </Tooltip>
+                    )}
+                    {info?.label === 'P/E RATIO' && (
+                      <Tooltip
+                        content={TERM_EXPLANATIONS.peRatio.description}
+                        title={TERM_EXPLANATIONS.peRatio.title}
+                      >
+                        <span className="sr-only">P/E RATIOの説明</span>
                       </Tooltip>
                     )}
                   </div>

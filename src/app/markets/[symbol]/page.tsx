@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { ArrowLeft, Bookmark, ChevronRight, TrendingUp, Search } from 'lucide-react';
+import { ChevronLeft, Bookmark, ChevronRight, TrendingUp, Search } from 'lucide-react';
 import Link from 'next/link';
 import Tooltip from '@/components/tooltip';
 import { getMarketDetails, getChartData, getFundamentalData, getRelatedMarkets } from '@/lib/api';
@@ -321,30 +321,27 @@ export default function MarketDetailPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] p-2 sm:p-4">
-      <div className="max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto py-3 px-2 sm:px-4">
+      <div className="max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto sm:px-4">
         {/* ヘッダー: 戻るボタンとブックマークボタン */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-2">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-[var(--color-gray-700)]"
-            style={{ minWidth: 44, minHeight: 44 }}
+            className="flex items-center text-[var(--color-gray-700)] h-11 rounded-full"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
-          <div className="flex space-x-3">
+          <div className="flex gap-1">
             <button
               onClick={toggleBookmark}
-              className={`text-[var(--color-gray-700)] ${isBookmarked ? 'text-[var(--color-primary)]' : ''}`}
-              style={{ minWidth: 44, minHeight: 44 }}
+              className={`h-11 rounded-full flex items-center justify-center text-[var(--color-gray-700)] ${isBookmarked ? 'text-[var(--color-primary)]' : ''}`}
             >
-              <Bookmark className="w-5 h-5" fill={isBookmarked ? 'var(--color-primary)' : 'none'} />
+              <Bookmark className="w-6 h-6" fill={isBookmarked ? 'var(--color-primary)' : 'none'} />
             </button>
             <button
               onClick={() => router.push('/search')}
-              className="text-[var(--color-gray-700)]"
-              style={{ minWidth: 44, minHeight: 44 }}
+              className="h-11 rounded-full flex items-center justify-center text-[var(--color-gray-700)]"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-6 h-6" />
             </button>
           </div>
         </div>

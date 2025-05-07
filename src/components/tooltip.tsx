@@ -112,7 +112,7 @@ export default function Tooltip({ children, content, title, position = 'top' }: 
 
           <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
             <div
-              className={`bg-white/95 backdrop-blur-sm rounded-xl max-w-xs w-[90%] max-h-[80vh] overflow-y-auto pointer-events-auto 
+              className={`bg-white/95 backdrop-blur-sm rounded-xl max-w-xs w-[90%] h-[400px] overflow-y-auto scrollbar-none pointer-events-auto 
                 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100
                 ${isAnimating ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} 
                 transition-all duration-200 ease-out`}

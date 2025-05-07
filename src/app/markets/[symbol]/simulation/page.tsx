@@ -166,29 +166,31 @@ export default function SimulationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-alt)] p-2">
-      <div className="max-w-lg mx-auto py-3">
+    <div className="min-h-screen bg-[var(--color-surface-alt)] p-2 sm:p-4">
+      <div className="max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto py-3 px-2 sm:px-4">
         {/* ヘッダー */}
         <div className="flex items-center mb-6">
           <button
             onClick={() => window.history.back()}
             className="flex items-center text-[var(--color-gray-700)]"
+            style={{ minWidth: 44, minHeight: 44 }}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
         </div>
 
         {/* 期間選択タブ */}
-        <div className="flex justify-between w-full mb-4 overflow-x-auto no-scrollbar">
+        <div className="flex justify-between w-full mb-4 overflow-x-auto no-scrollbar gap-1 sm:gap-2">
           {PERIOD_OPTIONS.map((option) => (
             <button
               key={option.value}
-              className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 ${
+              className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 min-w-[56px] sm:min-w-[72px] lg:min-w-[88px] ${
                 selectedPeriod === option.value
                   ? 'bg-[var(--color-primary)] bg-opacity-10 text-white font-medium'
                   : 'text-[var(--color-gray-400)]'
               }`}
               onClick={() => setSelectedPeriod(option.value)}
+              style={{ minHeight: 44 }}
             >
               {option.label}
             </button>
@@ -196,7 +198,7 @@ export default function SimulationPage() {
         </div>
 
         {/* チャート */}
-        <div className="relative h-[200px] mb-6 rounded-lg">
+        <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg">
           <svg
             ref={chartRef}
             className="w-full h-full"
@@ -318,7 +320,7 @@ export default function SimulationPage() {
         </div>
 
         {/* 投資条件設定 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
           <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-4">
             投資条件を設定
           </h2>
@@ -409,7 +411,7 @@ export default function SimulationPage() {
         </div>
 
         {/* 予想指標 */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
           <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="flex items-center mb-2">
               <TrendingUp className="w-5 h-5 text-[var(--color-primary)] mr-2" />
@@ -455,7 +457,7 @@ export default function SimulationPage() {
         </div>
 
         {/* 詳細分析 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
           <div className="flex items-center mb-4">
             <PieChart className="w-5 h-5 text-[var(--color-gray-900)] mr-2" />
             <h2 className="text-base font-medium text-[var(--color-gray-900)]">
@@ -496,7 +498,7 @@ export default function SimulationPage() {
         </div>
 
         {/* 注意事項 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
           <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-2">注意事項</h2>
           <ul className="text-sm text-[var(--color-gray-700)] space-y-2">
             <li>

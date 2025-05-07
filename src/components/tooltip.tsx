@@ -131,8 +131,33 @@ export default function Tooltip({ children, content, title, position = 'top' }: 
                   <X className="h-4 w-4 text-[var(--color-gray-700)]" />
                 </button>
               </div>
-              <div className="p-4 text-sm text-[var(--color-gray-700)]">
+              <div className="p-4 text-sm text-[var(--color-gray-700)] flex-1 overflow-y-auto">
                 {renderFormattedContent()}
+              </div>
+              {/* AIコメント（モザイク/ロックUI） */}
+              <div className="px-4 pb-4 pt-2">
+                <div className="flex items-center mb-1">
+                  <span className="text-xs font-semibold text-[var(--color-primary)] mr-2">
+                    【AIコメント】
+                  </span>
+                  <span className="text-xs text-[var(--color-gray-400)] bg-[var(--color-gray-200)] rounded px-2 py-0.5 ml-auto">
+                    PRO限定
+                  </span>
+                </div>
+                <div className="relative rounded-lg bg-[var(--color-surface-alt)] p-3 min-h-[48px] overflow-hidden select-none">
+                  <div className="blur-sm opacity-60 pointer-events-none select-none">
+                    ここにAIによる専門的な解説や投資アドバイスが表示されます（PRO会員限定）
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <button
+                      className="text-xs font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] rounded-full px-4 py-1 shadow transition-colors border-none outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2"
+                      style={{ pointerEvents: 'auto' }}
+                      onClick={() => alert('PRO会員プランのご案内ページへ遷移（仮）')}
+                    >
+                      PRO会員でAIコメントを解禁
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -353,18 +353,44 @@ export default function MarketDetailPage() {
             <div className="h-6 bg-gray-200 rounded-md w-1/3"></div>
           </div>
         ) : (
-          <div className="flex items-center space-x-3 mb-6">
-            <img
-              src={marketData?.logoUrl || getFlagIcon(marketData?.market || 'global')}
-              alt={marketData?.name}
-              className="w-8 h-8 rounded-full"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = getFlagIcon(marketData?.market || 'global');
-              }}
-            />
-            <h1 className="text-[22px] font-semibold text-[var(--color-gray-900)]">
-              {marketData?.name}
-            </h1>
+          <div className="flex items-center justify-between mb-6 w-full">
+            {/* 左: ロゴ＋銘柄名 */}
+            <div className="flex items-center space-x-3">
+              <img
+                src={marketData?.logoUrl || getFlagIcon(marketData?.market || 'global')}
+                alt={marketData?.name}
+                className="w-8 h-8 rounded-full"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = getFlagIcon(marketData?.market || 'global');
+                }}
+              />
+              <h1 className="text-[22px] font-semibold text-[var(--color-gray-900)]">
+                {marketData?.name}
+              </h1>
+            </div>
+            {/* 右: データ取得日時＋リアルタイム */}
+            {marketData?.lastUpdated && (
+              <div className="flex flex-col items-end text-xs text-[var(--color-gray-400)] min-w-[70px]">
+                <span>
+                  {(() => {
+                    try {
+                      // 不正なISO8601（+09:00Zなど）を修正
+                      const fixed = marketData.lastUpdated.replace(/([+-]\d{2}:\d{2})Z$/, '$1');
+                      const d = new Date(fixed);
+                      if (isNaN(d.getTime())) return '';
+                      const jstDate = d.toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' }); // 例: 2025/05/08
+                      const match = jstDate.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+                      if (match) {
+                        return `${match[2]}/${match[3]}`;
+                      }
+                      return jstDate;
+                    } catch {
+                      return '';
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

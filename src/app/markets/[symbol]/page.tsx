@@ -14,6 +14,7 @@ import {
   RelatedMarketsResponse,
 } from '@/types/api';
 import { generateChartPath } from '@/utils/chart';
+import { getFlagIcon } from '@/utils';
 
 // 期間選択のタブオプション
 const PERIOD_OPTIONS = [
@@ -196,18 +197,6 @@ export default function MarketDetailPage() {
 
   // シンボルをデコードする（例：URLでエンコードされた9432.Tなど）
   const decodedSymbol = typeof symbol === 'string' ? decodeURIComponent(symbol) : '';
-
-  // 国旗アイコンを取得する関数
-  const getFlagIcon = (market: string): string => {
-    switch (market?.toLowerCase()) {
-      case 'japan':
-        return '/flags/japan.svg'; // 日本の国旗
-      case 'us':
-        return '/flags/us.svg'; // アメリカの国旗
-      default:
-        return '/flags/global.svg'; // グローバル市場またはその他
-    }
-  };
 
   // ブックマークの切り替え
   const toggleBookmark = () => {

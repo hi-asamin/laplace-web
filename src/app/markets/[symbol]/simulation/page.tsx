@@ -49,13 +49,12 @@ const generateMockData = (
   let total = startAmount;
   let cumulativeDividend = 0;
   for (let i = 1; i <= years; i++) {
-    if (i > 1) {
-      if (monthlyAmount > 0) {
-        principal += monthlyAmount * 12;
-        total += monthlyAmount * 12;
-      }
+    // 1年目から積立金額を加算
+    if (monthlyAmount > 0) {
+      principal += monthlyAmount * 12;
+      total += monthlyAmount * 12;
     }
-    // 配当金（運用益）は前年までの合計資産に年利をかけて複利で加算
+    // 配当金（運用益）は積立後の合計資産に年利をかけて複利で加算
     const dividend = total * (annualRate / 100);
     cumulativeDividend += dividend;
     total += dividend;

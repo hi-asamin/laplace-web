@@ -7,6 +7,8 @@ import { getMarketDetails, MarketDetails } from '@/lib/api';
 import { generateChartPath } from '@/utils/chart';
 import { getFlagIcon } from '@/utils';
 import Tooltip from '@/components/tooltip';
+import WithdrawalPlan from '@/components/WithdrawalPlan';
+import WithdrawalChart from '@/components/WithdrawalChart';
 
 // シミュレーション期間のオプション
 const PERIOD_OPTIONS = [
@@ -69,31 +71,65 @@ const generateMockData = (
   return data;
 };
 
-// 各項目の説明（充実版）
+// 各項目の説明（リッチ版）
 const SIMULATION_TERM_EXPLANATIONS: Record<string, { title: string; description: string }> = {
   平均利回り率: {
     title: '平均利回り率',
-    description:
-      'シミュレーションで仮定する「1年あたりの資産増加率（年平均リターン）」です。たとえば5%なら、毎年資産が平均して5%ずつ増える前提で計算します。\n\n初期値はAIが銘柄や市場データから自動算出した推奨値を入力しています。初心者でも迷わず使えるよう設計されています。',
+    description: `資産運用で1年あたりどれくらい増えるかの平均リターン（年率）です。
+
+【見方のポイント】
+• 5%なら「毎年平均5%ずつ増える」前提で計算
+• 初期値はAIが自動算出（銘柄や市場データを参照）
+• 長期運用ほど小さな差が大きな差に
+
+【目安】
+• 日本株・ETF: 3〜6%
+• 米国株・ETF: 5〜8%
+• 債券・預金: 0.1〜2%`,
   },
   初期投資元本: {
     title: '初期投資元本',
-    description:
-      'シミュレーション開始時点で初期投資する金額です。\n\nここが0円の場合は「積立のみ」で運用を始める想定です。',
+    description: `シミュレーション開始時に一括で投資する金額です。
+
+【見方のポイント】
+• ここが0円なら「積立のみ」運用
+• まとまった資金がある場合はここに入力
+
+【例】
+• 100万円を一括投資→「初期投資元本」に100万円`,
   },
   毎月積立金額: {
     title: '毎月積立金額',
-    description:
-      '毎月追加で投資する金額です。たとえば「3万円」と設定すると、毎月3万円ずつ積み立てていきます。\n\nここが0円の場合は「初期投資金額」のみで運用を始める想定です。',
+    description: `毎月追加で投資する金額です。
+
+【見方のポイント】
+• 0円の場合は「一括投資のみ」
+• 毎月コツコツ積み立てる場合に入力
+
+【例】
+• 毎月3万円積立→「毎月積立金額」に3万円`,
   },
   シミュレーション年数: {
     title: 'シミュレーション年数',
-    description: '資産運用を何年間続けるかの期間です。期間が長いほど「複利効果」が大きくなります。',
+    description: `資産運用を何年間続けるかの期間です。
+
+【見方のポイント】
+• 期間が長いほど「複利効果」が大きくなる
+• 退職や目標時期に合わせて設定
+
+【例】
+• 20年運用→「シミュレーション年数」に20年`,
   },
   合計投資額: {
     title: '合計投資額',
-    description:
-      'シミュレーション期間中に実際に投資した元本の合計です。\n例：毎月3万円×12ヶ月×20年＝720万円',
+    description: `シミュレーション期間中に実際に投資した元本の合計です。
+
+【見方のポイント】
+• 初期投資元本＋毎月積立金額×年数
+• 運用益（利益）は含まれません
+
+【例】
+• 初期100万円＋毎月3万円×20年＝820万円`,
   },
 };
 
@@ -689,7 +725,7 @@ export default function SimulationPage() {
         </div>
 
         {/* 注意事項 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
+        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8 mb-6">
           <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-2">注意事項</h2>
           <ul className="text-sm text-[var(--color-gray-700)] space-y-2">
             <li>
@@ -701,6 +737,21 @@ export default function SimulationPage() {
             <li>• 投資にはリスクが伴います。投資判断は自己責任でお願いします。</li>
           </ul>
         </div>
+
+        {/* 取り崩しプランセクション */}
+        {simulationData.baseScenario.length > 0 && (
+          <>
+            <h2 className="text-xl font-semibold text-[var(--color-gray-900)] mb-4">
+              取り崩しプラン
+            </h2>
+            <WithdrawalPlan
+              finalBalance={
+                simulationData.baseScenario[simulationData.baseScenario.length - 1].total
+              }
+              annualRate={averageYield}
+            />
+          </>
+        )}
       </div>
     </div>
   );

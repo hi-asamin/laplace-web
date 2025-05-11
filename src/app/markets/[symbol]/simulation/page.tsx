@@ -10,17 +10,6 @@ import Tooltip from '@/components/tooltip';
 import WithdrawalPlan from '@/components/WithdrawalPlan';
 import WithdrawalChart from '@/components/WithdrawalChart';
 
-// シミュレーション期間のオプション
-const PERIOD_OPTIONS = [
-  { value: '1Y', label: '1年' },
-  { value: '3Y', label: '3年' },
-  { value: '5Y', label: '5年' },
-  { value: '10Y', label: '10年' },
-  { value: '20Y', label: '20年' },
-  { value: '30Y', label: '30年' },
-  { value: '40Y', label: '40年' },
-];
-
 // 投資方法のオプション
 const INVESTMENT_OPTIONS = [
   { value: 'lump', label: '一括投資' },
@@ -361,23 +350,7 @@ export default function SimulationPage() {
           </div>
         )}
 
-        {/* 期間選択タブ */}
-        <div className="flex justify-between w-full mb-4 overflow-x-auto no-scrollbar gap-1 sm:gap-2">
-          {PERIOD_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 min-w-[56px] sm:min-w-[72px] lg:min-w-[88px] ${
-                selectedPeriod === option.value
-                  ? 'bg-[var(--color-primary)] bg-opacity-10 text-white font-medium'
-                  : 'text-[var(--color-gray-400)]'
-              }`}
-              onClick={() => setSelectedPeriod(option.value)}
-              style={{ minHeight: 44 }}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        {/* 期間選択タブは廃止 */}
 
         {/* チャート */}
         <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg">
@@ -502,8 +475,51 @@ export default function SimulationPage() {
                 dividendPath += `L${x},${y}`;
               }
               dividendPath += 'Z';
+              // X軸ラベル（年）
+              const xLabels = [];
+              if (data.length > 10) {
+                // 5年ごと（5,10,15...）
+                for (let i = 0; i < data.length; i++) {
+                  const d = data[i];
+                  if (d.year % 5 === 0) {
+                    const x = 10 + (chartWidth / (data.length - 1)) * i;
+                    xLabels.push(
+                      <text
+                        key={d.year}
+                        x={x}
+                        y={160 - 2}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fill="#94A3B8"
+                      >
+                        {d.year}年
+                      </text>
+                    );
+                  }
+                }
+              } else {
+                // 1年ごと
+                for (let i = 0; i < data.length; i++) {
+                  const d = data[i];
+                  const x = 10 + (chartWidth / (data.length - 1)) * i;
+                  xLabels.push(
+                    <text
+                      key={d.year}
+                      x={x}
+                      y={160 - 2}
+                      textAnchor="middle"
+                      fontSize="10"
+                      fill="#94A3B8"
+                    >
+                      {d.year}年
+                    </text>
+                  );
+                }
+              }
               return (
                 <>
+                  {/* X軸ラベル */}
+                  {xLabels}
                   {/* 配当金エリア（上層、ブルー系濃色） */}
                   <path d={dividendPath} fill="rgba(89,101,255,0.38)" />
                   {/* 元本エリア（下層、ブルー系淡色） */}
@@ -609,132 +625,123 @@ export default function SimulationPage() {
 
         {/* 取引情報（シミュレーション変数表示） */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          {(isLoading
-            ? Array(4).fill(null)
-            : [
-                {
-                  label: '平均利回り率',
-                  value: (
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        step="0.1"
-                        min={0}
-                        max={99.9}
-                        value={averageYield}
-                        onChange={(e) =>
-                          setAverageYield(Math.max(0, Math.min(99.9, Number(e.target.value))))
-                        }
-                        className="w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
-                      />
-                      <span className="text-base font-semibold text-[var(--color-gray-900)]">
-                        %
-                      </span>
-                    </div>
-                  ),
-                },
-                {
-                  label: '初期投資元本',
-                  value: (
-                    <div className="flex items-center gap-1">
-                      <span className="text-base font-semibold text-[var(--color-gray-900)]">
-                        ¥
-                      </span>
-                      <input
-                        type="number"
-                        step="1"
-                        min={0}
-                        value={initialPrincipal}
-                        onChange={(e) => setInitialPrincipal(Math.max(0, Number(e.target.value)))}
-                        className="w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
-                      />
-                    </div>
-                  ),
-                },
-                {
-                  label: '毎月積立金額',
-                  value: (
-                    <div className="flex items-center gap-1">
-                      <span className="text-base font-semibold text-[var(--color-gray-900)]">
-                        ¥
-                      </span>
-                      <input
-                        type="number"
-                        step="1"
-                        min={0}
-                        value={monthlyAmount}
-                        onChange={(e) => setMonthlyAmount(Math.max(0, Number(e.target.value)))}
-                        className="w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
-                      />
-                    </div>
-                  ),
-                },
-                {
-                  label: 'シミュレーション年数',
-                  value: `${(() => {
-                    const years = parseInt(selectedPeriod);
-                    return isNaN(years) && selectedPeriod.endsWith('Y')
-                      ? parseInt(selectedPeriod)
-                      : years;
-                  })()} 年`,
-                },
-                {
-                  label: '合計投資額',
-                  value: `¥ ${(() => {
-                    const years = (() => {
-                      const y = parseInt(selectedPeriod);
-                      return isNaN(y) && selectedPeriod.endsWith('Y')
-                        ? parseInt(selectedPeriod)
-                        : y;
-                    })();
-                    return (initialPrincipal + years * monthlyAmount * 12).toLocaleString();
-                  })()}`,
-                },
-              ]
-          ).map((info, index) => (
-            <div
-              key={index}
-              className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-            >
-              {isLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-3 bg-gray-200 rounded-md w-2/3 mb-2"></div>
-                  <div className="h-5 bg-gray-200 rounded-md w-3/4"></div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center mb-1">
-                    <span className="text-xs text-[var(--color-gray-400)]">{info?.label}</span>
-                    {SIMULATION_TERM_EXPLANATIONS[info?.label] && (
-                      <Tooltip
-                        content={SIMULATION_TERM_EXPLANATIONS[info.label].description}
-                        title={SIMULATION_TERM_EXPLANATIONS[info.label].title}
-                      >
-                        <span className="sr-only">{`${SIMULATION_TERM_EXPLANATIONS[info.label].title}の説明`}</span>
-                      </Tooltip>
-                    )}
-                  </div>
-                  <div className="text-base font-semibold text-[var(--color-gray-900)]">
-                    {info?.value}
-                  </div>
-                </>
-              )}
+          {/* 平均利回り率 */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center mb-1">
+              <span className="text-xs text-[var(--color-gray-400)]">平均利回り率</span>
+              <Tooltip
+                content={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].description}
+                title={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].title}
+              >
+                <span className="sr-only">平均利回り率の説明</span>
+              </Tooltip>
             </div>
-          ))}
-        </div>
-
-        {/* 注意事項 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8 mb-6">
-          <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-2">注意事項</h2>
-          <ul className="text-sm text-[var(--color-gray-700)] space-y-2">
-            <li>
-              •
-              このシミュレーションは過去の実績に基づく予想であり、将来の結果を保証するものではありません。
-            </li>
-            <li>• 株価は市場環境により大きく変動する可能性があります。</li>
-            <li>• 配当金は企業の業績により変更される可能性があります。</li>
-            <li>• 投資にはリスクが伴います。投資判断は自己責任でお願いします。</li>
-          </ul>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                step="0.1"
+                min={0}
+                max={99.9}
+                value={averageYield}
+                onChange={(e) =>
+                  setAverageYield(Math.max(0, Math.min(99.9, Number(e.target.value))))
+                }
+                className="w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
+              />
+              <span className="text-base font-semibold text-[var(--color-gray-900)]">%</span>
+            </div>
+          </div>
+          {/* 初期投資元本 */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center mb-1">
+              <span className="text-xs text-[var(--color-gray-400)]">初期投資元本</span>
+              <Tooltip
+                content={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].description}
+                title={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].title}
+              >
+                <span className="sr-only">初期投資元本の説明</span>
+              </Tooltip>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
+              <input
+                type="number"
+                step="1"
+                min={0}
+                value={initialPrincipal}
+                onChange={(e) => setInitialPrincipal(Math.max(0, Number(e.target.value)))}
+                className="w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
+              />
+            </div>
+          </div>
+          {/* 毎月積立金額 */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center mb-1">
+              <span className="text-xs text-[var(--color-gray-400)]">毎月積立金額</span>
+              <Tooltip
+                content={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].description}
+                title={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].title}
+              >
+                <span className="sr-only">毎月積立金額の説明</span>
+              </Tooltip>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
+              <input
+                type="number"
+                step="1"
+                min={0}
+                value={monthlyAmount}
+                onChange={(e) => setMonthlyAmount(Math.max(0, Number(e.target.value)))}
+                className="w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
+              />
+            </div>
+          </div>
+          {/* シミュレーション年数（スライダー） */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center mb-1">
+              <span className="text-xs text-[var(--color-gray-400)]">シミュレーション年数</span>
+              <Tooltip
+                content={SIMULATION_TERM_EXPLANATIONS['シミュレーション年数'].description}
+                title={SIMULATION_TERM_EXPLANATIONS['シミュレーション年数'].title}
+              >
+                <span className="sr-only">シミュレーション年数の説明</span>
+              </Tooltip>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={3}
+                max={40}
+                step={1}
+                value={parseInt(selectedPeriod)}
+                onChange={(e) => {
+                  const v = Math.max(3, Math.min(40, Number(e.target.value)));
+                  setSelectedPeriod(v.toString() + 'Y');
+                }}
+                className="w-full accent-[var(--color-primary)]"
+              />
+              <span className="text-base font-semibold text-[var(--color-gray-900)] min-w-[2.5em] text-right">
+                {parseInt(selectedPeriod)} 年
+              </span>
+            </div>
+          </div>
+          {/* 合計投資額 */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center mb-1">
+              <span className="text-xs text-[var(--color-gray-400)]">合計投資額</span>
+              <Tooltip
+                content={SIMULATION_TERM_EXPLANATIONS['合計投資額'].description}
+                title={SIMULATION_TERM_EXPLANATIONS['合計投資額'].title}
+              >
+                <span className="sr-only">合計投資額の説明</span>
+              </Tooltip>
+            </div>
+            <div className="text-base font-semibold text-[var(--color-gray-900)]">
+              ¥{' '}
+              {(initialPrincipal + parseInt(selectedPeriod) * monthlyAmount * 12).toLocaleString()}
+            </div>
+          </div>
         </div>
 
         {/* 取り崩しプランセクション */}
@@ -751,6 +758,20 @@ export default function SimulationPage() {
             />
           </>
         )}
+
+        {/* 注意事項 */}
+        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8 mb-6">
+          <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-2">注意事項</h2>
+          <ul className="text-sm text-[var(--color-gray-700)] space-y-2">
+            <li>
+              •
+              このシミュレーションは過去の実績に基づく予想であり、将来の結果を保証するものではありません。
+            </li>
+            <li>• 株価は市場環境により大きく変動する可能性があります。</li>
+            <li>• 配当金は企業の業績により変更される可能性があります。</li>
+            <li>• 投資にはリスクが伴います。投資判断は自己責任でお願いします。</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

@@ -54,39 +54,54 @@ export default function LandingPage() {
         </div>
       </header>
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative flex flex-col items-center justify-center min-h-[80vh] bg-gradient-to-br from-[#5965FF]/10 to-[#ECF9F3]/30">
-          <div className="max-w-4xl mx-auto w-full">
-            <div className="relative z-10 flex flex-col items-center w-full max-w-2xl px-4 pt-12 pb-4 mx-auto">
-              <h1 className="text-3xl md:text-5xl font-bold text-[#0F172A] text-center mb-4 drop-shadow-sm leading-[40px] md:leading-[70px]">
+        {/* Hero + Simulation 統合セクション */}
+        <section className="relative flex flex-col md:flex-row items-center justify-center min-h-[80vh] bg-gradient-to-br from-[#5965FF]/10 to-[#ECF9F3]/30 py-8 md:py-16">
+          <div className="max-w-4xl w-full mx-auto flex flex-col md:flex-row gap-8 md:gap-12 items-center md:items-stretch px-4">
+            {/* 左：キャッチコピー＋CTA */}
+            <div className="flex-1 flex flex-col justify-center items-center md:items-start text-center md:text-left gap-4 md:gap-6">
+              <h1
+                className="text-3xl md:text-5xl font-bold text-[#0F172A] drop-shadow-sm leading-[40px] md:leading-[70px] tracking-tight"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
                 複雑な投資計算を
                 <br />
                 <span className="text-[#5965FF]">ワンクリックで</span>
               </h1>
-              <p className="text-lg md:text-2xl text-[#334155] text-center mb-6 font-medium">
+              <p
+                className="text-lg md:text-2xl text-[#334155] font-medium mb-2"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
                 資産形成をもっと簡単に、より身近に
               </p>
               <Link
                 href="/search"
-                className="w-full max-w-xs h-14 rounded-full bg-[#5965FF] text-white text-lg font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-[#414DFF] transition mt-8 mb-4"
+                className="w-full max-w-xs h-14 rounded-full bg-[#5965FF] text-white text-lg font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-[#414DFF] transition mt-2 mb-2"
                 aria-label="無料でシミュレーションを始める"
+                style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 無料でシミュレーションを始める
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
-          </div>
-        </section>
-
-        {/* Simulation Section - 新規追加 */}
-        <section className="py-8 md:py-16 flex justify-center bg-[#F7FAFC]">
-          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-[0_2px_12px_rgba(89,101,255,0.08)] flex flex-col md:flex-row p-6 md:p-10 gap-8 items-center">
-            {/* シミュレーションリスト */}
-            <div className="w-full md:w-1/3 flex flex-col gap-4">
-              <h3 className="text-lg font-bold text-[#0F172A] mb-2">シミュレーション</h3>
+            {/* 右：シミュレーションUIカード */}
+            <div className="flex-1 w-full max-w-md bg-white rounded-2xl shadow-[0_2px_12px_rgba(89,101,255,0.08)] flex flex-col md:min-h-[420px] p-6 md:p-8 gap-6 justify-center mx-auto">
+              <h3
+                className="text-[18px] font-semibold leading-7 tracking-tight text-[#0F172A] mb-2"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                シミュレーション
+              </h3>
               <div className="bg-[#F7FAFC] rounded-xl p-4 flex flex-col gap-2">
-                <span className="text-sm text-[#334155] mb-2">選択中の銘柄</span>
-                <button className="flex items-center gap-2 text-[#5965FF] text-sm font-medium mb-2 hover:underline">
+                <span
+                  className="text-[16px] leading-6 tracking-normal text-[#334155] mb-2"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  選択中の銘柄
+                </span>
+                <button
+                  className="flex items-center gap-2 text-[#5965FF] text-[16px] font-medium leading-6 tracking-normal mb-2 hover:underline"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
                   <span>銘柄を追加する</span>
                   <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#E2F1EA]">
                     <svg
@@ -101,15 +116,20 @@ export default function LandingPage() {
                     </svg>
                   </span>
                 </button>
-                {/* ダミーリスト */}
                 <div className="flex flex-col gap-2">
                   {['Google', 'Tesla', 'Nvidia'].map((name, idx) => (
                     <div
                       key={name}
                       className="flex items-center justify-between bg-[#ECF9F3] rounded-[28px] px-4 py-2"
                     >
-                      <span className="flex items-center gap-2 text-[#0F172A] font-medium">
-                        <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#E2F1EA] text-xs font-bold text-[#5965FF]">
+                      <span
+                        className="flex items-center gap-2 text-[#0F172A] font-medium text-[16px] leading-6 tracking-normal"
+                        style={{ fontFamily: 'Inter, sans-serif' }}
+                      >
+                        <span
+                          className="w-6 h-6 flex items-center justify-center rounded-full bg-[#E2F1EA] text-[12px] font-bold leading-5 text-[#5965FF]"
+                          style={{ fontFamily: 'Inter, sans-serif' }}
+                        >
                           {idx + 1}
                         </span>
                         {name}
@@ -132,28 +152,30 @@ export default function LandingPage() {
                   ))}
                 </div>
               </div>
-            </div>
-            {/* グラフ＋金額表示 */}
-            <div className="w-full md:w-2/3 flex flex-col items-center justify-center">
-              <div className="flex items-end gap-2 mb-2">
-                <span className="text-sm text-[#334155]">このまま積み立てた最終金額</span>
-                <span className="text-3xl font-bold text-[#5965FF] tracking-tight">1,800</span>
-                <span className="text-base text-[#334155] mb-1">万円</span>
-              </div>
-              {/* ダミーグラフ枠 */}
-              <div className="w-full h-64 bg-[#F7FAFC] rounded-xl flex items-center justify-center border border-[#ECF9F3]">
-                <SimulationChart />
-              </div>
-              <div className="flex gap-4 mt-4">
-                <span className="flex items-center gap-1 text-[#334155] text-xs">
-                  <span className="w-2 h-2 rounded-full bg-[#16A34A]"></span>Google
-                </span>
-                <span className="flex items-center gap-1 text-[#334155] text-xs">
-                  <span className="w-2 h-2 rounded-full bg-[#5965FF]"></span>Tesla
-                </span>
-                <span className="flex items-center gap-1 text-[#334155] text-xs">
-                  <span className="w-2 h-2 rounded-full bg-[#94A3B8]"></span>Nvidia
-                </span>
+              <div className="flex flex-col items-center justify-center mt-2">
+                <div className="flex items-end gap-2 mb-2">
+                  <span
+                    className="text-[16px] leading-6 tracking-normal text-[#334155]"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    このまま積み立てた最終金額
+                  </span>
+                  <span
+                    className="text-[30px] font-bold leading-none tracking-tight text-[#5965FF] font-mono"
+                    style={{ fontFamily: 'Menlo, monospace' }}
+                  >
+                    1,800
+                  </span>
+                  <span
+                    className="text-[16px] leading-6 text-[#334155] mb-1"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    万円
+                  </span>
+                </div>
+                <div className="w-full h-64 bg-[#F7FAFC] rounded-xl flex items-center justify-center border border-[#ECF9F3]">
+                  <SimulationChart />
+                </div>
               </div>
             </div>
           </div>

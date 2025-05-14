@@ -31,15 +31,16 @@ const generateMockData = (
   years: number,
   startAmount: number,
   monthlyAmount: number,
-  annualRate: number
+  annualRate: number,
+  contributionYears: number
 ) => {
   const data = [];
   let principal = startAmount;
   let total = startAmount;
   let cumulativeDividend = 0;
   for (let i = 1; i <= years; i++) {
-    // 1年目から積立金額を加算
-    if (monthlyAmount > 0) {
+    // 積立継続年数以内であれば積立金額を加算
+    if (i <= contributionYears && monthlyAmount > 0) {
       principal += monthlyAmount * 12;
       total += monthlyAmount * 12;
     }
@@ -113,11 +114,49 @@ const SIMULATION_TERM_EXPLANATIONS: Record<string, { title: string; description:
     description: `シミュレーション期間中に実際に投資した元本の合計です。
 
 【見方のポイント】
-• 初期投資元本＋毎月積立金額×年数
+• 初期投資元本＋毎月積立金額×積立継続年数
 • 運用益（利益）は含まれません
 
 【例】
-• 初期100万円＋毎月3万円×20年＝820万円`,
+• 初期100万円＋毎月3万円×20年積立＝820万円`,
+  },
+  貯まる金額: {
+    title: '貯まる金額',
+    description: `シミュレーション終了時点での総資産額（元本＋複利利益の合計）です。
+
+【見方のポイント】
+• 積立・運用を続けた場合の「最終的な手元資産」
+• 元本と運用益（複利利益）の合計
+• 途中で取り崩しや売却しなければこの金額が貯まります
+
+【例】
+• 20年後に1,200万円貯まる
+• 30年後に2,000万円貯まる など`,
+  },
+  積立継続年数: {
+    title: '積立継続年数',
+    description: `毎月の積立投資を何年間続けるかの期間です。
+
+【見方のポイント】
+• 3年〜40年の範囲で設定可能
+• この期間が終了した後は、追加の積立は行わず、それまでの資産を複利運用します。
+• 「シミュレーション年数」と同じ場合は、シミュレーション期間中ずっと積み立てを継続します。
+
+【例】
+• 30年シミュレーションのうち、最初の10年間だけ積立→「積立継続年数」に10年`,
+  },
+  累積配当金: {
+    title: '累積配当金（複利利益）',
+    description: `運用期間中に得られた配当金や運用益の累計額です。トータル資産額のうち、元本を除いた増加分を示します。
+
+【見方のポイント】
+• 配当再投資や複利効果による「増えた分」
+• 元本を除いた純粋な利益
+• 長期運用ほど複利効果が大きくなる
+
+【例】
+• 20年で元本800万円→累積配当金400万円
+• 30年で元本1,000万円→累積配当金1,200万円 など`,
   },
 };
 
@@ -156,6 +195,7 @@ export default function SimulationPage() {
   const [averageYield, setAverageYield] = useState(5.0); // %
   const [initialPrincipal, setInitialPrincipal] = useState(0); // 円
   const [monthlyAmount, setMonthlyAmount] = useState(30000); // 円
+  const [contributionYears, setContributionYears] = useState(parseInt(selectedPeriod)); // 積立継続年数
 
   // 銘柄データ取得
   useEffect(() => {
@@ -183,23 +223,40 @@ export default function SimulationPage() {
   useEffect(() => {
     const years = parseInt(selectedPeriod);
     const yearNum = isNaN(years) && selectedPeriod.endsWith('Y') ? parseInt(selectedPeriod) : years;
+    // シミュレーション年数変更時に積立継続年数も更新（ただし40年を上限とする）
+    setContributionYears((prev) => Math.min(yearNum, Math.min(prev, 40)));
     setSimulationData({
-      baseScenario: generateMockData(yearNum, initialPrincipal, monthlyAmount, averageYield),
+      baseScenario: generateMockData(
+        yearNum,
+        initialPrincipal,
+        monthlyAmount,
+        averageYield,
+        contributionYears
+      ),
       optimisticScenario: generateMockData(
         yearNum,
         initialPrincipal,
         monthlyAmount,
-        averageYield + 2
+        averageYield + 2,
+        contributionYears
       ),
       pessimisticScenario: generateMockData(
         yearNum,
         initialPrincipal,
         monthlyAmount,
-        Math.max(0, averageYield - 3)
+        Math.max(0, averageYield - 3),
+        contributionYears
       ),
     });
     setSelectedPoint(null);
-  }, [selectedPeriod, initialPrincipal, monthlyAmount, averageYield, investmentType]);
+  }, [
+    selectedPeriod,
+    initialPrincipal,
+    monthlyAmount,
+    averageYield,
+    investmentType,
+    contributionYears,
+  ]);
 
   // チャート外部をクリックしたときの処理
   useEffect(() => {
@@ -315,11 +372,18 @@ export default function SimulationPage() {
         ) : (
           <div className="mb-2 px-2">
             {/* 総資産額 */}
-            <div className="mb-0.5 flex items-center gap-1">
+            <div className="flex items-center gap-1">
               <span className="text-xs text-[var(--color-gray-400)]">貯まる金額</span>
               <Tooltip
-                title="トータル資産額"
-                content="シミュレーション終了時点での総資産額（元本＋複利利益の合計）です。"
+                title={SIMULATION_TERM_EXPLANATIONS['貯まる金額'].title}
+                content={`あなたは${parseInt(selectedPeriod)}年間で、合計${
+                  simulationData.baseScenario.length > 0
+                    ? '¥' +
+                      Math.round(
+                        simulationData.baseScenario[simulationData.baseScenario.length - 1].total
+                      ).toLocaleString()
+                    : '-'
+                }貯まります。\n\n${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`}
               >
                 <span className="sr-only">貯まる金額の説明</span>
               </Tooltip>
@@ -333,8 +397,8 @@ export default function SimulationPage() {
             <div className="mb-0.5 flex items-center gap-1 mt-2">
               <span className="text-xs text-[var(--color-gray-400)]">累積配当金（複利利益）</span>
               <Tooltip
-                title="累積配当金（複利利益）"
-                content="運用期間中に得られた配当金や運用益の累計額です。トータル資産額のうち、元本を除いた増加分を示します。"
+                title={SIMULATION_TERM_EXPLANATIONS['累積配当金'].title}
+                content={SIMULATION_TERM_EXPLANATIONS['累積配当金'].description}
               >
                 <span className="sr-only">累積配当金（複利利益）の説明</span>
               </Tooltip>
@@ -349,8 +413,6 @@ export default function SimulationPage() {
             </div>
           </div>
         )}
-
-        {/* 期間選択タブは廃止 */}
 
         {/* チャート */}
         <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg">
@@ -623,6 +685,36 @@ export default function SimulationPage() {
             })()}
         </div>
 
+        {/* シミュレーション年数（スライダー） - チャート下に移動 */}
+        <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] mb-6 mx-2 sm:mx-0">
+          <div className="flex items-center mb-1">
+            <span className="text-xs text-[var(--color-gray-400)]">シミュレーション年数</span>
+            <Tooltip
+              content={SIMULATION_TERM_EXPLANATIONS['シミュレーション年数'].description}
+              title={SIMULATION_TERM_EXPLANATIONS['シミュレーション年数'].title}
+            >
+              <span className="sr-only">シミュレーション年数の説明</span>
+            </Tooltip>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={3}
+              max={50}
+              step={1}
+              value={parseInt(selectedPeriod)}
+              onChange={(e) => {
+                const v = Math.max(3, Math.min(50, Number(e.target.value)));
+                setSelectedPeriod(v.toString() + 'Y');
+              }}
+              className="w-full accent-[var(--color-primary)]"
+            />
+            <span className="text-base font-semibold text-[var(--color-gray-900)] min-w-[2.5em] text-right">
+              {parseInt(selectedPeriod)} 年
+            </span>
+          </div>
+        </div>
+
         {/* 取引情報（シミュレーション変数表示） */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           {/* 平均利回り率 */}
@@ -697,15 +789,15 @@ export default function SimulationPage() {
               />
             </div>
           </div>
-          {/* シミュレーション年数（スライダー） */}
+          {/* 積立継続年数（スライダー） */}
           <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="flex items-center mb-1">
-              <span className="text-xs text-[var(--color-gray-400)]">シミュレーション年数</span>
+              <span className="text-xs text-[var(--color-gray-400)]">積立継続年数</span>
               <Tooltip
-                content={SIMULATION_TERM_EXPLANATIONS['シミュレーション年数'].description}
-                title={SIMULATION_TERM_EXPLANATIONS['シミュレーション年数'].title}
+                content={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].description}
+                title={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].title}
               >
-                <span className="sr-only">シミュレーション年数の説明</span>
+                <span className="sr-only">積立継続年数の説明</span>
               </Tooltip>
             </div>
             <div className="flex items-center gap-2">
@@ -714,15 +806,17 @@ export default function SimulationPage() {
                 min={3}
                 max={40}
                 step={1}
-                value={parseInt(selectedPeriod)}
+                value={contributionYears}
                 onChange={(e) => {
-                  const v = Math.max(3, Math.min(40, Number(e.target.value)));
-                  setSelectedPeriod(v.toString() + 'Y');
+                  const simYears = parseInt(selectedPeriod);
+                  const newContributionYears = Math.max(3, Math.min(40, Number(e.target.value)));
+                  // 積立継続年数はシミュレーション年数以下にする
+                  setContributionYears(Math.min(newContributionYears, simYears));
                 }}
                 className="w-full accent-[var(--color-primary)]"
               />
               <span className="text-base font-semibold text-[var(--color-gray-900)] min-w-[2.5em] text-right">
-                {parseInt(selectedPeriod)} 年
+                {contributionYears} 年
               </span>
             </div>
           </div>
@@ -738,8 +832,7 @@ export default function SimulationPage() {
               </Tooltip>
             </div>
             <div className="text-base font-semibold text-[var(--color-gray-900)]">
-              ¥{' '}
-              {(initialPrincipal + parseInt(selectedPeriod) * monthlyAmount * 12).toLocaleString()}
+              ¥ {(initialPrincipal + contributionYears * monthlyAmount * 12).toLocaleString()}
             </div>
           </div>
         </div>

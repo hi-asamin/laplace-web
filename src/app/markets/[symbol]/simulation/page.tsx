@@ -313,7 +313,7 @@ export default function SimulationPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] p-2 sm:p-4">
-      <div className="max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto sm:px-4">
+      <div className="max-w-3xl 2xl:max-w-5xl mx-auto px-2 sm:px-4 lg:px-8 xl:px-12">
         {/* ヘッダー */}
         <div className="flex justify-between items-center">
           <button
@@ -415,7 +415,7 @@ export default function SimulationPage() {
         )}
 
         {/* チャート */}
-        <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg">
+        <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg w-full">
           {/* 色の使い分け説明（凡例） */}
           <div className="absolute left-4 top-2 flex gap-4 z-10 text-xs sm:text-sm">
             <span className="flex items-center gap-1">
@@ -699,7 +699,7 @@ export default function SimulationPage() {
         </div>
 
         {/* シミュレーション年数（スライダー） - チャート下に移動 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] mb-6 mx-2 sm:mx-0">
+        <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] mb-6 w-full">
           <div className="flex items-center mb-1">
             <span className="text-xs text-[var(--color-gray-400)]">シミュレーション年数</span>
             <Tooltip
@@ -729,7 +729,7 @@ export default function SimulationPage() {
         </div>
 
         {/* 取引情報（シミュレーション変数表示） */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6 w-full">
           {/* 平均利回り率 */}
           <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <div className="flex items-center mb-1">
@@ -849,21 +849,6 @@ export default function SimulationPage() {
             </div>
           </div>
         </div>
-
-        {/* 取り崩しプランセクション */}
-        {simulationData.baseScenario.length > 0 && (
-          <>
-            <h2 className="text-xl font-semibold text-[var(--color-gray-900)] mb-4">
-              取り崩しプラン
-            </h2>
-            <WithdrawalPlan
-              finalBalance={
-                simulationData.baseScenario[simulationData.baseScenario.length - 1].total
-              }
-              annualRate={averageYield}
-            />
-          </>
-        )}
 
         {/* 注意事項 */}
         <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8 mt-6 mb-6">

@@ -637,14 +637,27 @@ export default function SimulationPage() {
             (() => {
               const data = simulationData.baseScenario.find((d) => d.year === selectedPoint.year);
               if (!data) return null;
+              // ポップアップ位置ロジック
+              let popupStyle: React.CSSProperties = { maxWidth: '180px', top: 0 };
+              let popupClass =
+                'absolute bg-[var(--color-surface)] px-3 py-2 rounded-lg shadow-md text-center';
+              if (selectedPoint.x < 90) {
+                // 左端
+                popupStyle.left = 10;
+                popupClass += ' '; // transformなし
+              } else if (selectedPoint.x > 310) {
+                // 右端
+                popupStyle.right = 10;
+                popupStyle.left = 'auto';
+                popupClass += ' '; // transformなし
+              } else {
+                // 中央付近
+                popupStyle.left = selectedPoint.x;
+                popupClass += ' transform -translate-x-1/2';
+              }
+              popupClass += ' -translate-y-[calc(100%+5px)]';
               return (
-                <div
-                  className="absolute left-1/2 top-0 bg-[var(--color-surface)] px-3 py-2 rounded-lg shadow-md text-center transform -translate-x-1/2 -translate-y-[calc(100%+5px)]"
-                  style={{
-                    left: `${(selectedPoint.x / 400) * 100}%`,
-                    maxWidth: '180px',
-                  }}
-                >
+                <div className={popupClass} style={popupStyle}>
                   <div className="text-xs text-[var(--color-gray-400)]">
                     {selectedPoint.year}年目
                   </div>

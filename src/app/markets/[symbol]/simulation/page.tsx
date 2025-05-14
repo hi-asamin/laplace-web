@@ -68,7 +68,7 @@ const SIMULATION_TERM_EXPLANATIONS: Record<string, { title: string; description:
 
 【見方のポイント】
 • 5%なら「毎年平均5%ずつ増える」前提で計算
-• 初期値はAIが自動算出（銘柄や市場データを参照）
+• 初期値は銘柄や市場データを参照して自動算出
 • 長期運用ほど小さな差が大きな差に
 
 【目安】
@@ -344,7 +344,7 @@ export default function SimulationPage() {
             <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
             <div className="h-6 bg-gray-200 rounded-md w-1/3"></div>
           </div>
-        ) : (
+        ) : !marketError ? (
           <div className="flex items-center justify-between mb-2 w-full">
             {/* 左: ロゴ＋銘柄名 */}
             <div className="flex items-center space-x-3 px-2">
@@ -361,7 +361,7 @@ export default function SimulationPage() {
               </h1>
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* 資産情報 */}
         {isLoading ? (
@@ -848,20 +848,6 @@ export default function SimulationPage() {
               ¥ {(initialPrincipal + contributionYears * monthlyAmount * 12).toLocaleString()}
             </div>
           </div>
-        </div>
-
-        {/* 注意事項 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8 mt-6 mb-6">
-          <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-2">注意事項</h2>
-          <ul className="text-sm text-[var(--color-gray-700)] space-y-2">
-            <li>
-              •
-              このシミュレーションは過去の実績に基づく予想であり、将来の結果を保証するものではありません。
-            </li>
-            <li>• 株価は市場環境により大きく変動する可能性があります。</li>
-            <li>• 配当金は企業の業績により変更される可能性があります。</li>
-            <li>• 投資にはリスクが伴います。投資判断は自己責任でお願いします。</li>
-          </ul>
         </div>
       </div>
     </div>

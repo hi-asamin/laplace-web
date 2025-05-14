@@ -760,7 +760,7 @@ export default function SimulationPage() {
         )}
 
         {/* 注意事項 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8 mb-6">
+        <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8 mt-6 mb-6">
           <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-2">注意事項</h2>
           <ul className="text-sm text-[var(--color-gray-700)] space-y-2">
             <li>

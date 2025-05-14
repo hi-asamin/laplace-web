@@ -1,0 +1,166 @@
+---
+description: 
+globs: *.tsx
+alwaysApply: false
+---
+## Laplace Analytics Rules (for **Cursor** project)
+
+> Version 1.0 — *May 14 2025*
+> Owners : PM ✕ Front-End Eng ✕ Data-Analyst
+> Scope : Web (v0.1 Next.js) — GA4 ＋ Google Tag Manager (GTM)
+
+---
+
+### 1. 目的
+
+1. **プロダクト成果指標（§5 Outcomes）の計測を 100 % 可能にする**
+2. **開発・分析チーム間のトラッキング実装差分をゼロにする**
+3. **命名とパラメータ仕様を GA4 / GTM ガイドラインに準拠させ、将来の BigQuery 分析を容易にする** ([Analytics Mania][1], [Google for Developers][2])
+
+---
+
+### 2. 計測アーキテクチャ
+
+```mermaid
+graph TD
+    UI[Next.js<br>Client] -- dataLayer.push() --> GTM
+    GTM -- GA4 event --> GA4[Google Analytics 4<br>Web property]
+    GTM -- other destinations --> Ads、Looker Studio etc.
+    GA4 -- BigQuery Export --> BQ[BigQuery]
+```
+
+* **Single Google Tag** (`gtag.js`) を GTM コンテナで一括管理
+* **全ページ**で `dataLayer` を初期化し、各コンポーネントがイベントを push
+* **デバッグ**は Chrome GTM preview＋GA4 DebugView の 2 段階で行う ([DEV Community][3])
+
+---
+
+### 3. 命名規約
+
+| 項目                                 | ルール                                                            | 例                           |                                            |
+| ---------------------------------- | -------------------------------------------------------------- | --------------------------- | ------------------------------------------ |
+| **event\_name**                    | 英小文字＋数字＋アンダースコア。30 字以内。<br>先頭は英字。<br>Google 予約語 / `ga_` 接頭辞 禁止 | `wizard_started`            |                                            |
+| **param**                          | `snake_case`、30 字以内                                            | `step_index`, `scenario_id` |                                            |
+| **tag / trigger / variable (GTM)** | `[機能] - [画面] - [詳細]`                                           | `GA4 - simulation - start`  |                                            |
+| **custom dimension**               | `cd_` + 説明的名前（例：`cd_user_type`）                                |                             | ([Kick Point Playbook][4], [Analytify][5]) |
+
+> **Tip** : ドキュメント不明の命名は PR レビューで必ずブロック。
+
+---
+
+### 4. データレイヤ仕様
+
+```ts
+interface LaplaceDL {
+  user_id?: string;        // ハッシュ化 ID (sha256)
+  plan_tier: 'free' | 'premium';
+  locale: 'ja-JP' | 'en-US';
+  // --- Wizard 状態
+  wizard: {
+    step_index: number;    // 0–N
+    completed: boolean;
+  };
+  scenario: {
+    id: string;            // uuid
+    count_total: number;
+  };
+}
+```
+
+* **PII 禁止** — name / email / phone は送らない
+* **user\_id ハッシュ**は FE で生成し Cookie にも保存
+* **locale** は Next.js i18n から注入
+
+---
+
+### 5. イベント設計
+
+| フェーズ   | 目的指標                  | GA4 event\_name                        | Trigger (例)                 | 必須 param                                               | 関連 metric          |                              |
+| ------ | --------------------- | -------------------------------------- | --------------------------- | ------------------------------------------------------ | ------------------ | ---------------------------- |
+| **α**  | Activation Rate       | `simulation_result_view` *(ページビュー拡張)*  | 結果ページ表示                     | `wizard_steps` `scenario_count`                        | Activation Rate    |                              |
+|        | Input Completion Rate | `wizard_completed`                     | ウィザード最終 Next クリック           | `steps_total` `duration_ms`                            | Input Completion   |                              |
+| **β**  | Scenario Comparison   | `scenario_saved`                       | 「比較カードを保存」                  | `scenario_id` `scenario_type`                          | Scenario Comp Rate |                              |
+|        | Session Depth         | `simulation_executed`                  | 「シミュレート」ボタン                 | `scenario_id`                                          | Session Depth      |                              |
+|        | Day-7 Retention       | 標準 `session_start`                     | GA4 自動収集                    | ―                                                      | Retention          |                              |
+| **正式** | MAS                   | `simulation_executed`                  | 上記                          | ―                                                      | MAS                |                              |
+|        | NPS                   | `survey_submitted` *(GA4 recommended)* | NPS 送信                      | `score` `survey_type='nps_d7'`                         | NPS                |                              |
+|        | Premium Conversion    | `purchase` *(recommended)*             | Stripe webhook ➜ GTM server | `value` `currency='JPY'` `payment_type='subscription'` | Conversion         | ([Google for Developers][2]) |
+
+> **標準イベント first\_visit, session\_start** は GA4 が自動送信するため重複実装しない。
+
+---
+
+### 6. GTM 実装ポリシー
+
+1. **タグ構成**
+
+   * *Google Tag › GA4 Base* — *Initialization / All Pages*
+   * *GA4 Event* — 1 イベント 1 タグ、同一フィールドセットを共有
+   * *Data Layer → Event Tag 変換* は **Custom Event Trigger** で統一
+2. **トリガ命名**
+   `[event] - [condition]` 例 `wizard_completed - all`
+3. **バージョン管理**
+
+   * **feature/analytics/\*** ブランチで Cursor PR 作成 ⇒ レビュワー: DA
+4. **公開フロー**
+
+   1. Staging コンテナ + Pipeline (live preview)
+   2. QA (DebugViewでイベント確認)
+   3. 本番コンテナにマージ後 **タグ限定公開**して 5 分観測
+5. **障害時** : `gtm.disable` フラグで全タグ停止、SRE へ Slack 通知
+
+---
+
+### 7. データ品質・監査
+
+| チェック                   | 週次 | 月次 |
+| ---------------------- | -- | -- |
+| Missing event 比率 < 1 % | ✔  | ✔  |
+| パラメータ Null 率 < 0.5 %   | —  | ✔  |
+| BigQuery テーブルスキーマ diff | —  | ✔  |
+| サンプリング発生有無             | —  | ✔  |
+
+※ Looker Studio に自動レポートし、異常検知時は PagerDuty へ通知。
+
+---
+
+### 8. プライバシー & セキュリティ
+
+* **IP 匿名化** ( `gtag('config', 'G-XXXX', { anonymize_ip: true })` )
+* EU / US でのアクセス時は Consent Mode v2 に準拠
+* データ保持期間: **14 か月**（初期）、将来拡張時は DPO 承認必須
+* BigQuery export は **日本リージョン**、IAM は最小権限付与
+
+---
+
+### 9. 変更管理
+
+| 変更レベル        | 例          | 承認者           |
+| ------------ | ---------- | ------------- |
+| **Minor**    | パラメータ追加    | FE → DA       |
+| **Major**    | 新イベント・指標追加 | PM → DA → CPO |
+| **Critical** | PII 送信変更   | CPO → Legal   |
+
+---
+
+### 10. 付録 — イベント Quick-Ref
+
+```text
+wizard_started          // ウィザード STEP 1 表示
+wizard_completed        // 入力完了
+simulation_executed     // シミュレーション実行
+simulation_result_view  // 結果ページ表示
+scenario_saved          // シナリオ保存
+survey_submitted        // NPS アンケート送信
+purchase                // 課金
+```
+
+---
+
+> **運用メモ** : PR レビュワーはこのドキュメントを基に “イベント名・パラメータが規約に一致するか” を必ずチェックしてください。違反 PR は **Block ＋ 修正依頼** とします。
+
+[1]: https://www.analyticsmania.com/post/google-analytics-and-google-tag-manager-naming-conventions/?utm_source=chatgpt.com "GTM and Google Analytics 4 Naming Conventions"
+[2]: https://developers.google.com/analytics/devguides/collection/ga4/reference/events?utm_source=chatgpt.com "Analytics - Recommended events - Google for Developers"
+[3]: https://dev.to/gerryleonugroho/event-tracking-and-parameters-setting-up-custom-events-and-parameters-in-google-analytics-4-2025-10gd?utm_source=chatgpt.com "Setting Up Custom Events and Parameters in Google Analytics 4 ..."
+[4]: https://kpplaybook.com/resources/what-are-the-rules-for-event-names-in-ga4/?utm_source=chatgpt.com "What Are the Rules for Event Names in GA4? - Kick Point Playbook"
+[5]: https://analytify.io/ga4-and-google-tag-manager-naming-conventions/?utm_source=chatgpt.com "GA4 And Google Tag Manager Naming Conventions (2025) - Analytify"

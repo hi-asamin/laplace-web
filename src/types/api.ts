@@ -31,6 +31,7 @@ export interface MarketDetails {
     peRatio?: string;
     primaryExchange?: string;
   };
+  lastUpdated?: string;
 }
 
 /**

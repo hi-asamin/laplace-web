@@ -14,15 +14,19 @@ import {
   RelatedMarketsResponse,
 } from '@/types/api';
 import { generateChartPath } from '@/utils/chart';
+import { getFlagIcon } from '@/utils';
 
 // 期間選択のタブオプション
 const PERIOD_OPTIONS = [
-  { value: '1D', label: '1D', default: true },
+  { value: '1D', label: '1D' },
   { value: '1W', label: '1W' },
   { value: '1M', label: '1M' },
   { value: '3M', label: '3M' },
   { value: '6M', label: '6M' },
   { value: '1Y', label: '1Y' },
+  { value: '2Y', label: '2Y' },
+  { value: '5Y', label: '5Y' },
+  { value: '10Y', label: '10Y' },
   { value: 'ALL', label: 'All' },
 ];
 
@@ -172,7 +176,7 @@ export default function MarketDetailPage() {
   const router = useRouter();
   const { symbol } = useParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('1D');
+  const [selectedPeriod, setSelectedPeriod] = useState('1Y');
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<{
     price: number;
@@ -193,18 +197,6 @@ export default function MarketDetailPage() {
 
   // シンボルをデコードする（例：URLでエンコードされた9432.Tなど）
   const decodedSymbol = typeof symbol === 'string' ? decodeURIComponent(symbol) : '';
-
-  // 国旗アイコンを取得する関数
-  const getFlagIcon = (market: string): string => {
-    switch (market?.toLowerCase()) {
-      case 'japan':
-        return '/flags/japan.svg'; // 日本の国旗
-      case 'us':
-        return '/flags/us.svg'; // アメリカの国旗
-      default:
-        return '/flags/global.svg'; // グローバル市場またはその他
-    }
-  };
 
   // ブックマークの切り替え
   const toggleBookmark = () => {
@@ -353,18 +345,44 @@ export default function MarketDetailPage() {
             <div className="h-6 bg-gray-200 rounded-md w-1/3"></div>
           </div>
         ) : (
-          <div className="flex items-center space-x-3 mb-6">
-            <img
-              src={marketData?.logoUrl || getFlagIcon(marketData?.market || 'global')}
-              alt={marketData?.name}
-              className="w-8 h-8 rounded-full"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = getFlagIcon(marketData?.market || 'global');
-              }}
-            />
-            <h1 className="text-[22px] font-semibold text-[var(--color-gray-900)]">
-              {marketData?.name}
-            </h1>
+          <div className="flex items-center justify-between mb-6 w-full">
+            {/* 左: ロゴ＋銘柄名 */}
+            <div className="flex items-center space-x-3">
+              <img
+                src={marketData?.logoUrl || getFlagIcon(marketData?.market || 'global')}
+                alt={marketData?.name}
+                className="w-8 h-8 rounded-full"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = getFlagIcon(marketData?.market || 'global');
+                }}
+              />
+              <h1 className="text-[22px] font-semibold text-[var(--color-gray-900)]">
+                {marketData?.name}
+              </h1>
+            </div>
+            {/* 右: データ取得日時＋リアルタイム */}
+            {marketData?.lastUpdated && (
+              <div className="flex flex-col items-end text-xs text-[var(--color-gray-400)] min-w-[70px]">
+                <span>
+                  {(() => {
+                    try {
+                      // 不正なISO8601（+09:00Zなど）を修正
+                      const fixed = marketData.lastUpdated.replace(/([+-]\d{2}:\d{2})Z$/, '$1');
+                      const d = new Date(fixed);
+                      if (isNaN(d.getTime())) return '';
+                      const jstDate = d.toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' }); // 例: 2025/05/08
+                      const match = jstDate.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+                      if (match) {
+                        return `${match[2]}/${match[3]}`;
+                      }
+                      return jstDate;
+                    } catch {
+                      return '';
+                    }
+                  })()}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
@@ -416,7 +434,7 @@ export default function MarketDetailPage() {
         {isLoading ? (
           <div className="h-[200px] sm:h-[260px] lg:h-[320px] bg-gray-200 rounded-md mb-6 animate-pulse"></div>
         ) : (
-          <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg">
+          <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 px-2 rounded-lg">
             {chartData?.data &&
             chartData.data.length >= 2 &&
             !chartData.data.some((p) => isNaN(p.close)) ? (
@@ -598,16 +616,27 @@ export default function MarketDetailPage() {
             {/* 選択したポイントの情報表示 */}
             {selectedPoint && (
               <div
-                className="absolute left-1/2 top-0 bg-[var(--color-surface)] px-3 py-2 rounded-lg shadow-md text-center transform -translate-x-1/2 -translate-y-[calc(100%+5px)]"
+                className="absolute left-1/2 top-0 bg-[var(--color-surface)] px-2 py-1 rounded-md shadow text-center transform -translate-x-1/2 -translate-y-[calc(100%+5px)]"
                 style={{
                   left: `${(selectedPoint.x / 400) * 100}%`,
-                  maxWidth: '150px',
+                  maxWidth: '100px',
+                  fontSize: '11px',
+                  lineHeight: '1.2',
+                  padding: '2px 6px',
                 }}
               >
-                <div className="text-xs text-[var(--color-gray-400)]">
-                  {new Date(selectedPoint.date).toLocaleDateString()}
+                <div className="text-[10px] text-[var(--color-gray-400)] mb-0.5">
+                  {(() => {
+                    const d = new Date(selectedPoint.date);
+                    if (isNaN(d.getTime())) return '';
+                    return d.toLocaleDateString('ja-JP', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                    });
+                  })()}
                 </div>
-                <div className="text-sm font-medium text-[var(--color-gray-900)]">
+                <div className="text-xs font-medium text-[var(--color-gray-900)]">
                   {selectedPoint.price.toLocaleString()}
                 </div>
               </div>

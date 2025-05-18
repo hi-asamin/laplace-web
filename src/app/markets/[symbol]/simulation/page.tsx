@@ -1,30 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, TrendingUp, DollarSign, PieChart } from 'lucide-react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  PieChart as RePieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { useParams, useRouter } from 'next/navigation';
+import { ChevronLeft, Bookmark, Search } from 'lucide-react';
+import { getMarketDetails, MarketDetails } from '@/lib/api';
 import { generateChartPath } from '@/utils/chart';
-import { ChartDataPoint } from '@/types/api';
-
-// シミュレーション期間のオプション
-const PERIOD_OPTIONS = [
-  { value: '1Y', label: '1年' },
-  { value: '3Y', label: '3年' },
-  { value: '5Y', label: '5年' },
-  { value: '10Y', label: '10年' },
-];
+import { getFlagIcon } from '@/utils';
+import Tooltip from '@/components/tooltip';
+import WithdrawalPlan from '@/components/WithdrawalPlan';
+import WithdrawalChart from '@/components/WithdrawalChart';
 
 // 投資方法のオプション
 const INVESTMENT_OPTIONS = [
@@ -38,43 +22,156 @@ interface SimYearData {
   price: number;
   dividend: number;
   total: number;
+  principal: number;
+  profit: number;
 }
 
 // モックデータ
-const generateMockData = (years: number) => {
+const generateMockData = (
+  years: number,
+  startAmount: number,
+  monthlyAmount: number,
+  annualRate: number,
+  contributionYears: number
+) => {
   const data = [];
-  let price = 100;
-  let dividend = 2;
-  let total = 102;
-
+  let principal = startAmount;
+  let total = startAmount;
+  let cumulativeDividend = 0;
   for (let i = 1; i <= years; i++) {
-    // 株価の変動（ランダムな上昇）
-    const priceChange = (Math.random() * 10 - 2) / 100; // -2% から +8% の範囲
-    price *= 1 + priceChange;
-
-    // 配当金の変動（株価に連動）
-    dividend = price * 0.02; // 2%の配当利回りを維持
-
-    // 合計（株価 + 配当金）
-    total = price + dividend;
-
+    // 積立継続年数以内であれば積立金額を加算
+    if (i <= contributionYears && monthlyAmount > 0) {
+      principal += monthlyAmount * 12;
+      total += monthlyAmount * 12;
+    }
+    // 配当金（運用益）は積立後の合計資産に年利をかけて複利で加算
+    const dividend = total * (annualRate / 100);
+    cumulativeDividend += dividend;
+    total += dividend;
     data.push({
       year: i,
-      price: Math.round(price * 100) / 100,
-      dividend: Math.round(dividend * 100) / 100,
-      total: Math.round(total * 100) / 100,
+      price: total, // priceは合計値と同じでOK
+      dividend: cumulativeDividend, // 累積配当金
+      total: total,
+      principal: principal,
+      profit: cumulativeDividend, // profitは配当金（運用益）
     });
   }
-
   return data;
 };
 
+// 各項目の説明（リッチ版）
+const SIMULATION_TERM_EXPLANATIONS: Record<string, { title: string; description: string }> = {
+  平均利回り率: {
+    title: '平均利回り率',
+    description: `資産運用で1年あたりどれくらい増えるかの平均リターン（年率）です。
+
+【見方のポイント】
+• 5%なら「毎年平均5%ずつ増える」前提で計算
+• 初期値は銘柄や市場データを参照して自動算出
+• 長期運用ほど小さな差が大きな差に
+
+【目安】
+• 日本株・ETF: 3〜6%
+• 米国株・ETF: 5〜8%
+• 債券・預金: 0.1〜2%`,
+  },
+  初期投資元本: {
+    title: '初期投資元本',
+    description: `シミュレーション開始時に一括で投資する金額です。
+
+【見方のポイント】
+• ここが0円なら「積立のみ」運用
+• まとまった資金がある場合はここに入力
+
+【例】
+• 100万円を一括投資→「初期投資元本」に100万円`,
+  },
+  毎月積立金額: {
+    title: '毎月積立金額',
+    description: `毎月追加で投資する金額です。
+
+【見方のポイント】
+• 0円の場合は「一括投資のみ」
+• 毎月コツコツ積み立てる場合に入力
+
+【例】
+• 毎月3万円積立→「毎月積立金額」に3万円`,
+  },
+  シミュレーション年数: {
+    title: 'シミュレーション年数',
+    description: `資産運用を何年間続けるかの期間です。
+
+【見方のポイント】
+• 期間が長いほど「複利効果」が大きくなる
+• 退職や目標時期に合わせて設定
+
+【例】
+• 20年運用→「シミュレーション年数」に20年`,
+  },
+  合計投資額: {
+    title: '合計投資額',
+    description: `シミュレーション期間中に実際に投資した元本の合計です。
+
+【見方のポイント】
+• 初期投資元本＋毎月積立金額×積立継続年数
+• 運用益（利益）は含まれません
+
+【例】
+• 初期100万円＋毎月3万円×20年積立＝820万円`,
+  },
+  貯まる金額: {
+    title: '貯まる金額',
+    description: `シミュレーション終了時点での総資産額（元本＋複利利益の合計）です。
+
+【見方のポイント】
+• 積立・運用を続けた場合の「最終的な手元資産」
+• 元本と運用益（複利利益）の合計
+• 途中で取り崩しや売却しなければこの金額が貯まります
+
+【例】
+• 20年後に1,200万円貯まる
+• 30年後に2,000万円貯まる など`,
+  },
+  積立継続年数: {
+    title: '積立継続年数',
+    description: `毎月の積立投資を何年間続けるかの期間です。
+
+【見方のポイント】
+• 3年〜40年の範囲で設定可能
+• この期間が終了した後は、追加の積立は行わず、それまでの資産を複利運用します。
+• 「シミュレーション年数」と同じ場合は、シミュレーション期間中ずっと積み立てを継続します。
+
+【例】
+• 30年シミュレーションのうち、最初の10年間だけ積立→「積立継続年数」に10年`,
+  },
+  累積配当金: {
+    title: '累積配当金（複利利益）',
+    description: `運用期間中に得られた配当金や運用益の累計額です。トータル資産額のうち、元本を除いた増加分を示します。
+
+【見方のポイント】
+• 配当再投資や複利効果による「増えた分」
+• 元本を除いた純粋な利益
+• 長期運用ほど複利効果が大きくなる
+
+【例】
+• 20年で元本800万円→累積配当金400万円
+• 30年で元本1,000万円→累積配当金1,200万円 など`,
+  },
+};
+
 export default function SimulationPage() {
+  const router = useRouter();
   const { symbol } = useParams();
-  const [selectedPeriod, setSelectedPeriod] = useState('5Y');
-  const [investmentAmount, setInvestmentAmount] = useState(1000000);
+  // シンボルをデコードする（例：URLでエンコードされた9432.Tなど）
+  const decodedSymbol = typeof symbol === 'string' ? decodeURIComponent(symbol) : '';
+
+  const [marketData, setMarketData] = useState<MarketDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [marketError, setMarketError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState('20Y');
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const [investmentType, setInvestmentType] = useState('lump');
-  const [reinvestDividends, setReinvestDividends] = useState(true);
   const [selectedPoint, setSelectedPoint] = useState<{
     price: number;
     year: number;
@@ -94,47 +191,278 @@ export default function SimulationPage() {
   // チャート参照用のrefを作成
   const chartRef = useRef<SVGSVGElement>(null);
 
+  // 変数のstate
+  const [averageYield, setAverageYield] = useState(5.0); // %
+  const [initialPrincipal, setInitialPrincipal] = useState(0); // 円
+  const [monthlyAmount, setMonthlyAmount] = useState(30000); // 円
+  const [contributionYears, setContributionYears] = useState(20); // 積立継続年数（デフォルト20年）
+
+  // 目標金額（初期値は空）
+  const [targetAmount, setTargetAmount] = useState<string>('');
+  // 逆算対象: 'yield' | 'contributionYears' | 'monthlyAmount' | 'initialPrincipal'
+  const [reverseTarget, setReverseTarget] = useState<
+    'yield' | 'contributionYears' | 'monthlyAmount' | 'initialPrincipal'
+  >('yield');
+  // 逆算結果state
+  const [reverseYield, setReverseYield] = useState<number | null>(null);
+  const [reverseYears, setReverseYears] = useState<number | null>(null);
+  const [reverseMonthly, setReverseMonthly] = useState<number | null>(null);
+  const [reversePrincipal, setReversePrincipal] = useState<number | null>(null);
+  const [reverseError, setReverseError] = useState<string | null>(null);
+
+  // 目標金額入力時は逆算モード
+  const isReverseMode =
+    targetAmount !== '' && !isNaN(Number(targetAmount)) && Number(targetAmount) > 0;
+
+  // 目標金額入力時にデフォルトで利回り率を逆算対象に
   useEffect(() => {
-    const years = parseInt(selectedPeriod);
+    if (isReverseMode) setReverseTarget('yield');
+  }, [isReverseMode]);
+
+  // 逆算ロジック
+  useEffect(() => {
+    if (!isReverseMode) {
+      setReverseYield(null);
+      setReverseYears(null);
+      setReverseMonthly(null);
+      setReversePrincipal(null);
+      setReverseError(null);
+      return;
+    }
+    setReverseError(null);
+    // 変数
+    const FV = Number(targetAmount);
+    let P = initialPrincipal;
+    let PMT = monthlyAmount * 12;
+    let r = averageYield / 100;
+    let n = contributionYears;
+    // 利回り逆算
+    if (reverseTarget === 'yield') {
+      // forループシミュレーションベースで逆算
+      let lower = 0.0001;
+      let upper = 0.5; // 50%まで探索
+      let bestR = lower;
+      let minDiff = Infinity;
+      for (let iter = 0; iter < 30; iter++) {
+        let mid = (lower + upper) / 2;
+        // forループでシミュレーション
+        let principal = P;
+        let total = P;
+        let cumulativeDividend = 0;
+        for (let i = 1; i <= n; i++) {
+          if (monthlyAmount > 0) {
+            principal += monthlyAmount * 12;
+            total += monthlyAmount * 12;
+          }
+          const dividend = total * mid;
+          cumulativeDividend += dividend;
+          total += dividend;
+        }
+        const diff = total - FV;
+        if (Math.abs(diff) < Math.abs(minDiff)) {
+          minDiff = diff;
+          bestR = mid;
+        }
+        if (Math.abs(diff) < 0.01) break;
+        if (diff > 0) {
+          upper = mid;
+        } else {
+          lower = mid;
+        }
+      }
+      let result = Math.round(bestR * 10000) / 100;
+      if (Math.abs(result - averageYield) < 0.01) {
+        result = averageYield;
+      }
+      if (!isFinite(result) || result < 0) {
+        setReverseError('目標金額に到達できません');
+        setReverseYield(null);
+      } else {
+        setReverseYield(result);
+      }
+    }
+    // 積立継続年数逆算
+    if (reverseTarget === 'contributionYears') {
+      // forループシミュレーションベースで逆算
+      let lower = 1;
+      let upper = 50;
+      let bestN = lower;
+      let minDiff = Infinity;
+      for (let iter = 0; iter < 30; iter++) {
+        let mid = (lower + upper) / 2;
+        let nTest = Math.round(mid);
+        let principal = P;
+        let total = P;
+        let cumulativeDividend = 0;
+        for (let i = 1; i <= nTest; i++) {
+          if (monthlyAmount > 0) {
+            principal += monthlyAmount * 12;
+            total += monthlyAmount * 12;
+          }
+          const dividend = total * r;
+          cumulativeDividend += dividend;
+          total += dividend;
+        }
+        const diff = total - FV;
+        if (Math.abs(diff) < Math.abs(minDiff)) {
+          minDiff = diff;
+          bestN = nTest;
+        }
+        if (Math.abs(diff) < 0.01) break;
+        if (diff > 0) {
+          upper = mid;
+        } else {
+          lower = mid;
+        }
+      }
+      let result = Math.round(bestN);
+      if (Math.abs(result - n) < 1) {
+        result = n;
+      }
+      if (!isFinite(result) || result < 1) {
+        setReverseError('目標金額に到達できません');
+        setReverseYears(null);
+      } else {
+        setReverseYears(result);
+      }
+    }
+    // 毎月積立金額逆算
+    if (reverseTarget === 'monthlyAmount') {
+      // forループシミュレーションベースで逆算
+      let lower = 0;
+      let upper = (FV / n / 12) * 2 + 1; // 目標金額からざっくり上限推定
+      let bestPMT = lower;
+      let minDiff = Infinity;
+      for (let iter = 0; iter < 30; iter++) {
+        let mid = (lower + upper) / 2;
+        let principal = P;
+        let total = P;
+        let cumulativeDividend = 0;
+        for (let i = 1; i <= n; i++) {
+          if (mid > 0) {
+            principal += mid * 12;
+            total += mid * 12;
+          }
+          const dividend = total * r;
+          cumulativeDividend += dividend;
+          total += dividend;
+        }
+        const diff = total - FV;
+        if (Math.abs(diff) < Math.abs(minDiff)) {
+          minDiff = diff;
+          bestPMT = mid;
+        }
+        if (Math.abs(diff) < 0.01) break;
+        if (diff > 0) {
+          upper = mid;
+        } else {
+          lower = mid;
+        }
+      }
+      let result = Math.round(bestPMT);
+      if (Math.abs(result - monthlyAmount) < 1) {
+        result = monthlyAmount;
+      }
+      if (!isFinite(result) || result < 0) {
+        setReverseError('目標金額に到達できません');
+        setReverseMonthly(null);
+      } else {
+        setReverseMonthly(result);
+      }
+    }
+    // 初期投資元本逆算
+    if (reverseTarget === 'initialPrincipal') {
+      const pow = Math.pow(1 + r, n);
+      const denom = pow;
+      if (denom === 0) {
+        setReverseError('目標金額に到達できません');
+        setReversePrincipal(null);
+      } else {
+        let principal = (FV - (PMT * (pow - 1)) / r) / denom;
+        let result = Math.round(principal * 100) / 100;
+        if (Math.abs(result - initialPrincipal) < 0.01) {
+          result = initialPrincipal;
+        }
+        if (!isFinite(result) || result < 0) {
+          setReverseError('目標金額に到達できません');
+          setReversePrincipal(null);
+        } else {
+          setReversePrincipal(result);
+        }
+      }
+    }
+  }, [
+    isReverseMode,
+    reverseTarget,
+    targetAmount,
+    initialPrincipal,
+    monthlyAmount,
+    averageYield,
+    contributionYears,
+  ]);
+
+  // 銘柄データ取得
+  useEffect(() => {
+    if (!decodedSymbol) return;
+    setIsLoading(true);
+    setMarketError(null);
+    getMarketDetails(decodedSymbol)
+      .then((data) => {
+        setMarketData(data);
+        setIsLoading(false);
+      })
+      .catch((e) => {
+        setMarketError('取得できませんでした');
+        setIsLoading(false);
+      });
+  }, [decodedSymbol]);
+
+  // ブックマークの切り替え
+  const toggleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
+    // 実際の実装ではここでブックマークの保存処理を行う
+    // 例: localStorage や API 呼び出しなど
+  };
+
+  useEffect(() => {
     setSimulationData({
-      baseScenario: generateMockData(years),
-      optimisticScenario: generateMockData(years).map((d) => ({
-        ...d,
-        price: d.price * 1.1,
-        total: d.total * 1.1,
-      })),
-      pessimisticScenario: generateMockData(years).map((d) => ({
-        ...d,
-        price: d.price * 0.9,
-        total: d.total * 0.9,
-      })),
+      baseScenario: generateMockData(
+        contributionYears,
+        initialPrincipal,
+        monthlyAmount,
+        averageYield,
+        contributionYears
+      ),
+      optimisticScenario: generateMockData(
+        contributionYears,
+        initialPrincipal,
+        monthlyAmount,
+        averageYield + 2,
+        contributionYears
+      ),
+      pessimisticScenario: generateMockData(
+        contributionYears,
+        initialPrincipal,
+        monthlyAmount,
+        Math.max(0, averageYield - 3),
+        contributionYears
+      ),
     });
     setSelectedPoint(null);
-  }, [selectedPeriod]);
+  }, [initialPrincipal, monthlyAmount, averageYield, investmentType, contributionYears]);
 
-  // 年間収益率の計算
-  const calculateAnnualReturn = (data: SimYearData[]) => {
-    if (!data || data.length === 0) return '0.0';
-    const firstYear = data[0];
-    const lastYear = data[data.length - 1];
-    if (!firstYear || !lastYear) return '0.0';
-    const totalReturn = (lastYear.total - firstYear.total) / firstYear.total;
-    return (totalReturn * 100).toFixed(1);
-  };
-
-  // 配当利回りの計算
-  const calculateDividendYield = (data: SimYearData[]) => {
-    if (!data || data.length === 0) return '0.0';
-    const lastYear = data[data.length - 1];
-    if (!lastYear) return '0.0';
-    return ((lastYear.dividend / lastYear.price) * 100).toFixed(1);
-  };
-
-  // 配当金の累積額計算
-  const calculateTotalDividends = (data: SimYearData[]) => {
-    if (!data || data.length === 0) return 0;
-    return data.reduce((sum, year) => sum + year.dividend, 0);
-  };
+  // チャート外部をクリックしたときの処理
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chartRef.current && !chartRef.current.contains(event.target as Node)) {
+        setSelectedPoint(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   // チャートのパスを生成
   const chartPaths = {
@@ -176,404 +504,760 @@ export default function SimulationPage() {
     ),
   };
 
+  // シミュレーション/取り崩しモード切替
+  const [mode, setMode] = useState<'simulation' | 'withdrawal'>('simulation');
+
+  // チャートのclipPathアニメーションを制御
+  useEffect(() => {
+    if (mode !== 'simulation') return;
+    // 1フレーム遅延でclipPathをリセット→再アニメーション
+    const rect = document.getElementById('chart-area-clip-rect');
+    if (rect) {
+      rect.setAttribute('width', '0');
+      // 次フレームでwidthを400に
+      requestAnimationFrame(() => {
+        rect.style.transition = 'width 1.5s cubic-bezier(0.4,0,0.2,1)';
+        rect.setAttribute('width', '400');
+      });
+    }
+    // 線のアニメーションも同様に再発火
+    const line = document.querySelector('.chart-line-animation');
+    if (line) {
+      (line as HTMLElement).style.animation = 'none';
+      void (line as HTMLElement).offsetWidth;
+      (line as HTMLElement).style.animation =
+        'chart-line-draw 1.5s cubic-bezier(0.4,0,0.2,1) forwards';
+    }
+  }, [mode, simulationData.baseScenario]);
+
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] p-2 sm:p-4">
-      <div className="max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto py-3 px-2 sm:px-4">
+      <div className="max-w-3xl 2xl:max-w-5xl mx-auto px-2 sm:px-4 lg:px-8 xl:px-12">
         {/* ヘッダー */}
-        <div className="flex items-center mb-6">
+        <div className="flex justify-between items-center">
           <button
-            onClick={() => window.history.back()}
-            className="flex items-center text-[var(--color-gray-700)]"
-            style={{ minWidth: 44, minHeight: 44 }}
+            onClick={() => router.back()}
+            className="flex items-center text-[var(--color-gray-700)] h-11 rounded-full"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
-        </div>
-
-        {/* 期間選択タブ */}
-        <div className="flex justify-between w-full mb-4 overflow-x-auto no-scrollbar gap-1 sm:gap-2">
-          {PERIOD_OPTIONS.map((option) => (
+          <div className="flex gap-1">
             <button
-              key={option.value}
-              className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 min-w-[56px] sm:min-w-[72px] lg:min-w-[88px] ${
-                selectedPeriod === option.value
-                  ? 'bg-[var(--color-primary)] bg-opacity-10 text-white font-medium'
-                  : 'text-[var(--color-gray-400)]'
-              }`}
-              onClick={() => setSelectedPeriod(option.value)}
-              style={{ minHeight: 44 }}
+              onClick={toggleBookmark}
+              className={`h-11 rounded-full flex items-center justify-center text-[var(--color-gray-700)] ${isBookmarked ? 'text-[var(--color-primary)]' : ''}`}
             >
-              {option.label}
+              <Bookmark className="w-6 h-6" fill={isBookmarked ? 'var(--color-primary)' : 'none'} />
             </button>
-          ))}
+            <button
+              onClick={() => router.push('/search')}
+              className="h-11 rounded-full flex items-center justify-center text-[var(--color-gray-700)]"
+            >
+              <Search className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
-        {/* チャート */}
-        <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg">
-          <svg
-            ref={chartRef}
-            className="w-full h-full"
-            viewBox="0 0 400 160"
-            preserveAspectRatio="none"
-            onClick={(e) => {
-              if (!simulationData.baseScenario) return;
+        {/* 銘柄情報ヘッダー */}
+        {isLoading ? (
+          <div className="flex items-center space-x-3 mb-2 animate-pulse">
+            <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+            <div className="h-6 bg-gray-200 rounded-md w-1/3"></div>
+          </div>
+        ) : !marketError ? (
+          <div className="flex items-center justify-between mb-2 w-full">
+            {/* 左: ロゴ＋銘柄名 */}
+            <div className="flex items-center space-x-3 px-2">
+              <img
+                src={marketData?.logoUrl || getFlagIcon(marketData?.market || 'global')}
+                alt={marketData?.name}
+                className="w-6 h-6 rounded-full"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = getFlagIcon(marketData?.market || 'global');
+                }}
+              />
+              <h1 className="text-[22px] font-semibold text-[var(--color-gray-900)]">
+                {marketData?.name}
+              </h1>
+            </div>
+          </div>
+        ) : null}
 
-              // クリック位置を取得
-              const svg = e.currentTarget;
-              const rect = svg.getBoundingClientRect();
-              const x = ((e.clientX - rect.left) / rect.width) * 400;
+        {/* 資産情報 */}
+        {isLoading ? (
+          <div className="mb-2 px-2 animate-pulse">
+            <div className="h-10 bg-gray-200 rounded-md w-1/2 mb-2"></div>
+            <div className="h-6 bg-gray-200 rounded-md w-1/4"></div>
+          </div>
+        ) : (
+          <div className="mb-2 px-2">
+            {/* 総資産額 */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-[var(--color-gray-400)]">
+                {mode === 'withdrawal' ? '使える金額' : '貯まる金額'}
+              </span>
+              <Tooltip
+                title={
+                  mode === 'withdrawal'
+                    ? '使える金額'
+                    : SIMULATION_TERM_EXPLANATIONS['貯まる金額'].title
+                }
+                content={
+                  mode === 'withdrawal'
+                    ? `取り崩しプランに基づき、期間中に使える金額の目安です。運用・取り崩し条件によって変動します。`
+                    : `あなたは${contributionYears}年間で、合計${
+                        isReverseMode && targetAmount !== '' && !reverseError
+                          ? '¥' + Number(targetAmount).toLocaleString() + '（目標）'
+                          : simulationData.baseScenario.length > 0
+                            ? '¥' +
+                              Math.round(
+                                simulationData.baseScenario[simulationData.baseScenario.length - 1]
+                                  .total
+                              ).toLocaleString()
+                            : '-'
+                      }貯まります。
 
-              // x座標に最も近いデータポイントを見つける
-              const chartWidth = 400 - 20; // パディングを考慮
-              const pointWidth = chartWidth / (simulationData.baseScenario.length - 1);
-              const dataIndex = Math.round((x - 10) / pointWidth); // パディングを考慮して調整
+${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
+                }
+              >
+                <span className="sr-only">
+                  {mode === 'withdrawal' ? '使える金額の説明' : '貯まる金額の説明'}
+                </span>
+              </Tooltip>
+            </div>
+            <div className="text-[36px] font-bold text-[var(--color-gray-900)]">
+              {isReverseMode && targetAmount !== '' && !reverseError
+                ? `¥ ${Number(targetAmount).toLocaleString()}`
+                : simulationData.baseScenario.length > 0
+                  ? `¥ ${Math.round(simulationData.baseScenario[simulationData.baseScenario.length - 1].total).toLocaleString()}`
+                  : '-'}
+            </div>
+            {/* 累積配当金（複利利益） */}
+            <div className="mb-0.5 flex items-center gap-1 mt-2">
+              <span className="text-xs text-[var(--color-gray-400)]">累積配当金（複利利益）</span>
+              <Tooltip
+                title={SIMULATION_TERM_EXPLANATIONS['累積配当金'].title}
+                content={SIMULATION_TERM_EXPLANATIONS['累積配当金'].description}
+              >
+                <span className="sr-only">累積配当金（複利利益）の説明</span>
+              </Tooltip>
+            </div>
+            <div className="flex items-center text-base text-[var(--color-success)]">
+              <span className="mr-1">＋</span>
+              <span>
+                {(() => {
+                  if (isReverseMode && targetAmount !== '' && !reverseError) {
+                    let currentInitialPrincipal = initialPrincipal;
+                    let currentMonthlyAmount = monthlyAmount;
+                    let currentContributionYears = contributionYears;
 
-              // 範囲チェック
-              const validIndex = Math.max(
-                0,
-                Math.min(dataIndex, simulationData.baseScenario.length - 1)
-              );
-              const point = simulationData.baseScenario[validIndex];
+                    if (reverseTarget === 'initialPrincipal' && reversePrincipal !== null) {
+                      currentInitialPrincipal = reversePrincipal;
+                    }
+                    if (reverseTarget === 'monthlyAmount' && reverseMonthly !== null) {
+                      currentMonthlyAmount = reverseMonthly;
+                    }
+                    if (reverseTarget === 'contributionYears' && reverseYears !== null) {
+                      currentContributionYears = reverseYears;
+                    }
 
-              if (point) {
-                const values = simulationData.baseScenario.map((p) => p.total);
+                    const totalInvested =
+                      currentInitialPrincipal +
+                      currentContributionYears * currentMonthlyAmount * 12;
+                    const profit = Number(targetAmount) - totalInvested;
+                    return profit >= 0 ? `¥ ${Math.round(profit).toLocaleString()}` : '算出不可';
+                  } else if (simulationData.baseScenario.length > 0) {
+                    return `¥ ${Math.round(simulationData.baseScenario[simulationData.baseScenario.length - 1].dividend).toLocaleString()}`;
+                  } else {
+                    return '-';
+                  }
+                })()}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* チャートエリア：シミュレーション or 取り崩しプラン */}
+        {mode === 'simulation' ? (
+          <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg w-full">
+            {/* 色の使い分け説明（凡例） */}
+            <div className="absolute left-4 top-2 flex gap-4 z-10 text-xs sm:text-sm">
+              <span className="flex items-center gap-1">
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 16,
+                    height: 8,
+                    background: 'rgba(89,101,255,0.13)',
+                    borderRadius: 2,
+                  }}
+                ></span>
+                <span className="text-[var(--color-gray-700)]">積立元本</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 16,
+                    height: 8,
+                    background: 'rgba(89,101,255,0.38)',
+                    borderRadius: 2,
+                  }}
+                ></span>
+                <span className="text-[var(--color-gray-700)]">複利利益</span>
+              </span>
+            </div>
+            <svg
+              ref={chartRef}
+              className="w-full h-full"
+              viewBox="0 0 400 160"
+              preserveAspectRatio="none"
+              onClick={(e) => {
+                if (!simulationData.baseScenario) return;
+
+                // クリック位置を取得
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 400;
+
+                // x座標に最も近いデータポイントを見つける
+                const chartWidth = 400 - 20; // パディングを考慮
+                const pointWidth = chartWidth / (simulationData.baseScenario.length - 1);
+                const dataIndex = Math.round((x - 10) / pointWidth); // パディングを考慮して調整
+
+                // 範囲チェック
+                const validIndex = Math.max(
+                  0,
+                  Math.min(dataIndex, simulationData.baseScenario.length - 1)
+                );
+                const point = simulationData.baseScenario[validIndex];
+
+                if (point) {
+                  const values = simulationData.baseScenario.map((p) => p.total);
+                  const min = Math.min(...values);
+                  const max = Math.max(...values);
+                  const valueMargin = (max - min) * 0.1;
+                  const effectiveMin = min - valueMargin;
+                  const effectiveMax = max + valueMargin;
+                  const valueRange = effectiveMax - effectiveMin;
+
+                  // Y座標を計算
+                  const chartHeight = 160 - 20; // パディングを考慮
+                  const y =
+                    10 + chartHeight - ((point.total - effectiveMin) / valueRange) * chartHeight;
+
+                  setSelectedPoint({
+                    price: point.total,
+                    year: point.year,
+                    x: 10 + validIndex * pointWidth,
+                    y,
+                  });
+                }
+              }}
+            >
+              {/* 背景アニメーション用clipPath */}
+              <defs>
+                <clipPath id="chart-area-clip">
+                  <rect id="chart-area-clip-rect" x="0" y="0" width="0" height="160" />
+                </clipPath>
+              </defs>
+              {/* --- ここから積立元本・利回り分エリアの描画 --- */}
+              {(() => {
+                const data = simulationData.baseScenario;
+                if (!data || data.length === 0) return null;
+                // チャートスケール計算
+                const values = data.map((p) => p.total);
                 const min = Math.min(...values);
                 const max = Math.max(...values);
                 const valueMargin = (max - min) * 0.1;
                 const effectiveMin = min - valueMargin;
                 const effectiveMax = max + valueMargin;
                 const valueRange = effectiveMax - effectiveMin;
-
-                // Y座標を計算
-                const chartHeight = 160 - 20; // パディングを考慮
-                const y =
-                  10 + chartHeight - ((point.total - effectiveMin) / valueRange) * chartHeight;
-
-                setSelectedPoint({
-                  price: point.total,
-                  year: point.year,
-                  x: 10 + validIndex * pointWidth,
-                  y,
+                const chartWidth = 400 - 20;
+                const chartHeight = 160 - 20;
+                // 積立元本配列
+                const principalPoints = data.map((d, i) => {
+                  const x = 10 + (chartWidth / (data.length - 1)) * i;
+                  const y =
+                    10 + chartHeight - ((d.principal - effectiveMin) / valueRange) * chartHeight;
+                  return [x, y];
                 });
-              }
-            }}
-          >
-            {/* チャートの線 */}
-            {chartPaths.baseScenario.linePath && (
-              <path
-                d={chartPaths.baseScenario.linePath}
-                fill="none"
-                stroke="var(--color-primary)"
-                strokeWidth="2"
-                className="chart-line-animation"
-                style={{
-                  strokeDasharray: '1000',
-                  strokeDashoffset: '1000',
-                  animation: 'chart-line-draw 1.5s ease-in-out forwards',
-                }}
-              />
-            )}
-
-            {/* チャートの塗りつぶし領域 */}
-            {chartPaths.baseScenario.areaPath && (
-              <path
-                d={chartPaths.baseScenario.areaPath}
-                fill="rgba(89, 101, 255, 0.1)"
-                className="chart-area-animation"
-                style={{
-                  opacity: 0,
-                  animation: 'chart-area-fade 0.5s ease-in-out 1s forwards',
-                }}
-              />
-            )}
-
-            {/* 選択したポイントのマーカー */}
-            {selectedPoint && (
-              <>
-                {/* 垂直線 */}
-                <line
-                  x1={selectedPoint.x}
-                  y1="10"
-                  x2={selectedPoint.x}
-                  y2="150"
+                // 配当金エリア配列（元本＋配当金まで）
+                const dividendPoints = data.map((d, i) => {
+                  const x = 10 + (chartWidth / (data.length - 1)) * i;
+                  const y =
+                    10 +
+                    chartHeight -
+                    ((d.principal + d.dividend - effectiveMin) / valueRange) * chartHeight;
+                  return [x, y];
+                });
+                // 元本エリアパス
+                let principalPath = '';
+                principalPoints.forEach(([x, y], i) => {
+                  principalPath += i === 0 ? `M${x},${y}` : `L${x},${y}`;
+                });
+                principalPath += `L${10 + chartWidth},${10 + chartHeight}L10,${10 + chartHeight}Z`;
+                // 配当金エリアパス（上辺：配当金、下辺：元本）
+                let dividendPath = '';
+                dividendPoints.forEach(([x, y], i) => {
+                  dividendPath += i === 0 ? `M${x},${y}` : `L${x},${y}`;
+                });
+                for (let i = data.length - 1; i >= 0; i--) {
+                  const [x, y] = principalPoints[i];
+                  dividendPath += `L${x},${y}`;
+                }
+                dividendPath += 'Z';
+                // X軸ラベル（年）
+                const xLabels = [];
+                if (data.length > 10) {
+                  // 5年ごと（5,10,15...）
+                  for (let i = 0; i < data.length; i++) {
+                    const d = data[i];
+                    if (d.year % 5 === 0) {
+                      const x = 10 + (chartWidth / (data.length - 1)) * i;
+                      xLabels.push(
+                        <text
+                          key={d.year}
+                          x={x}
+                          y={160 - 2}
+                          textAnchor="middle"
+                          fontSize="10"
+                          fill="#94A3B8"
+                        >
+                          {d.year}年
+                        </text>
+                      );
+                    }
+                  }
+                } else {
+                  // 1年ごと
+                  for (let i = 0; i < data.length; i++) {
+                    const d = data[i];
+                    const x = 10 + (chartWidth / (data.length - 1)) * i;
+                    xLabels.push(
+                      <text
+                        key={d.year}
+                        x={x}
+                        y={160 - 2}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fill="#94A3B8"
+                      >
+                        {d.year}年
+                      </text>
+                    );
+                  }
+                }
+                return (
+                  <>
+                    {/* X軸ラベル */}
+                    {xLabels}
+                    {/* 配当金エリア（上層、ブルー系濃色） */}
+                    <path
+                      d={dividendPath}
+                      fill="rgba(89,101,255,0.38)"
+                      clipPath="url(#chart-area-clip)"
+                      className="chart-area-fade"
+                    />
+                    {/* 元本エリア（下層、ブルー系淡色） */}
+                    <path
+                      d={principalPath}
+                      fill="rgba(89,101,255,0.13)"
+                      clipPath="url(#chart-area-clip)"
+                      className="chart-area-fade"
+                    />
+                  </>
+                );
+              })()}
+              {/* --- ここまでエリア描画 --- */}
+              {/* 既存の折れ線チャート（資産推移） */}
+              {chartPaths.baseScenario.linePath && (
+                <path
+                  d={chartPaths.baseScenario.linePath}
+                  fill="none"
                   stroke="var(--color-primary)"
-                  strokeWidth="1"
-                  strokeDasharray="3,3"
-                />
-                {/* ポイントマーカー */}
-                <circle
-                  cx={selectedPoint.x}
-                  cy={selectedPoint.y}
-                  r="4"
-                  fill="var(--color-primary)"
-                  stroke="white"
                   strokeWidth="2"
+                  className="chart-line-animation"
+                  style={{
+                    strokeDasharray: 1000,
+                    strokeDashoffset: 1000,
+                    animation: 'chart-line-draw 1.5s cubic-bezier(0.4,0,0.2,1) forwards',
+                  }}
                 />
-              </>
-            )}
-          </svg>
+              )}
 
-          {/* 選択したポイントの情報表示 */}
-          {selectedPoint && (
-            <div
-              className="absolute left-1/2 top-0 bg-[var(--color-surface)] px-3 py-2 rounded-lg shadow-md text-center transform -translate-x-1/2 -translate-y-[calc(100%+5px)]"
-              style={{
-                left: `${(selectedPoint.x / 400) * 100}%`,
-                maxWidth: '150px',
-              }}
-            >
-              <div className="text-xs text-[var(--color-gray-400)]">{selectedPoint.year}年目</div>
-              <div className="text-sm font-medium text-[var(--color-gray-900)]">
-                ¥{Math.round((selectedPoint.price * investmentAmount) / 100).toLocaleString()}
-              </div>
-            </div>
-          )}
-        </div>
+              {/* 選択したポイントのマーカー */}
+              {selectedPoint && (
+                <>
+                  {/* 垂直線 */}
+                  <line
+                    x1={selectedPoint.x}
+                    y1="10"
+                    x2={selectedPoint.x}
+                    y2="150"
+                    stroke="var(--color-primary)"
+                    strokeWidth="1"
+                    strokeDasharray="3,3"
+                  />
+                  {/* ポイントマーカー */}
+                  <circle
+                    cx={selectedPoint.x}
+                    cy={selectedPoint.y}
+                    r="4"
+                    fill="var(--color-primary)"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                </>
+              )}
+            </svg>
 
-        {/* 投資条件設定 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
-          <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-4">
-            投資条件を設定
-          </h2>
-
-          {/* 投資金額 */}
-          <div className="mb-4">
-            <label className="block text-sm text-[var(--color-gray-700)] mb-2">投資金額</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-gray-400)]">
-                ¥
-              </span>
-              <input
-                type="number"
-                value={investmentAmount}
-                onChange={(e) => setInvestmentAmount(Number(e.target.value))}
-                className="w-full h-[44px] pl-8 pr-4 rounded-lg border border-[var(--color-gray-400)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-opacity-20"
-              />
-            </div>
+            {/* 選択したポイントの情報表示 */}
+            {selectedPoint &&
+              (() => {
+                const data = simulationData.baseScenario.find((d) => d.year === selectedPoint.year);
+                if (!data) return null;
+                // ポップアップ位置ロジック
+                let popupStyle: React.CSSProperties = { maxWidth: '180px', top: 0 };
+                let popupClass =
+                  'absolute bg-[var(--color-surface)] px-3 py-2 rounded-lg shadow-md text-center';
+                if (selectedPoint.x < 90) {
+                  // 左端
+                  popupStyle.left = 10;
+                  popupClass += ' '; // transformなし
+                } else if (selectedPoint.x > 310) {
+                  // 右端
+                  popupStyle.right = 10;
+                  popupStyle.left = 'auto';
+                  popupClass += ' '; // transformなし
+                } else {
+                  // 中央付近
+                  popupStyle.left = selectedPoint.x;
+                  popupClass += ' transform -translate-x-1/2';
+                }
+                popupClass += ' -translate-y-[calc(100%+5px)]';
+                return (
+                  <div className={popupClass} style={popupStyle}>
+                    <div className="text-xs text-[var(--color-gray-400)]">
+                      {selectedPoint.year}年後
+                    </div>
+                    <div className="text-xs text-[var(--color-gray-700)] flex flex-col gap-1 mt-1">
+                      <span>
+                        <span
+                          className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
+                          style={{ background: 'rgba(89,101,255,0.13)' }}
+                        ></span>
+                        元本:{' '}
+                        <span className="font-medium text-[var(--color-gray-900)]">
+                          ¥{Math.round(data.principal).toLocaleString()}
+                        </span>
+                      </span>
+                      <span>
+                        <span
+                          className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
+                          style={{ background: 'rgba(89,101,255,0.38)' }}
+                        ></span>
+                        複利利益:{' '}
+                        <span className="font-medium text-[var(--color-gray-900)]">
+                          ¥{Math.round(data.dividend).toLocaleString()}
+                        </span>
+                      </span>
+                      <span>
+                        <span
+                          className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
+                          style={{ background: 'var(--color-primary)' }}
+                        ></span>
+                        合計:{' '}
+                        <span className="font-medium text-[var(--color-primary)]">
+                          ¥{Math.round(data.total).toLocaleString()}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
           </div>
-
-          {/* 投資方法 */}
-          <div className="mb-4">
-            <label className="block text-sm text-[var(--color-gray-700)] mb-2">投資方法</label>
-            <div className="flex space-x-2">
-              {INVESTMENT_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setInvestmentType(option.value)}
-                  className={`flex-1 h-[44px] rounded-lg border transition-colors duration-200 ${
-                    investmentType === option.value
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)] bg-opacity-10 text-white font-medium'
-                      : 'border-[var(--color-gray-400)] text-[var(--color-gray-700)]'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 配当再投資 */}
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="reinvestDividends"
-              checked={reinvestDividends}
-              onChange={(e) => setReinvestDividends(e.target.checked)}
-              className="w-4 h-4 text-[var(--color-primary)] border-[var(--color-gray-400)] rounded"
+        ) : (
+          <div className="mb-6 w-full">
+            <WithdrawalPlan
+              finalBalance={
+                simulationData.baseScenario.length > 0
+                  ? simulationData.baseScenario[simulationData.baseScenario.length - 1].total
+                  : 0
+              }
+              annualRate={averageYield}
+              mode="chart"
             />
-            <label
-              htmlFor="reinvestDividends"
-              className="ml-2 text-sm text-[var(--color-gray-700)]"
+          </div>
+        )}
+
+        {/* CTAボタン：x年後にいくら使える？ */}
+        <button
+          className="w-full mb-6 py-3 rounded-xl border-2 border-[var(--color-primary)] text-[var(--color-primary)] text-lg font-bold bg-transparent transition hover:bg-[var(--color-primary)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+          type="button"
+          onClick={() => setMode(mode === 'simulation' ? 'withdrawal' : 'simulation')}
+        >
+          {mode === 'simulation'
+            ? `${contributionYears}年後にいくら使える？`
+            : 'シミュレーションをやり直す'}
+        </button>
+
+        {/* 取引情報（シミュレーション変数表示 or 取り崩しプラン） */}
+        {mode === 'simulation' ? (
+          <div className="grid grid-cols-2 gap-3 mb-6 w-full">
+            {/* 平均利回り率カード（逆算対象にできる） */}
+            <div
+              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'yield' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
+              aria-pressed={isReverseMode && reverseTarget === 'yield'}
+              tabIndex={isReverseMode ? 0 : -1}
+              onClick={() => isReverseMode && setReverseTarget('yield')}
             >
-              配当金を再投資する
-            </label>
-          </div>
-        </div>
-
-        {/* 予想チャート */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-4">資産推移予想</h2>
-          <div className="h-[300px]">
-            {simulationData.baseScenario.length > 0 ? (
-              <LineChart
-                width={400}
-                height={300}
-                data={simulationData.baseScenario}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="price" stroke="var(--color-primary)" name="株価" />
-                <Line
-                  type="monotone"
-                  dataKey="dividend"
-                  stroke="var(--color-success)"
-                  name="配当金"
+              <div className="flex items-center mb-1 cursor-pointer select-none">
+                <span className="text-xs text-[var(--color-gray-400)]">平均利回り率</span>
+                {isReverseMode && reverseTarget === 'yield' && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
+                    逆算中
+                  </span>
+                )}
+                <Tooltip
+                  content={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].description}
+                  title={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].title}
+                >
+                  <span className="sr-only">平均利回り率の説明</span>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  step="0.1"
+                  min={0}
+                  max={99.9}
+                  value={
+                    isReverseMode && reverseTarget === 'yield' && reverseYield !== null
+                      ? reverseYield
+                      : averageYield
+                  }
+                  onChange={(e) =>
+                    setAverageYield(Math.max(0, Math.min(99.9, Number(e.target.value))))
+                  }
+                  className={`w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'yield' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
+                  readOnly={isReverseMode && reverseTarget === 'yield'}
+                  onClick={(e) => e.stopPropagation()}
                 />
-                <Line type="monotone" dataKey="total" stroke="var(--color-gray-900)" name="合計" />
-              </LineChart>
-            ) : (
-              <p>データが読み込まれていません。</p>
-            )}
-          </div>
-        </div>
-
-        {/* 予想指標 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-          <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center mb-2">
-              <TrendingUp className="w-5 h-5 text-[var(--color-primary)] mr-2" />
-              <h3 className="text-sm font-medium text-[var(--color-gray-900)]">年間収益予想</h3>
-            </div>
-            {simulationData.baseScenario.length > 0 ? (
-              <div className="text-2xl font-bold text-[var(--color-gray-900)]">
-                +{calculateAnnualReturn(simulationData.baseScenario)}%
+                <span className="text-base font-semibold text-[var(--color-gray-900)]">%</span>
               </div>
-            ) : (
-              <div className="text-2xl font-bold text-[var(--color-gray-900)]">+0.0%</div>
-            )}
-            <div className="text-sm text-[var(--color-gray-400)]">
-              株価上昇: +
-              {(parseFloat(calculateAnnualReturn(simulationData.baseScenario)) * 0.8).toFixed(1)}%
             </div>
-            <div className="text-sm text-[var(--color-gray-400)]">
-              配当金: +
-              {(parseFloat(calculateAnnualReturn(simulationData.baseScenario)) * 0.2).toFixed(1)}%
-            </div>
-          </div>
-
-          <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center mb-2">
-              <DollarSign className="w-5 h-5 text-[var(--color-success)] mr-2" />
-              <h3 className="text-sm font-medium text-[var(--color-gray-900)]">配当利回り予想</h3>
-            </div>
-            {simulationData.baseScenario.length > 0 ? (
-              <div className="text-2xl font-bold text-[var(--color-gray-900)]">
-                {calculateDividendYield(simulationData.baseScenario)}%
-              </div>
-            ) : (
-              <div className="text-2xl font-bold text-[var(--color-gray-900)]">0.0%</div>
-            )}
-            <div className="text-sm text-[var(--color-gray-400)]">
-              年間配当金: ¥
-              {Math.round(
-                investmentAmount *
-                  (parseFloat(calculateDividendYield(simulationData.baseScenario)) / 100)
-              ).toLocaleString()}
-            </div>
-          </div>
-        </div>
-
-        {/* 詳細分析 */}
-        <div className="bg-[var(--color-surface)] rounded-xl p-4 mb-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
-          <div className="flex items-center mb-4">
-            <PieChart className="w-5 h-5 text-[var(--color-gray-900)] mr-2" />
-            <h2 className="text-base font-medium text-[var(--color-gray-900)]">
-              配当金の貢献度分析
-            </h2>
-          </div>
-          {/* インフォグラフィックス（円グラフ） */}
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            {/* 円グラフ */}
-            <RePieChart width={120} height={120}>
-              <Pie
-                data={(() => {
-                  const totalDiv =
-                    (calculateTotalDividends(simulationData.baseScenario) * investmentAmount) / 100;
-                  const last = simulationData.baseScenario[simulationData.baseScenario.length - 1];
-                  const totalAsset = last ? (last.total * investmentAmount) / 100 : 0;
-                  const divRatio = totalAsset > 0 ? totalDiv / totalAsset : 0;
-                  return [
-                    { name: '配当金累積', value: totalDiv },
-                    { name: 'その他', value: Math.max(totalAsset - totalDiv, 0) },
-                  ];
-                })()}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={40}
-                outerRadius={55}
-                fill="#16A34A"
-                stroke="none"
-              >
-                <Cell fill="#16A34A" />
-                <Cell fill="#5965FF" />
-              </Pie>
-            </RePieChart>
-            {/* 数値・ラベル */}
-            <div className="flex-1 space-y-4 w-full">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-[var(--color-gray-700)]">配当金の累積額</span>
-                  <span className="font-medium text-[var(--color-gray-900)]">
-                    ¥
-                    {Math.round(
-                      (calculateTotalDividends(simulationData.baseScenario) * investmentAmount) /
-                        100
-                    ).toLocaleString()}
+            {/* 初期投資元本カード（逆算対象にできる） */}
+            <div
+              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'initialPrincipal' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
+              aria-pressed={isReverseMode && reverseTarget === 'initialPrincipal'}
+              tabIndex={isReverseMode ? 0 : -1}
+              onClick={() => isReverseMode && setReverseTarget('initialPrincipal')}
+            >
+              <div className="flex items-center mb-1 cursor-pointer select-none">
+                <span className="text-xs text-[var(--color-gray-400)]">初期投資元本</span>
+                {isReverseMode && reverseTarget === 'initialPrincipal' && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
+                    逆算中
                   </span>
+                )}
+                <Tooltip
+                  content={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].description}
+                  title={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].title}
+                >
+                  <span className="sr-only">初期投資元本の説明</span>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
+                <input
+                  type="number"
+                  step="1"
+                  min={0}
+                  value={
+                    isReverseMode &&
+                    reverseTarget === 'initialPrincipal' &&
+                    reversePrincipal !== null
+                      ? reversePrincipal
+                      : initialPrincipal
+                  }
+                  onChange={(e) => setInitialPrincipal(Math.max(0, Number(e.target.value)))}
+                  className={`w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'initialPrincipal' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
+                  readOnly={isReverseMode && reverseTarget === 'initialPrincipal'}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            </div>
+            {/* 毎月積立金額カード（逆算対象にできる） */}
+            <div
+              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'monthlyAmount' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
+              aria-pressed={isReverseMode && reverseTarget === 'monthlyAmount'}
+              tabIndex={isReverseMode ? 0 : -1}
+              onClick={() => isReverseMode && setReverseTarget('monthlyAmount')}
+            >
+              <div className="flex items-center mb-1 cursor-pointer select-none">
+                <span className="text-xs text-[var(--color-gray-400)]">毎月積立金額</span>
+                {isReverseMode && reverseTarget === 'monthlyAmount' && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
+                    逆算中
+                  </span>
+                )}
+                <Tooltip
+                  content={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].description}
+                  title={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].title}
+                >
+                  <span className="sr-only">毎月積立金額の説明</span>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
+                <input
+                  type="number"
+                  step="1"
+                  min={0}
+                  value={
+                    isReverseMode && reverseTarget === 'monthlyAmount' && reverseMonthly !== null
+                      ? Math.floor(reverseMonthly)
+                      : monthlyAmount
+                  }
+                  onChange={(e) =>
+                    setMonthlyAmount(Math.max(0, Math.floor(Number(e.target.value))))
+                  }
+                  className={`w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'monthlyAmount' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
+                  readOnly={isReverseMode && reverseTarget === 'monthlyAmount'}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            </div>
+            {/* 積立継続年数スライダー（毎月積立金額の右隣に移動） */}
+            <div
+              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between transition-all duration-150 ${isReverseMode && reverseTarget === 'contributionYears' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
+              aria-pressed={isReverseMode && reverseTarget === 'contributionYears'}
+              tabIndex={isReverseMode ? 0 : -1}
+              onClick={() => isReverseMode && setReverseTarget('contributionYears')}
+            >
+              <div className="flex items-center mb-1 cursor-pointer select-none">
+                <span className="text-xs text-[var(--color-gray-400)]">積立継続年数</span>
+                <Tooltip
+                  content={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].description}
+                  title={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].title}
+                >
+                  <span className="sr-only">積立継続年数の説明</span>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min={3}
+                  max={50}
+                  step={1}
+                  value={
+                    isReverseMode && reverseTarget === 'contributionYears' && reverseYears !== null
+                      ? Math.round(reverseYears)
+                      : contributionYears
+                  }
+                  onChange={(e) => {
+                    const newContributionYears = Math.max(3, Math.min(50, Number(e.target.value)));
+                    setContributionYears(newContributionYears);
+                  }}
+                  className={`w-full accent-[var(--color-primary)] ${isReverseMode && reverseTarget === 'contributionYears' ? 'bg-[var(--color-surface-alt)]' : ''}`}
+                  readOnly={isReverseMode && reverseTarget === 'contributionYears'}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span
+                  className={`text-base font-semibold min-w-[2.5em] text-right ${isReverseMode && reverseTarget === 'contributionYears' ? 'text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
+                >
+                  {isReverseMode && reverseTarget === 'contributionYears' && reverseYears !== null
+                    ? `${reverseYears} 年`
+                    : `${contributionYears} 年`}
+                </span>
+              </div>
+            </div>
+            {/* 合計投資額 & 目標金額カード */}
+            <div className="col-span-2 grid grid-cols-2 gap-3">
+              {/* 合計投資額 */}
+              <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center mb-1">
+                  <span className="text-xs text-[var(--color-gray-400)]">合計投資額</span>
+                  <Tooltip
+                    content={SIMULATION_TERM_EXPLANATIONS['合計投資額'].description}
+                    title={SIMULATION_TERM_EXPLANATIONS['合計投資額'].title}
+                  >
+                    <span className="sr-only">合計投資額の説明</span>
+                  </Tooltip>
                 </div>
-                <div className="h-2 bg-[var(--color-gray-200)] rounded-full">
-                  <div
-                    className="h-full bg-[var(--color-success)] rounded-full"
-                    style={{
-                      width: `${(() => {
-                        const totalDiv =
-                          (calculateTotalDividends(simulationData.baseScenario) *
-                            investmentAmount) /
-                          100;
-                        const last =
-                          simulationData.baseScenario[simulationData.baseScenario.length - 1];
-                        const totalAsset = last ? (last.total * investmentAmount) / 100 : 0;
-                        const divRatio = totalAsset > 0 ? (totalDiv / totalAsset) * 100 : 0;
-                        return divRatio.toFixed(1);
-                      })()}%`,
-                    }}
-                  ></div>
+                <div className="text-base font-semibold text-[var(--color-gray-900)]">
+                  {(() => {
+                    let principal = initialPrincipal;
+                    let monthly = monthlyAmount;
+                    let years = contributionYears;
+                    if (isReverseMode) {
+                      if (reverseTarget === 'initialPrincipal' && reversePrincipal !== null) {
+                        principal = reversePrincipal;
+                      }
+                      if (reverseTarget === 'monthlyAmount' && reverseMonthly !== null) {
+                        monthly = Math.floor(reverseMonthly);
+                      }
+                      if (reverseTarget === 'contributionYears' && reverseYears !== null) {
+                        years = Math.round(reverseYears);
+                      }
+                    }
+                    return `¥ ${(principal + years * monthly * 12).toLocaleString()}`;
+                  })()}
                 </div>
               </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-[var(--color-gray-700)]">資産総額に占める割合</span>
-                  <span className="font-medium text-[var(--color-gray-900)]">
-                    {(() => {
-                      const totalDiv =
-                        (calculateTotalDividends(simulationData.baseScenario) * investmentAmount) /
-                        100;
-                      const last =
-                        simulationData.baseScenario[simulationData.baseScenario.length - 1];
-                      const totalAsset = last ? (last.total * investmentAmount) / 100 : 0;
-                      const divRatio = totalAsset > 0 ? (totalDiv / totalAsset) * 100 : 0;
-                      return `${divRatio.toFixed(1)}%`;
-                    })()}
-                  </span>
+              {/* 目標金額 */}
+              <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center">
+                    <span className="text-xs text-[var(--color-gray-400)]">目標金額</span>
+                    <Tooltip title="目標金額" content={'達成したい目標金額を入力してください。'}>
+                      <span className="sr-only">目標金額の説明</span>
+                    </Tooltip>
+                  </div>
+                  {isReverseMode && (
+                    <button
+                      onClick={() => setTargetAmount('')}
+                      className="text-xs text-[var(--color-primary)] hover:underline focus:outline-none"
+                      aria-label="逆算を解除"
+                    >
+                      解除
+                    </button>
+                  )}
                 </div>
-                <div className="h-2 bg-[var(--color-gray-200)] rounded-full">
-                  <div
-                    className="h-full bg-[var(--color-primary)] rounded-full"
-                    style={{
-                      width: `${(() => {
-                        const totalDiv =
-                          (calculateTotalDividends(simulationData.baseScenario) *
-                            investmentAmount) /
-                          100;
-                        const last =
-                          simulationData.baseScenario[simulationData.baseScenario.length - 1];
-                        const totalAsset = last ? (last.total * investmentAmount) / 100 : 0;
-                        const divRatio = totalAsset > 0 ? (totalDiv / totalAsset) * 100 : 0;
-                        return divRatio.toFixed(1);
-                      })()}%`,
-                    }}
-                  ></div>
+                <div className="flex items-center gap-1">
+                  <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
+                  <input
+                    type="number"
+                    step="1000"
+                    min={0}
+                    value={targetAmount}
+                    onChange={(e) => setTargetAmount(e.target.value)}
+                    className="w-full px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
+                    placeholder="例: 10000000"
+                  />
                 </div>
               </div>
             </div>
+            {/* 逆算エラー表示 */}
+            {isReverseMode && reverseError && (
+              <div className="col-span-2 text-sm text-[var(--color-danger)] font-semibold mb-2">
+                {reverseError}
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="mb-6 w-full">
+            <WithdrawalPlan
+              finalBalance={
+                simulationData.baseScenario.length > 0
+                  ? simulationData.baseScenario[simulationData.baseScenario.length - 1].total
+                  : 0
+              }
+              annualRate={averageYield}
+              mode="input"
+            />
+          </div>
+        )}
 
         {/* 注意事項 */}
         <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
@@ -586,9 +1270,24 @@ export default function SimulationPage() {
             <li>• 株価は市場環境により大きく変動する可能性があります。</li>
             <li>• 配当金は企業の業績により変更される可能性があります。</li>
             <li>• 投資にはリスクが伴います。投資判断は自己責任でお願いします。</li>
+            <li>• 本シミュレーションは手数料・税金等を考慮していません。</li>
           </ul>
         </div>
       </div>
+      <style>{`
+        @keyframes chart-line-draw {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        @keyframes chart-area-clip-grow {
+          from { width: 0; }
+          to { width: 400px; }
+        }
+        .chart-area-fade {
+          /* 何も指定しなくてOK。clipPathで制御 */
+        }
+      `}</style>
     </div>
   );
 }

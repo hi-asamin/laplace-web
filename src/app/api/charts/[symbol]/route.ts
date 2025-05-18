@@ -7,8 +7,8 @@ import { apiConfig } from '@/lib/config';
  * チャートデータAPI (BFF)
  * クライアントからのリクエストを受け取り、バックエンドAPIと通信する
  */
-export async function GET(request: Request, { params }: { params: { symbol: string } }) {
-  const { symbol } = params;
+export async function GET(request: Request, context: { params: { symbol: string } }) {
+  const { symbol } = context.params;
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') || '3M';
   const interval = searchParams.get('interval') || '1D';

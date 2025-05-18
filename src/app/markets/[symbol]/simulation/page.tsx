@@ -592,23 +592,36 @@ export default function SimulationPage() {
           <div className="mb-2 px-2">
             {/* 総資産額 */}
             <div className="flex items-center gap-1">
-              <span className="text-xs text-[var(--color-gray-400)]">貯まる金額</span>
+              <span className="text-xs text-[var(--color-gray-400)]">
+                {mode === 'withdrawal' ? '使える金額' : '貯まる金額'}
+              </span>
               <Tooltip
-                title={SIMULATION_TERM_EXPLANATIONS['貯まる金額'].title}
-                content={`あなたは${contributionYears}年間で、合計${
-                  isReverseMode && targetAmount !== '' && !reverseError
-                    ? '¥' + Number(targetAmount).toLocaleString() + '（目標）'
-                    : simulationData.baseScenario.length > 0
-                      ? '¥' +
-                        Math.round(
-                          simulationData.baseScenario[simulationData.baseScenario.length - 1].total
-                        ).toLocaleString()
-                      : '-'
-                }貯まります。
+                title={
+                  mode === 'withdrawal'
+                    ? '使える金額'
+                    : SIMULATION_TERM_EXPLANATIONS['貯まる金額'].title
+                }
+                content={
+                  mode === 'withdrawal'
+                    ? `取り崩しプランに基づき、期間中に使える金額の目安です。運用・取り崩し条件によって変動します。`
+                    : `あなたは${contributionYears}年間で、合計${
+                        isReverseMode && targetAmount !== '' && !reverseError
+                          ? '¥' + Number(targetAmount).toLocaleString() + '（目標）'
+                          : simulationData.baseScenario.length > 0
+                            ? '¥' +
+                              Math.round(
+                                simulationData.baseScenario[simulationData.baseScenario.length - 1]
+                                  .total
+                              ).toLocaleString()
+                            : '-'
+                      }貯まります。
 
-${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`}
+${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
+                }
               >
-                <span className="sr-only">貯まる金額の説明</span>
+                <span className="sr-only">
+                  {mode === 'withdrawal' ? '使える金額の説明' : '貯まる金額の説明'}
+                </span>
               </Tooltip>
             </div>
             <div className="text-[36px] font-bold text-[var(--color-gray-900)]">
@@ -985,7 +998,7 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`}
         >
           {mode === 'simulation'
             ? `${contributionYears}年後にいくら使える？`
-            : 'この金額を貯めるためには？'}
+            : 'シミュレーションをやり直す'}
         </button>
 
         {/* 取引情報（シミュレーション変数表示 or 取り崩しプラン） */}
@@ -1257,6 +1270,7 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`}
             <li>• 株価は市場環境により大きく変動する可能性があります。</li>
             <li>• 配当金は企業の業績により変更される可能性があります。</li>
             <li>• 投資にはリスクが伴います。投資判断は自己責任でお願いします。</li>
+            <li>• 本シミュレーションは手数料・税金等を考慮していません。</li>
           </ul>
         </div>
       </div>

@@ -13,9 +13,14 @@ import Tooltip from '@/components/tooltip';
 interface WithdrawalPlanProps {
   finalBalance: number;
   annualRate: number;
+  mode?: 'chart' | 'input' | 'full';
 }
 
-export default function WithdrawalPlan({ finalBalance, annualRate }: WithdrawalPlanProps) {
+export default function WithdrawalPlan({
+  finalBalance,
+  annualRate,
+  mode = 'full',
+}: WithdrawalPlanProps) {
   const [withdrawalPlan, setWithdrawalPlan] = useState<WithdrawalPlanType>({
     startAge: 65,
     endAge: 85,
@@ -36,6 +41,9 @@ export default function WithdrawalPlan({ finalBalance, annualRate }: WithdrawalP
     y: number;
   } | null>(null);
 
+  const chartAreaClipId = 'withdrawal-chart-area-clip';
+  const chartLineClass = 'withdrawal-chart-line-animation';
+
   useEffect(() => {
     const data = calculateWithdrawalSimulation(finalBalance, withdrawalPlan, annualRate);
     setWithdrawalData(data);
@@ -55,10 +63,30 @@ export default function WithdrawalPlan({ finalBalance, annualRate }: WithdrawalP
     };
   }, []);
 
+  // チャートアニメーション制御
+  useEffect(() => {
+    if (!(mode === 'chart' || mode === 'full')) return;
+    const rect = document.getElementById(`${chartAreaClipId}-rect`);
+    if (rect) {
+      rect.setAttribute('width', '0');
+      requestAnimationFrame(() => {
+        rect.style.transition = 'width 1.5s cubic-bezier(0.4,0,0.2,1)';
+        rect.setAttribute('width', '400');
+      });
+    }
+    const line = document.querySelector(`.${chartLineClass}`);
+    if (line) {
+      (line as HTMLElement).style.animation = 'none';
+      void (line as HTMLElement).offsetWidth;
+      (line as HTMLElement).style.animation =
+        'withdrawal-chart-line-draw 1.5s cubic-bezier(0.4,0,0.2,1) forwards';
+    }
+  }, [mode, withdrawalData]);
+
   return (
     <div className="lg:p-6 xl:p-8">
       {/* 取り崩し資産推移チャート */}
-      {withdrawalData.length > 0 && (
+      {(mode === 'chart' || mode === 'full') && withdrawalData.length > 0 && (
         <div className="mb-8">
           <div className="relative h-[180px] sm:h-[220px] lg:h-[260px] rounded-lg bg-[var(--color-surface-alt)]">
             <svg
@@ -98,6 +126,12 @@ export default function WithdrawalPlan({ finalBalance, annualRate }: WithdrawalP
                 });
               }}
             >
+              {/* アニメーション用clipPath */}
+              <defs>
+                <clipPath id={chartAreaClipId}>
+                  <rect id={`${chartAreaClipId}-rect`} x="0" y="0" width="0" height="140" />
+                </clipPath>
+              </defs>
               {(() => {
                 const data = withdrawalData;
                 if (!data || data.length === 0) return null;
@@ -173,9 +207,20 @@ export default function WithdrawalPlan({ finalBalance, annualRate }: WithdrawalP
                     {/* X軸ラベル */}
                     {xLabels}
                     {/* エリア */}
-                    <path d={areaPath} fill="rgba(89,101,255,0.13)" />
+                    <path
+                      d={areaPath}
+                      fill="rgba(89,101,255,0.13)"
+                      clipPath={`url(#${chartAreaClipId})`}
+                    />
                     {/* 折れ線 */}
-                    <path d={linePath} fill="none" stroke="var(--color-primary)" strokeWidth="2" />
+                    <path
+                      d={linePath}
+                      fill="none"
+                      stroke="var(--color-primary)"
+                      strokeWidth="2"
+                      className={chartLineClass}
+                      style={{ strokeDasharray: 1000, strokeDashoffset: 1000 }}
+                    />
                     {/* 選択ポイントのマーカー */}
                     {selectedPoint && (
                       <>
@@ -251,110 +296,111 @@ export default function WithdrawalPlan({ finalBalance, annualRate }: WithdrawalP
       )}
 
       {/* 取り崩し設定 */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          <label className="block text-sm text-[var(--color-gray-400)] mb-1">
-            取り崩し開始年齢
-          </label>
-          <select
-            value={withdrawalPlan.startAge}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setWithdrawalPlan((prev) => ({
-                ...prev,
-                startAge: v,
-                endAge: Math.max(v + 5, prev.endAge), // 終了年齢が開始+5未満なら自動調整
-              }));
-            }}
-            className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
-          >
-            {[...Array(9)].map((_, i) => {
-              const age = 40 + i * 5;
-              return (
-                <option key={age} value={age}>
-                  {age}歳
-                </option>
-              );
-            })}
-          </select>
-        </div>
-        <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          <label className="block text-sm text-[var(--color-gray-400)] mb-1">
-            取り崩し終了年齢
-          </label>
-          <select
-            value={withdrawalPlan.endAge}
-            onChange={(e) =>
-              setWithdrawalPlan((prev) => ({
-                ...prev,
-                endAge: Number(e.target.value),
-              }))
-            }
-            className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
-          >
-            {(() => {
-              const options = [];
-              for (let age = withdrawalPlan.startAge + 5; age <= 100; age += 5) {
-                options.push(
+      {(mode === 'input' || mode === 'full') && (
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <label className="block text-sm text-[var(--color-gray-400)] mb-1">
+              取り崩し開始年齢
+            </label>
+            <select
+              value={withdrawalPlan.startAge}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setWithdrawalPlan((prev) => ({
+                  ...prev,
+                  startAge: v,
+                  endAge: Math.max(v + 5, prev.endAge), // 終了年齢が開始+5未満なら自動調整
+                }));
+              }}
+              className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
+            >
+              {[...Array(9)].map((_, i) => {
+                const age = 40 + i * 5;
+                return (
                   <option key={age} value={age}>
                     {age}歳
                   </option>
                 );
+              })}
+            </select>
+          </div>
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <label className="block text-sm text-[var(--color-gray-400)] mb-1">
+              取り崩し終了年齢
+            </label>
+            <select
+              value={withdrawalPlan.endAge}
+              onChange={(e) =>
+                setWithdrawalPlan((prev) => ({
+                  ...prev,
+                  endAge: Number(e.target.value),
+                }))
               }
-              return options;
-            })()}
-          </select>
-        </div>
-        <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          {withdrawalPlan.withdrawalType === 'fixed' ? (
-            <>
-              <label className="block text-sm text-[var(--color-gray-400)] mb-1">
-                月間取り崩し額
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={withdrawalPlan.monthlyAmount}
-                  onChange={(e) =>
-                    setWithdrawalPlan((prev) => ({
-                      ...prev,
-                      monthlyAmount: Math.max(0, Number(e.target.value)),
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
-                />
-                <span className="text-base text-[var(--color-gray-700)]">円</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <label className="block text-sm text-[var(--color-gray-400)] mb-1">年率（%）</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={withdrawalPlan.monthlyAmount}
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  onChange={(e) =>
-                    setWithdrawalPlan((prev) => ({
-                      ...prev,
-                      monthlyAmount: Math.max(0, Math.min(100, Number(e.target.value))),
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
-                />
-                <span className="text-base text-[var(--color-gray-700)]">%</span>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          <label className="block text-sm text-[var(--color-gray-400)] mb-1">
-            取り崩しタイプ
-            <Tooltip
-              title="取り崩しタイプ"
-              content={`定額取り崩し：毎年同じ金額を取り崩します。
+              className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
+            >
+              {(() => {
+                const options = [];
+                for (let age = withdrawalPlan.startAge + 5; age <= 100; age += 5) {
+                  options.push(
+                    <option key={age} value={age}>
+                      {age}歳
+                    </option>
+                  );
+                }
+                return options;
+              })()}
+            </select>
+          </div>
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            {withdrawalPlan.withdrawalType === 'fixed' ? (
+              <>
+                <label className="block text-sm text-[var(--color-gray-400)] mb-1">
+                  月間取り崩し額
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={withdrawalPlan.monthlyAmount}
+                    onChange={(e) =>
+                      setWithdrawalPlan((prev) => ({
+                        ...prev,
+                        monthlyAmount: Math.max(0, Number(e.target.value)),
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
+                  />
+                  <span className="text-base text-[var(--color-gray-700)]">円</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <label className="block text-sm text-[var(--color-gray-400)] mb-1">年率（%）</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={withdrawalPlan.monthlyAmount}
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    onChange={(e) =>
+                      setWithdrawalPlan((prev) => ({
+                        ...prev,
+                        monthlyAmount: Math.max(0, Math.min(100, Number(e.target.value))),
+                      }))
+                    }
+                    className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
+                  />
+                  <span className="text-base text-[var(--color-gray-700)]">%</span>
+                </div>
+              </>
+            )}
+          </div>
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <label className="block text-sm text-[var(--color-gray-400)] mb-1">
+              取り崩しタイプ
+              <Tooltip
+                title="取り崩しタイプ"
+                content={`定額取り崩し：毎年同じ金額を取り崩します。
 定率取り崩し：残高に対して一定の割合を取り崩します。
 
 【見方のポイント】
@@ -364,25 +410,33 @@ export default function WithdrawalPlan({ finalBalance, annualRate }: WithdrawalP
 【例】
 • 定額：毎年120万円ずつ取り崩す
 • 定率：毎年残高の4%ずつ取り崩す`}
+              >
+                <span className="sr-only">取り崩しタイプの説明</span>
+              </Tooltip>
+            </label>
+            <select
+              value={withdrawalPlan.withdrawalType}
+              onChange={(e) =>
+                setWithdrawalPlan((prev) => ({
+                  ...prev,
+                  withdrawalType: e.target.value as 'fixed' | 'percentage',
+                }))
+              }
+              className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
             >
-              <span className="sr-only">取り崩しタイプの説明</span>
-            </Tooltip>
-          </label>
-          <select
-            value={withdrawalPlan.withdrawalType}
-            onChange={(e) =>
-              setWithdrawalPlan((prev) => ({
-                ...prev,
-                withdrawalType: e.target.value as 'fixed' | 'percentage',
-              }))
-            }
-            className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
-          >
-            <option value="fixed">定額取り崩し</option>
-            <option value="percentage">定率取り崩し</option>
-          </select>
+              <option value="fixed">定額取り崩し</option>
+              <option value="percentage">定率取り崩し</option>
+            </select>
+          </div>
         </div>
-      </div>
+      )}
+      <style>{`
+        @keyframes withdrawal-chart-line-draw {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }

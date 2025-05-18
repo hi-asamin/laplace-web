@@ -504,6 +504,32 @@ export default function SimulationPage() {
     ),
   };
 
+  // シミュレーション/取り崩しモード切替
+  const [mode, setMode] = useState<'simulation' | 'withdrawal'>('simulation');
+
+  // チャートのclipPathアニメーションを制御
+  useEffect(() => {
+    if (mode !== 'simulation') return;
+    // 1フレーム遅延でclipPathをリセット→再アニメーション
+    const rect = document.getElementById('chart-area-clip-rect');
+    if (rect) {
+      rect.setAttribute('width', '0');
+      // 次フレームでwidthを400に
+      requestAnimationFrame(() => {
+        rect.style.transition = 'width 1.5s cubic-bezier(0.4,0,0.2,1)';
+        rect.setAttribute('width', '400');
+      });
+    }
+    // 線のアニメーションも同様に再発火
+    const line = document.querySelector('.chart-line-animation');
+    if (line) {
+      (line as HTMLElement).style.animation = 'none';
+      void (line as HTMLElement).offsetWidth;
+      (line as HTMLElement).style.animation =
+        'chart-line-draw 1.5s cubic-bezier(0.4,0,0.2,1) forwards';
+    }
+  }, [mode, simulationData.baseScenario]);
+
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] p-2 sm:p-4">
       <div className="max-w-3xl 2xl:max-w-5xl mx-auto px-2 sm:px-4 lg:px-8 xl:px-12">
@@ -637,136 +663,162 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`}
           </div>
         )}
 
-        {/* チャート */}
-        <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg w-full">
-          {/* 色の使い分け説明（凡例） */}
-          <div className="absolute left-4 top-2 flex gap-4 z-10 text-xs sm:text-sm">
-            <span className="flex items-center gap-1">
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 16,
-                  height: 8,
-                  background: 'rgba(89,101,255,0.13)',
-                  borderRadius: 2,
-                }}
-              ></span>
-              <span className="text-[var(--color-gray-700)]">積立元本</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 16,
-                  height: 8,
-                  background: 'rgba(89,101,255,0.38)',
-                  borderRadius: 2,
-                }}
-              ></span>
-              <span className="text-[var(--color-gray-700)]">複利利益</span>
-            </span>
-          </div>
-          <svg
-            ref={chartRef}
-            className="w-full h-full"
-            viewBox="0 0 400 160"
-            preserveAspectRatio="none"
-            onClick={(e) => {
-              if (!simulationData.baseScenario) return;
+        {/* チャートエリア：シミュレーション or 取り崩しプラン */}
+        {mode === 'simulation' ? (
+          <div className="relative h-[200px] sm:h-[260px] lg:h-[320px] mb-6 rounded-lg w-full">
+            {/* 色の使い分け説明（凡例） */}
+            <div className="absolute left-4 top-2 flex gap-4 z-10 text-xs sm:text-sm">
+              <span className="flex items-center gap-1">
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 16,
+                    height: 8,
+                    background: 'rgba(89,101,255,0.13)',
+                    borderRadius: 2,
+                  }}
+                ></span>
+                <span className="text-[var(--color-gray-700)]">積立元本</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 16,
+                    height: 8,
+                    background: 'rgba(89,101,255,0.38)',
+                    borderRadius: 2,
+                  }}
+                ></span>
+                <span className="text-[var(--color-gray-700)]">複利利益</span>
+              </span>
+            </div>
+            <svg
+              ref={chartRef}
+              className="w-full h-full"
+              viewBox="0 0 400 160"
+              preserveAspectRatio="none"
+              onClick={(e) => {
+                if (!simulationData.baseScenario) return;
 
-              // クリック位置を取得
-              const svg = e.currentTarget;
-              const rect = svg.getBoundingClientRect();
-              const x = ((e.clientX - rect.left) / rect.width) * 400;
+                // クリック位置を取得
+                const svg = e.currentTarget;
+                const rect = svg.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 400;
 
-              // x座標に最も近いデータポイントを見つける
-              const chartWidth = 400 - 20; // パディングを考慮
-              const pointWidth = chartWidth / (simulationData.baseScenario.length - 1);
-              const dataIndex = Math.round((x - 10) / pointWidth); // パディングを考慮して調整
+                // x座標に最も近いデータポイントを見つける
+                const chartWidth = 400 - 20; // パディングを考慮
+                const pointWidth = chartWidth / (simulationData.baseScenario.length - 1);
+                const dataIndex = Math.round((x - 10) / pointWidth); // パディングを考慮して調整
 
-              // 範囲チェック
-              const validIndex = Math.max(
-                0,
-                Math.min(dataIndex, simulationData.baseScenario.length - 1)
-              );
-              const point = simulationData.baseScenario[validIndex];
+                // 範囲チェック
+                const validIndex = Math.max(
+                  0,
+                  Math.min(dataIndex, simulationData.baseScenario.length - 1)
+                );
+                const point = simulationData.baseScenario[validIndex];
 
-              if (point) {
-                const values = simulationData.baseScenario.map((p) => p.total);
+                if (point) {
+                  const values = simulationData.baseScenario.map((p) => p.total);
+                  const min = Math.min(...values);
+                  const max = Math.max(...values);
+                  const valueMargin = (max - min) * 0.1;
+                  const effectiveMin = min - valueMargin;
+                  const effectiveMax = max + valueMargin;
+                  const valueRange = effectiveMax - effectiveMin;
+
+                  // Y座標を計算
+                  const chartHeight = 160 - 20; // パディングを考慮
+                  const y =
+                    10 + chartHeight - ((point.total - effectiveMin) / valueRange) * chartHeight;
+
+                  setSelectedPoint({
+                    price: point.total,
+                    year: point.year,
+                    x: 10 + validIndex * pointWidth,
+                    y,
+                  });
+                }
+              }}
+            >
+              {/* 背景アニメーション用clipPath */}
+              <defs>
+                <clipPath id="chart-area-clip">
+                  <rect id="chart-area-clip-rect" x="0" y="0" width="0" height="160" />
+                </clipPath>
+              </defs>
+              {/* --- ここから積立元本・利回り分エリアの描画 --- */}
+              {(() => {
+                const data = simulationData.baseScenario;
+                if (!data || data.length === 0) return null;
+                // チャートスケール計算
+                const values = data.map((p) => p.total);
                 const min = Math.min(...values);
                 const max = Math.max(...values);
                 const valueMargin = (max - min) * 0.1;
                 const effectiveMin = min - valueMargin;
                 const effectiveMax = max + valueMargin;
                 const valueRange = effectiveMax - effectiveMin;
-
-                // Y座標を計算
-                const chartHeight = 160 - 20; // パディングを考慮
-                const y =
-                  10 + chartHeight - ((point.total - effectiveMin) / valueRange) * chartHeight;
-
-                setSelectedPoint({
-                  price: point.total,
-                  year: point.year,
-                  x: 10 + validIndex * pointWidth,
-                  y,
+                const chartWidth = 400 - 20;
+                const chartHeight = 160 - 20;
+                // 積立元本配列
+                const principalPoints = data.map((d, i) => {
+                  const x = 10 + (chartWidth / (data.length - 1)) * i;
+                  const y =
+                    10 + chartHeight - ((d.principal - effectiveMin) / valueRange) * chartHeight;
+                  return [x, y];
                 });
-              }
-            }}
-          >
-            {/* --- ここから積立元本・利回り分エリアの描画 --- */}
-            {(() => {
-              const data = simulationData.baseScenario;
-              if (!data || data.length === 0) return null;
-              // チャートスケール計算
-              const values = data.map((p) => p.total);
-              const min = Math.min(...values);
-              const max = Math.max(...values);
-              const valueMargin = (max - min) * 0.1;
-              const effectiveMin = min - valueMargin;
-              const effectiveMax = max + valueMargin;
-              const valueRange = effectiveMax - effectiveMin;
-              const chartWidth = 400 - 20;
-              const chartHeight = 160 - 20;
-              // 積立元本配列
-              const principalPoints = data.map((d, i) => {
-                const x = 10 + (chartWidth / (data.length - 1)) * i;
-                const y =
-                  10 + chartHeight - ((d.principal - effectiveMin) / valueRange) * chartHeight;
-                return [x, y];
-              });
-              // 配当金エリア配列（元本＋配当金まで）
-              const dividendPoints = data.map((d, i) => {
-                const x = 10 + (chartWidth / (data.length - 1)) * i;
-                const y =
-                  10 +
-                  chartHeight -
-                  ((d.principal + d.dividend - effectiveMin) / valueRange) * chartHeight;
-                return [x, y];
-              });
-              // 元本エリアパス
-              let principalPath = '';
-              principalPoints.forEach(([x, y], i) => {
-                principalPath += i === 0 ? `M${x},${y}` : `L${x},${y}`;
-              });
-              principalPath += `L${10 + chartWidth},${10 + chartHeight}L10,${10 + chartHeight}Z`;
-              // 配当金エリアパス（上辺：配当金、下辺：元本）
-              let dividendPath = '';
-              dividendPoints.forEach(([x, y], i) => {
-                dividendPath += i === 0 ? `M${x},${y}` : `L${x},${y}`;
-              });
-              for (let i = data.length - 1; i >= 0; i--) {
-                const [x, y] = principalPoints[i];
-                dividendPath += `L${x},${y}`;
-              }
-              dividendPath += 'Z';
-              // X軸ラベル（年）
-              const xLabels = [];
-              if (data.length > 10) {
-                // 5年ごと（5,10,15...）
-                for (let i = 0; i < data.length; i++) {
-                  const d = data[i];
-                  if (d.year % 5 === 0) {
+                // 配当金エリア配列（元本＋配当金まで）
+                const dividendPoints = data.map((d, i) => {
+                  const x = 10 + (chartWidth / (data.length - 1)) * i;
+                  const y =
+                    10 +
+                    chartHeight -
+                    ((d.principal + d.dividend - effectiveMin) / valueRange) * chartHeight;
+                  return [x, y];
+                });
+                // 元本エリアパス
+                let principalPath = '';
+                principalPoints.forEach(([x, y], i) => {
+                  principalPath += i === 0 ? `M${x},${y}` : `L${x},${y}`;
+                });
+                principalPath += `L${10 + chartWidth},${10 + chartHeight}L10,${10 + chartHeight}Z`;
+                // 配当金エリアパス（上辺：配当金、下辺：元本）
+                let dividendPath = '';
+                dividendPoints.forEach(([x, y], i) => {
+                  dividendPath += i === 0 ? `M${x},${y}` : `L${x},${y}`;
+                });
+                for (let i = data.length - 1; i >= 0; i--) {
+                  const [x, y] = principalPoints[i];
+                  dividendPath += `L${x},${y}`;
+                }
+                dividendPath += 'Z';
+                // X軸ラベル（年）
+                const xLabels = [];
+                if (data.length > 10) {
+                  // 5年ごと（5,10,15...）
+                  for (let i = 0; i < data.length; i++) {
+                    const d = data[i];
+                    if (d.year % 5 === 0) {
+                      const x = 10 + (chartWidth / (data.length - 1)) * i;
+                      xLabels.push(
+                        <text
+                          key={d.year}
+                          x={x}
+                          y={160 - 2}
+                          textAnchor="middle"
+                          fontSize="10"
+                          fill="#94A3B8"
+                        >
+                          {d.year}年
+                        </text>
+                      );
+                    }
+                  }
+                } else {
+                  // 1年ごと
+                  for (let i = 0; i < data.length; i++) {
+                    const d = data[i];
                     const x = 10 + (chartWidth / (data.length - 1)) * i;
                     xLabels.push(
                       <text
@@ -782,384 +834,417 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`}
                     );
                   }
                 }
-              } else {
-                // 1年ごと
-                for (let i = 0; i < data.length; i++) {
-                  const d = data[i];
-                  const x = 10 + (chartWidth / (data.length - 1)) * i;
-                  xLabels.push(
-                    <text
-                      key={d.year}
-                      x={x}
-                      y={160 - 2}
-                      textAnchor="middle"
-                      fontSize="10"
-                      fill="#94A3B8"
-                    >
-                      {d.year}年
-                    </text>
-                  );
-                }
-              }
-              return (
-                <>
-                  {/* X軸ラベル */}
-                  {xLabels}
-                  {/* 配当金エリア（上層、ブルー系濃色） */}
-                  <path d={dividendPath} fill="rgba(89,101,255,0.38)" />
-                  {/* 元本エリア（下層、ブルー系淡色） */}
-                  <path d={principalPath} fill="rgba(89,101,255,0.13)" />
-                </>
-              );
-            })()}
-            {/* --- ここまでエリア描画 --- */}
-            {/* 既存の折れ線チャート（資産推移） */}
-            {chartPaths.baseScenario.linePath && (
-              <path
-                d={chartPaths.baseScenario.linePath}
-                fill="none"
-                stroke="var(--color-primary)"
-                strokeWidth="2"
-                className="chart-line-animation"
-                style={{
-                  strokeDasharray: '1000',
-                  strokeDashoffset: '1000',
-                  animation: 'chart-line-draw 1.5s ease-in-out forwards',
-                }}
-              />
-            )}
-
-            {/* 選択したポイントのマーカー */}
-            {selectedPoint && (
-              <>
-                {/* 垂直線 */}
-                <line
-                  x1={selectedPoint.x}
-                  y1="10"
-                  x2={selectedPoint.x}
-                  y2="150"
+                return (
+                  <>
+                    {/* X軸ラベル */}
+                    {xLabels}
+                    {/* 配当金エリア（上層、ブルー系濃色） */}
+                    <path
+                      d={dividendPath}
+                      fill="rgba(89,101,255,0.38)"
+                      clipPath="url(#chart-area-clip)"
+                      className="chart-area-fade"
+                    />
+                    {/* 元本エリア（下層、ブルー系淡色） */}
+                    <path
+                      d={principalPath}
+                      fill="rgba(89,101,255,0.13)"
+                      clipPath="url(#chart-area-clip)"
+                      className="chart-area-fade"
+                    />
+                  </>
+                );
+              })()}
+              {/* --- ここまでエリア描画 --- */}
+              {/* 既存の折れ線チャート（資産推移） */}
+              {chartPaths.baseScenario.linePath && (
+                <path
+                  d={chartPaths.baseScenario.linePath}
+                  fill="none"
                   stroke="var(--color-primary)"
-                  strokeWidth="1"
-                  strokeDasharray="3,3"
-                />
-                {/* ポイントマーカー */}
-                <circle
-                  cx={selectedPoint.x}
-                  cy={selectedPoint.y}
-                  r="4"
-                  fill="var(--color-primary)"
-                  stroke="white"
                   strokeWidth="2"
+                  className="chart-line-animation"
+                  style={{
+                    strokeDasharray: 1000,
+                    strokeDashoffset: 1000,
+                    animation: 'chart-line-draw 1.5s cubic-bezier(0.4,0,0.2,1) forwards',
+                  }}
                 />
-              </>
-            )}
-          </svg>
+              )}
 
-          {/* 選択したポイントの情報表示 */}
-          {selectedPoint &&
-            (() => {
-              const data = simulationData.baseScenario.find((d) => d.year === selectedPoint.year);
-              if (!data) return null;
-              // ポップアップ位置ロジック
-              let popupStyle: React.CSSProperties = { maxWidth: '180px', top: 0 };
-              let popupClass =
-                'absolute bg-[var(--color-surface)] px-3 py-2 rounded-lg shadow-md text-center';
-              if (selectedPoint.x < 90) {
-                // 左端
-                popupStyle.left = 10;
-                popupClass += ' '; // transformなし
-              } else if (selectedPoint.x > 310) {
-                // 右端
-                popupStyle.right = 10;
-                popupStyle.left = 'auto';
-                popupClass += ' '; // transformなし
-              } else {
-                // 中央付近
-                popupStyle.left = selectedPoint.x;
-                popupClass += ' transform -translate-x-1/2';
+              {/* 選択したポイントのマーカー */}
+              {selectedPoint && (
+                <>
+                  {/* 垂直線 */}
+                  <line
+                    x1={selectedPoint.x}
+                    y1="10"
+                    x2={selectedPoint.x}
+                    y2="150"
+                    stroke="var(--color-primary)"
+                    strokeWidth="1"
+                    strokeDasharray="3,3"
+                  />
+                  {/* ポイントマーカー */}
+                  <circle
+                    cx={selectedPoint.x}
+                    cy={selectedPoint.y}
+                    r="4"
+                    fill="var(--color-primary)"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                </>
+              )}
+            </svg>
+
+            {/* 選択したポイントの情報表示 */}
+            {selectedPoint &&
+              (() => {
+                const data = simulationData.baseScenario.find((d) => d.year === selectedPoint.year);
+                if (!data) return null;
+                // ポップアップ位置ロジック
+                let popupStyle: React.CSSProperties = { maxWidth: '180px', top: 0 };
+                let popupClass =
+                  'absolute bg-[var(--color-surface)] px-3 py-2 rounded-lg shadow-md text-center';
+                if (selectedPoint.x < 90) {
+                  // 左端
+                  popupStyle.left = 10;
+                  popupClass += ' '; // transformなし
+                } else if (selectedPoint.x > 310) {
+                  // 右端
+                  popupStyle.right = 10;
+                  popupStyle.left = 'auto';
+                  popupClass += ' '; // transformなし
+                } else {
+                  // 中央付近
+                  popupStyle.left = selectedPoint.x;
+                  popupClass += ' transform -translate-x-1/2';
+                }
+                popupClass += ' -translate-y-[calc(100%+5px)]';
+                return (
+                  <div className={popupClass} style={popupStyle}>
+                    <div className="text-xs text-[var(--color-gray-400)]">
+                      {selectedPoint.year}年後
+                    </div>
+                    <div className="text-xs text-[var(--color-gray-700)] flex flex-col gap-1 mt-1">
+                      <span>
+                        <span
+                          className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
+                          style={{ background: 'rgba(89,101,255,0.13)' }}
+                        ></span>
+                        元本:{' '}
+                        <span className="font-medium text-[var(--color-gray-900)]">
+                          ¥{Math.round(data.principal).toLocaleString()}
+                        </span>
+                      </span>
+                      <span>
+                        <span
+                          className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
+                          style={{ background: 'rgba(89,101,255,0.38)' }}
+                        ></span>
+                        複利利益:{' '}
+                        <span className="font-medium text-[var(--color-gray-900)]">
+                          ¥{Math.round(data.dividend).toLocaleString()}
+                        </span>
+                      </span>
+                      <span>
+                        <span
+                          className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
+                          style={{ background: 'var(--color-primary)' }}
+                        ></span>
+                        合計:{' '}
+                        <span className="font-medium text-[var(--color-primary)]">
+                          ¥{Math.round(data.total).toLocaleString()}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+          </div>
+        ) : (
+          <div className="mb-6 w-full">
+            <WithdrawalPlan
+              finalBalance={
+                simulationData.baseScenario.length > 0
+                  ? simulationData.baseScenario[simulationData.baseScenario.length - 1].total
+                  : 0
               }
-              popupClass += ' -translate-y-[calc(100%+5px)]';
-              return (
-                <div className={popupClass} style={popupStyle}>
-                  <div className="text-xs text-[var(--color-gray-400)]">
-                    {selectedPoint.year}年目
-                  </div>
-                  <div className="text-xs text-[var(--color-gray-700)] flex flex-col gap-1 mt-1">
-                    <span>
-                      <span
-                        className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
-                        style={{ background: 'rgba(89,101,255,0.13)' }}
-                      ></span>
-                      元本:{' '}
-                      <span className="font-medium text-[var(--color-gray-900)]">
-                        ¥{Math.round(data.principal).toLocaleString()}
-                      </span>
-                    </span>
-                    <span>
-                      <span
-                        className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
-                        style={{ background: 'rgba(89,101,255,0.38)' }}
-                      ></span>
-                      複利利益:{' '}
-                      <span className="font-medium text-[var(--color-gray-900)]">
-                        ¥{Math.round(data.dividend).toLocaleString()}
-                      </span>
-                    </span>
-                    <span>
-                      <span
-                        className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
-                        style={{ background: 'var(--color-primary)' }}
-                      ></span>
-                      合計:{' '}
-                      <span className="font-medium text-[var(--color-primary)]">
-                        ¥{Math.round(data.total).toLocaleString()}
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              );
-            })()}
-        </div>
+              annualRate={averageYield}
+              mode="chart"
+            />
+          </div>
+        )}
 
-        {/* 取引情報（シミュレーション変数表示） */}
-        <div className="grid grid-cols-2 gap-3 mb-6 w-full">
-          {/* 平均利回り率カード（逆算対象にできる） */}
-          <div
-            className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'yield' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
-            aria-pressed={isReverseMode && reverseTarget === 'yield'}
-            tabIndex={isReverseMode ? 0 : -1}
-            onClick={() => isReverseMode && setReverseTarget('yield')}
-          >
-            <div className="flex items-center mb-1 cursor-pointer select-none">
-              <span className="text-xs text-[var(--color-gray-400)]">平均利回り率</span>
-              {isReverseMode && reverseTarget === 'yield' && (
-                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
-                  逆算中
-                </span>
-              )}
-              <Tooltip
-                content={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].description}
-                title={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].title}
-              >
-                <span className="sr-only">平均利回り率の説明</span>
-              </Tooltip>
-            </div>
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                step="0.1"
-                min={0}
-                max={99.9}
-                value={
-                  isReverseMode && reverseTarget === 'yield' && reverseYield !== null
-                    ? reverseYield
-                    : averageYield
-                }
-                onChange={(e) =>
-                  setAverageYield(Math.max(0, Math.min(99.9, Number(e.target.value))))
-                }
-                className={`w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'yield' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
-                readOnly={isReverseMode && reverseTarget === 'yield'}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <span className="text-base font-semibold text-[var(--color-gray-900)]">%</span>
-            </div>
-          </div>
-          {/* 初期投資元本カード（逆算対象にできる） */}
-          <div
-            className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'initialPrincipal' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
-            aria-pressed={isReverseMode && reverseTarget === 'initialPrincipal'}
-            tabIndex={isReverseMode ? 0 : -1}
-            onClick={() => isReverseMode && setReverseTarget('initialPrincipal')}
-          >
-            <div className="flex items-center mb-1 cursor-pointer select-none">
-              <span className="text-xs text-[var(--color-gray-400)]">初期投資元本</span>
-              {isReverseMode && reverseTarget === 'initialPrincipal' && (
-                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
-                  逆算中
-                </span>
-              )}
-              <Tooltip
-                content={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].description}
-                title={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].title}
-              >
-                <span className="sr-only">初期投資元本の説明</span>
-              </Tooltip>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
-              <input
-                type="number"
-                step="1"
-                min={0}
-                value={
-                  isReverseMode && reverseTarget === 'initialPrincipal' && reversePrincipal !== null
-                    ? reversePrincipal
-                    : initialPrincipal
-                }
-                onChange={(e) => setInitialPrincipal(Math.max(0, Number(e.target.value)))}
-                className={`w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'initialPrincipal' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
-                readOnly={isReverseMode && reverseTarget === 'initialPrincipal'}
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-          </div>
-          {/* 毎月積立金額カード（逆算対象にできる） */}
-          <div
-            className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'monthlyAmount' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
-            aria-pressed={isReverseMode && reverseTarget === 'monthlyAmount'}
-            tabIndex={isReverseMode ? 0 : -1}
-            onClick={() => isReverseMode && setReverseTarget('monthlyAmount')}
-          >
-            <div className="flex items-center mb-1 cursor-pointer select-none">
-              <span className="text-xs text-[var(--color-gray-400)]">毎月積立金額</span>
-              {isReverseMode && reverseTarget === 'monthlyAmount' && (
-                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
-                  逆算中
-                </span>
-              )}
-              <Tooltip
-                content={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].description}
-                title={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].title}
-              >
-                <span className="sr-only">毎月積立金額の説明</span>
-              </Tooltip>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
-              <input
-                type="number"
-                step="1"
-                min={0}
-                value={
-                  isReverseMode && reverseTarget === 'monthlyAmount' && reverseMonthly !== null
-                    ? Math.floor(reverseMonthly)
-                    : monthlyAmount
-                }
-                onChange={(e) => setMonthlyAmount(Math.max(0, Math.floor(Number(e.target.value))))}
-                className={`w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'monthlyAmount' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
-                readOnly={isReverseMode && reverseTarget === 'monthlyAmount'}
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-          </div>
-          {/* 積立継続年数スライダー（毎月積立金額の右隣に移動） */}
-          <div
-            className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between transition-all duration-150 ${isReverseMode && reverseTarget === 'contributionYears' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
-            aria-pressed={isReverseMode && reverseTarget === 'contributionYears'}
-            tabIndex={isReverseMode ? 0 : -1}
-            onClick={() => isReverseMode && setReverseTarget('contributionYears')}
-          >
-            <div className="flex items-center mb-1 cursor-pointer select-none">
-              <span className="text-xs text-[var(--color-gray-400)]">積立継続年数</span>
-              <Tooltip
-                content={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].description}
-                title={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].title}
-              >
-                <span className="sr-only">積立継続年数の説明</span>
-              </Tooltip>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min={3}
-                max={50}
-                step={1}
-                value={
-                  isReverseMode && reverseTarget === 'contributionYears' && reverseYears !== null
-                    ? Math.round(reverseYears)
-                    : contributionYears
-                }
-                onChange={(e) => {
-                  const newContributionYears = Math.max(3, Math.min(50, Number(e.target.value)));
-                  setContributionYears(newContributionYears);
-                }}
-                className={`w-full accent-[var(--color-primary)] ${isReverseMode && reverseTarget === 'contributionYears' ? 'bg-[var(--color-surface-alt)]' : ''}`}
-                readOnly={isReverseMode && reverseTarget === 'contributionYears'}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <span
-                className={`text-base font-semibold min-w-[2.5em] text-right ${isReverseMode && reverseTarget === 'contributionYears' ? 'text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
-              >
-                {isReverseMode && reverseTarget === 'contributionYears' && reverseYears !== null
-                  ? `${reverseYears} 年`
-                  : `${contributionYears} 年`}
-              </span>
-            </div>
-          </div>
-          {/* 合計投資額 & 目標金額カード */}
-          <div className="col-span-2 grid grid-cols-2 gap-3">
-            {/* 合計投資額 */}
-            <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-              <div className="flex items-center mb-1">
-                <span className="text-xs text-[var(--color-gray-400)]">合計投資額</span>
+        {/* CTAボタン：x年後にいくら使える？ */}
+        <button
+          className="w-full mb-6 py-3 rounded-xl border-2 border-[var(--color-primary)] text-[var(--color-primary)] text-lg font-bold bg-transparent transition hover:bg-[var(--color-primary)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+          type="button"
+          onClick={() => setMode(mode === 'simulation' ? 'withdrawal' : 'simulation')}
+        >
+          {mode === 'simulation'
+            ? `${contributionYears}年後にいくら使える？`
+            : 'この金額を貯めるためには？'}
+        </button>
+
+        {/* 取引情報（シミュレーション変数表示 or 取り崩しプラン） */}
+        {mode === 'simulation' ? (
+          <div className="grid grid-cols-2 gap-3 mb-6 w-full">
+            {/* 平均利回り率カード（逆算対象にできる） */}
+            <div
+              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'yield' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
+              aria-pressed={isReverseMode && reverseTarget === 'yield'}
+              tabIndex={isReverseMode ? 0 : -1}
+              onClick={() => isReverseMode && setReverseTarget('yield')}
+            >
+              <div className="flex items-center mb-1 cursor-pointer select-none">
+                <span className="text-xs text-[var(--color-gray-400)]">平均利回り率</span>
+                {isReverseMode && reverseTarget === 'yield' && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
+                    逆算中
+                  </span>
+                )}
                 <Tooltip
-                  content={SIMULATION_TERM_EXPLANATIONS['合計投資額'].description}
-                  title={SIMULATION_TERM_EXPLANATIONS['合計投資額'].title}
+                  content={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].description}
+                  title={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].title}
                 >
-                  <span className="sr-only">合計投資額の説明</span>
+                  <span className="sr-only">平均利回り率の説明</span>
                 </Tooltip>
               </div>
-              <div className="text-base font-semibold text-[var(--color-gray-900)]">
-                {(() => {
-                  let principal = initialPrincipal;
-                  let monthly = monthlyAmount;
-                  let years = contributionYears;
-                  if (isReverseMode) {
-                    if (reverseTarget === 'initialPrincipal' && reversePrincipal !== null) {
-                      principal = reversePrincipal;
-                    }
-                    if (reverseTarget === 'monthlyAmount' && reverseMonthly !== null) {
-                      monthly = Math.floor(reverseMonthly);
-                    }
-                    if (reverseTarget === 'contributionYears' && reverseYears !== null) {
-                      years = Math.round(reverseYears);
-                    }
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  step="0.1"
+                  min={0}
+                  max={99.9}
+                  value={
+                    isReverseMode && reverseTarget === 'yield' && reverseYield !== null
+                      ? reverseYield
+                      : averageYield
                   }
-                  return `¥ ${(principal + years * monthly * 12).toLocaleString()}`;
-                })()}
+                  onChange={(e) =>
+                    setAverageYield(Math.max(0, Math.min(99.9, Number(e.target.value))))
+                  }
+                  className={`w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'yield' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
+                  readOnly={isReverseMode && reverseTarget === 'yield'}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span className="text-base font-semibold text-[var(--color-gray-900)]">%</span>
               </div>
             </div>
-            {/* 目標金額 */}
-            <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center">
-                  <span className="text-xs text-[var(--color-gray-400)]">目標金額</span>
-                  <Tooltip title="目標金額" content={'達成したい目標金額を入力してください。'}>
-                    <span className="sr-only">目標金額の説明</span>
-                  </Tooltip>
-                </div>
-                {isReverseMode && (
-                  <button
-                    onClick={() => setTargetAmount('')}
-                    className="text-xs text-[var(--color-primary)] hover:underline focus:outline-none"
-                    aria-label="逆算を解除"
-                  >
-                    解除
-                  </button>
+            {/* 初期投資元本カード（逆算対象にできる） */}
+            <div
+              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'initialPrincipal' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
+              aria-pressed={isReverseMode && reverseTarget === 'initialPrincipal'}
+              tabIndex={isReverseMode ? 0 : -1}
+              onClick={() => isReverseMode && setReverseTarget('initialPrincipal')}
+            >
+              <div className="flex items-center mb-1 cursor-pointer select-none">
+                <span className="text-xs text-[var(--color-gray-400)]">初期投資元本</span>
+                {isReverseMode && reverseTarget === 'initialPrincipal' && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
+                    逆算中
+                  </span>
                 )}
+                <Tooltip
+                  content={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].description}
+                  title={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].title}
+                >
+                  <span className="sr-only">初期投資元本の説明</span>
+                </Tooltip>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
                 <input
                   type="number"
-                  step="1000"
+                  step="1"
                   min={0}
-                  value={targetAmount}
-                  onChange={(e) => setTargetAmount(e.target.value)}
-                  className="w-full px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
-                  placeholder="例: 10000000"
+                  value={
+                    isReverseMode &&
+                    reverseTarget === 'initialPrincipal' &&
+                    reversePrincipal !== null
+                      ? reversePrincipal
+                      : initialPrincipal
+                  }
+                  onChange={(e) => setInitialPrincipal(Math.max(0, Number(e.target.value)))}
+                  className={`w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'initialPrincipal' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
+                  readOnly={isReverseMode && reverseTarget === 'initialPrincipal'}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
             </div>
-          </div>
-          {/* 逆算エラー表示 */}
-          {isReverseMode && reverseError && (
-            <div className="col-span-2 text-sm text-[var(--color-danger)] font-semibold mb-2">
-              {reverseError}
+            {/* 毎月積立金額カード（逆算対象にできる） */}
+            <div
+              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'monthlyAmount' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
+              aria-pressed={isReverseMode && reverseTarget === 'monthlyAmount'}
+              tabIndex={isReverseMode ? 0 : -1}
+              onClick={() => isReverseMode && setReverseTarget('monthlyAmount')}
+            >
+              <div className="flex items-center mb-1 cursor-pointer select-none">
+                <span className="text-xs text-[var(--color-gray-400)]">毎月積立金額</span>
+                {isReverseMode && reverseTarget === 'monthlyAmount' && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
+                    逆算中
+                  </span>
+                )}
+                <Tooltip
+                  content={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].description}
+                  title={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].title}
+                >
+                  <span className="sr-only">毎月積立金額の説明</span>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
+                <input
+                  type="number"
+                  step="1"
+                  min={0}
+                  value={
+                    isReverseMode && reverseTarget === 'monthlyAmount' && reverseMonthly !== null
+                      ? Math.floor(reverseMonthly)
+                      : monthlyAmount
+                  }
+                  onChange={(e) =>
+                    setMonthlyAmount(Math.max(0, Math.floor(Number(e.target.value))))
+                  }
+                  className={`w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'monthlyAmount' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
+                  readOnly={isReverseMode && reverseTarget === 'monthlyAmount'}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
             </div>
-          )}
-        </div>
+            {/* 積立継続年数スライダー（毎月積立金額の右隣に移動） */}
+            <div
+              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between transition-all duration-150 ${isReverseMode && reverseTarget === 'contributionYears' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
+              aria-pressed={isReverseMode && reverseTarget === 'contributionYears'}
+              tabIndex={isReverseMode ? 0 : -1}
+              onClick={() => isReverseMode && setReverseTarget('contributionYears')}
+            >
+              <div className="flex items-center mb-1 cursor-pointer select-none">
+                <span className="text-xs text-[var(--color-gray-400)]">積立継続年数</span>
+                <Tooltip
+                  content={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].description}
+                  title={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].title}
+                >
+                  <span className="sr-only">積立継続年数の説明</span>
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min={3}
+                  max={50}
+                  step={1}
+                  value={
+                    isReverseMode && reverseTarget === 'contributionYears' && reverseYears !== null
+                      ? Math.round(reverseYears)
+                      : contributionYears
+                  }
+                  onChange={(e) => {
+                    const newContributionYears = Math.max(3, Math.min(50, Number(e.target.value)));
+                    setContributionYears(newContributionYears);
+                  }}
+                  className={`w-full accent-[var(--color-primary)] ${isReverseMode && reverseTarget === 'contributionYears' ? 'bg-[var(--color-surface-alt)]' : ''}`}
+                  readOnly={isReverseMode && reverseTarget === 'contributionYears'}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span
+                  className={`text-base font-semibold min-w-[2.5em] text-right ${isReverseMode && reverseTarget === 'contributionYears' ? 'text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
+                >
+                  {isReverseMode && reverseTarget === 'contributionYears' && reverseYears !== null
+                    ? `${reverseYears} 年`
+                    : `${contributionYears} 年`}
+                </span>
+              </div>
+            </div>
+            {/* 合計投資額 & 目標金額カード */}
+            <div className="col-span-2 grid grid-cols-2 gap-3">
+              {/* 合計投資額 */}
+              <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center mb-1">
+                  <span className="text-xs text-[var(--color-gray-400)]">合計投資額</span>
+                  <Tooltip
+                    content={SIMULATION_TERM_EXPLANATIONS['合計投資額'].description}
+                    title={SIMULATION_TERM_EXPLANATIONS['合計投資額'].title}
+                  >
+                    <span className="sr-only">合計投資額の説明</span>
+                  </Tooltip>
+                </div>
+                <div className="text-base font-semibold text-[var(--color-gray-900)]">
+                  {(() => {
+                    let principal = initialPrincipal;
+                    let monthly = monthlyAmount;
+                    let years = contributionYears;
+                    if (isReverseMode) {
+                      if (reverseTarget === 'initialPrincipal' && reversePrincipal !== null) {
+                        principal = reversePrincipal;
+                      }
+                      if (reverseTarget === 'monthlyAmount' && reverseMonthly !== null) {
+                        monthly = Math.floor(reverseMonthly);
+                      }
+                      if (reverseTarget === 'contributionYears' && reverseYears !== null) {
+                        years = Math.round(reverseYears);
+                      }
+                    }
+                    return `¥ ${(principal + years * monthly * 12).toLocaleString()}`;
+                  })()}
+                </div>
+              </div>
+              {/* 目標金額 */}
+              <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center">
+                    <span className="text-xs text-[var(--color-gray-400)]">目標金額</span>
+                    <Tooltip title="目標金額" content={'達成したい目標金額を入力してください。'}>
+                      <span className="sr-only">目標金額の説明</span>
+                    </Tooltip>
+                  </div>
+                  {isReverseMode && (
+                    <button
+                      onClick={() => setTargetAmount('')}
+                      className="text-xs text-[var(--color-primary)] hover:underline focus:outline-none"
+                      aria-label="逆算を解除"
+                    >
+                      解除
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
+                  <input
+                    type="number"
+                    step="1000"
+                    min={0}
+                    value={targetAmount}
+                    onChange={(e) => setTargetAmount(e.target.value)}
+                    className="w-full px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
+                    placeholder="例: 10000000"
+                  />
+                </div>
+              </div>
+            </div>
+            {/* 逆算エラー表示 */}
+            {isReverseMode && reverseError && (
+              <div className="col-span-2 text-sm text-[var(--color-danger)] font-semibold mb-2">
+                {reverseError}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mb-6 w-full">
+            <WithdrawalPlan
+              finalBalance={
+                simulationData.baseScenario.length > 0
+                  ? simulationData.baseScenario[simulationData.baseScenario.length - 1].total
+                  : 0
+              }
+              annualRate={averageYield}
+              mode="input"
+            />
+          </div>
+        )}
 
         {/* 注意事項 */}
         <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
@@ -1175,6 +1260,20 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`}
           </ul>
         </div>
       </div>
+      <style>{`
+        @keyframes chart-line-draw {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        @keyframes chart-area-clip-grow {
+          from { width: 0; }
+          to { width: 400px; }
+        }
+        .chart-area-fade {
+          /* 何も指定しなくてOK。clipPathで制御 */
+        }
+      `}</style>
     </div>
   );
 }

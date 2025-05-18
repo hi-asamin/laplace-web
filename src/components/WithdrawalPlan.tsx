@@ -23,7 +23,7 @@ export default function WithdrawalPlan({
 }: WithdrawalPlanProps) {
   const [withdrawalPlan, setWithdrawalPlan] = useState<WithdrawalPlanType>({
     withdrawalPeriod: 20, // デフォルト20年
-    monthlyAmount: 100000,
+    monthlyAmount: 100000, // デフォルト10万円（円単位）
     withdrawalType: 'fixed',
   });
 
@@ -93,6 +93,21 @@ export default function WithdrawalPlan({
       {(mode === 'chart' || mode === 'full') && withdrawalData.length > 0 && (
         <div className="mb-8">
           <div className="relative h-[180px] sm:h-[220px] lg:h-[260px] rounded-lg bg-[var(--color-surface-alt)]">
+            {/* 背景色の意味（凡例） */}
+            <div className="absolute left-4 top-2 flex gap-4 z-10 text-xs sm:text-sm">
+              <span className="flex items-center gap-1">
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 16,
+                    height: 8,
+                    background: 'rgba(89,101,255,0.13)',
+                    borderRadius: 2,
+                  }}
+                ></span>
+                <span className="text-[var(--color-gray-700)]">残高</span>
+              </span>
+            </div>
             <svg
               ref={chartRef}
               className="w-full h-full"
@@ -272,26 +287,6 @@ export default function WithdrawalPlan({
                       ¥{Math.round(selectedPoint.remainingBalance).toLocaleString()}
                     </span>
                   </span>
-                  <span>
-                    <span
-                      className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
-                      style={{ background: 'rgba(89,101,255,0.38)' }}
-                    ></span>
-                    取り崩し額:{' '}
-                    <span className="font-medium text-[var(--color-gray-900)]">
-                      ¥{Math.round(selectedPoint.withdrawalAmount).toLocaleString()}
-                    </span>
-                  </span>
-                  <span>
-                    <span
-                      className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
-                      style={{ background: 'var(--color-error)' }}
-                    ></span>
-                    課税額:{' '}
-                    <span className="font-medium text-[var(--color-error)]">
-                      ¥{Math.round(selectedPoint.taxAmount).toLocaleString()}
-                    </span>
-                  </span>
                 </div>
               </div>
             )}
@@ -373,13 +368,14 @@ export default function WithdrawalPlan({
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    value={withdrawalPlan.monthlyAmount}
-                    onChange={(e) =>
+                    value={withdrawalPlan.monthlyAmount / 10000}
+                    onChange={(e) => {
+                      const man = Math.max(0, Number(e.target.value));
                       setWithdrawalPlan((prev) => ({
                         ...prev,
-                        monthlyAmount: Math.max(0, Number(e.target.value)),
-                      }))
-                    }
+                        monthlyAmount: man * 10000,
+                      }));
+                    }}
                     className="w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold bg-[var(--color-surface-alt)] text-[var(--color-gray-900)]"
                   />
                   <span className="text-base text-[var(--color-gray-700)]">万円</span>

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { apiGet } from '@/lib/api-client';
 import { ChartData } from '@/types/api';
 import { apiConfig } from '@/lib/config';
@@ -7,9 +7,12 @@ import { apiConfig } from '@/lib/config';
  * チャートデータAPI (BFF)
  * クライアントからのリクエストを受け取り、バックエンドAPIと通信する
  */
-export async function GET(request: Request, context: { params: { symbol: string } }) {
+export async function GET(
+  req: NextRequest,
+  context: { params: { symbol: string } }
+): Promise<NextResponse> {
   const { symbol } = context.params;
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(req.url);
   const period = searchParams.get('period') || '3M';
   const interval = searchParams.get('interval') || '1D';
 

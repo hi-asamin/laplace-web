@@ -8,7 +8,7 @@ export function calculateWithdrawalSimulation(
 ): WithdrawalYearData[] {
   const data: WithdrawalYearData[] = [];
   let remainingBalance = finalBalance;
-  const years = withdrawalPlan.endAge - withdrawalPlan.startAge;
+  const years = withdrawalPlan.withdrawalPeriod;
 
   for (let i = 0; i < years; i++) {
     const year = i + 1;

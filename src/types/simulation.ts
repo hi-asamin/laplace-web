@@ -7,9 +7,10 @@ export interface WithdrawalYearData {
 }
 
 export interface WithdrawalPlan {
-  startAge: number; // 取り崩し開始年齢
-  endAge: number; // 取り崩し終了年齢
-  monthlyAmount: number; // 月間取り崩し額
+  // startAge: number; // 取り崩し開始年齢（廃止）
+  // endAge: number; // 取り崩し終了年齢（廃止）
+  withdrawalPeriod: number; // 取り崩し期間（年数）
+  monthlyAmount: number; // 月間取り崩し額 or 年率
   withdrawalType: 'fixed' | 'percentage'; // 取り崩しタイプ
 }
 

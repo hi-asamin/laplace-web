@@ -22,8 +22,7 @@ export default function WithdrawalPlan({
   mode = 'full',
 }: WithdrawalPlanProps) {
   const [withdrawalPlan, setWithdrawalPlan] = useState<WithdrawalPlanType>({
-    startAge: 65,
-    endAge: 85,
+    withdrawalPeriod: 20, // デフォルト20年
     monthlyAmount: 100000,
     withdrawalType: 'fixed',
   });
@@ -45,7 +44,12 @@ export default function WithdrawalPlan({
   const chartLineClass = 'withdrawal-chart-line-animation';
 
   useEffect(() => {
-    const data = calculateWithdrawalSimulation(finalBalance, withdrawalPlan, annualRate);
+    // withdrawalPeriodを使って計算
+    const plan = { ...withdrawalPlan };
+    // 互換性のためstartAge=0, endAge=withdrawalPeriod
+    (plan as any).startAge = 0;
+    (plan as any).endAge = withdrawalPlan.withdrawalPeriod;
+    const data = calculateWithdrawalSimulation(finalBalance, plan, annualRate);
     setWithdrawalData(data);
     setNisaTaxEffect(calculateNisaTaxEffect(data));
   }, [finalBalance, withdrawalPlan, annualRate]);
@@ -295,67 +299,76 @@ export default function WithdrawalPlan({
         </div>
       )}
 
-      {/* 取り崩し設定 */}
+      {/* 取り崩しプラン入力フォーム */}
       {(mode === 'input' || mode === 'full') && (
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <label className="block text-sm text-[var(--color-gray-400)] mb-1">
-              取り崩し開始年齢
+          {/* 平均利回り率カード */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between">
+            <label className="block text-xs text-[var(--color-gray-400)] mb-1 flex items-center gap-1">
+              平均利回り率
+              <Tooltip
+                title="平均利回り率"
+                content={`資産運用で1年あたりどれくらい増えるかの平均リターン（年率）です。\n\n【見方のポイント】\n• 5%なら「毎年平均5%ずつ増える」前提で計算\n• 初期値は銘柄や市場データを参照して自動算出\n• 長期運用ほど小さな差が大きな差に\n\n【目安】\n• 日本株・ETF: 3〜6%\n• 米国株・ETF: 5〜8%\n• 債券・預金: 0.1〜2%`}
+              >
+                <span className="sr-only">平均利回り率の説明</span>
+              </Tooltip>
             </label>
-            <select
-              value={withdrawalPlan.startAge}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                setWithdrawalPlan((prev) => ({
-                  ...prev,
-                  startAge: v,
-                  endAge: Math.max(v + 5, prev.endAge), // 終了年齢が開始+5未満なら自動調整
-                }));
-              }}
-              className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
-            >
-              {[...Array(9)].map((_, i) => {
-                const age = 40 + i * 5;
-                return (
-                  <option key={age} value={age}>
-                    {age}歳
-                  </option>
-                );
-              })}
-            </select>
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                step="0.1"
+                min={0}
+                max={99.9}
+                value={annualRate}
+                readOnly
+                className="w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold"
+              />
+              <span className="text-base font-semibold text-[var(--color-gray-900)]">%</span>
+            </div>
           </div>
-          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <label className="block text-sm text-[var(--color-gray-400)] mb-1">
-              取り崩し終了年齢
+          {/* 取り崩し期間カード */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between">
+            <label className="block text-xs text-[var(--color-gray-400)] mb-1">
+              取り崩し期間
+              <Tooltip
+                title="取り崩し期間"
+                content={`資産を何年間かけて取り崩すかを設定します。5年〜40年の範囲で選択できます。`}
+              >
+                <span className="sr-only">取り崩し期間の説明</span>
+              </Tooltip>
             </label>
-            <select
-              value={withdrawalPlan.endAge}
-              onChange={(e) =>
-                setWithdrawalPlan((prev) => ({
-                  ...prev,
-                  endAge: Number(e.target.value),
-                }))
-              }
-              className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
-            >
-              {(() => {
-                const options = [];
-                for (let age = withdrawalPlan.startAge + 5; age <= 100; age += 5) {
-                  options.push(
-                    <option key={age} value={age}>
-                      {age}歳
-                    </option>
-                  );
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={5}
+                max={40}
+                step={1}
+                value={withdrawalPlan.withdrawalPeriod}
+                onChange={(e) =>
+                  setWithdrawalPlan((prev) => ({
+                    ...prev,
+                    withdrawalPeriod: Number(e.target.value),
+                  }))
                 }
-                return options;
-              })()}
-            </select>
+                className="w-full accent-[var(--color-primary)]"
+              />
+              <span className="text-base font-semibold min-w-[2.5em] text-right text-[var(--color-primary)]">
+                {withdrawalPlan.withdrawalPeriod} 年
+              </span>
+            </div>
           </div>
-          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          {/* 月間取り崩し額 or 年率カード */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between">
             {withdrawalPlan.withdrawalType === 'fixed' ? (
               <>
-                <label className="block text-sm text-[var(--color-gray-400)] mb-1">
+                <label className="block text-xs text-[var(--color-gray-400)] mb-1 flex items-center gap-1">
                   月間取り崩し額
+                  <Tooltip
+                    title="月間取り崩し額"
+                    content={`毎月いくらずつ資産を取り崩すかを設定します。\n\n【見方のポイント】\n• 生活費や必要資金に合わせて設定\n• 0円の場合は取り崩しなし`}
+                  >
+                    <span className="sr-only">月間取り崩し額の説明</span>
+                  </Tooltip>
                 </label>
                 <div className="flex items-center gap-2">
                   <input
@@ -367,14 +380,22 @@ export default function WithdrawalPlan({
                         monthlyAmount: Math.max(0, Number(e.target.value)),
                       }))
                     }
-                    className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
+                    className="w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold bg-[var(--color-surface-alt)] text-[var(--color-gray-900)]"
                   />
-                  <span className="text-base text-[var(--color-gray-700)]">円</span>
+                  <span className="text-base text-[var(--color-gray-700)]">万円</span>
                 </div>
               </>
             ) : (
               <>
-                <label className="block text-sm text-[var(--color-gray-400)] mb-1">年率（%）</label>
+                <label className="block text-xs text-[var(--color-gray-400)] mb-1 flex items-center gap-1">
+                  取り崩し年率（%）
+                  <Tooltip
+                    title="取り崩し年率（%）"
+                    content={`残高に対して毎年何％ずつ取り崩すかを設定します。\n\n【見方のポイント】\n• 4%ルールなど、資産寿命を延ばしたい場合に有効\n• 市場環境や個人の状況により適切な率は異なります`}
+                  >
+                    <span className="sr-only">取り崩し年率の説明</span>
+                  </Tooltip>
+                </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
@@ -388,15 +409,16 @@ export default function WithdrawalPlan({
                         monthlyAmount: Math.max(0, Math.min(100, Number(e.target.value))),
                       }))
                     }
-                    className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
+                    className="w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold bg-[var(--color-surface-alt)] text-[var(--color-gray-900)]"
                   />
                   <span className="text-base text-[var(--color-gray-700)]">%</span>
                 </div>
               </>
             )}
           </div>
-          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-            <label className="block text-sm text-[var(--color-gray-400)] mb-1">
+          {/* 取り崩しタイプカード */}
+          <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between">
+            <label className="block text-xs text-[var(--color-gray-400)] mb-1">
               取り崩しタイプ
               <Tooltip
                 title="取り崩しタイプ"
@@ -407,6 +429,11 @@ export default function WithdrawalPlan({
 • 定額は「毎年決まった生活費を確保したい」場合に便利
 • 定率は「資産寿命を延ばしたい」「残高に応じて柔軟に使いたい」場合に有効
 
+【4％ルールとは？】
+米国の退職後資産運用で有名な「4％ルール」は、毎年残高の4％ずつ取り崩すことで30年以上資産が持続しやすいという経験則です。
+• 例：1,000万円の資産なら初年度は40万円を取り崩し、翌年は残高の4％を再計算して取り崩します。
+• 市場環境や個人の状況により適切な率は異なりますが、定率取り崩しの代表的な考え方です。
+
 【例】
 • 定額：毎年120万円ずつ取り崩す
 • 定率：毎年残高の4%ずつ取り崩す`}
@@ -416,12 +443,14 @@ export default function WithdrawalPlan({
             </label>
             <select
               value={withdrawalPlan.withdrawalType}
-              onChange={(e) =>
+              onChange={(e) => {
+                const type = e.target.value as 'fixed' | 'percentage';
                 setWithdrawalPlan((prev) => ({
                   ...prev,
-                  withdrawalType: e.target.value as 'fixed' | 'percentage',
-                }))
-              }
+                  withdrawalType: type,
+                  monthlyAmount: type === 'percentage' ? 4 : prev.monthlyAmount,
+                }));
+              }}
               className="w-full px-3 py-2 border border-[var(--color-gray-300)] rounded-lg text-base"
             >
               <option value="fixed">定額取り崩し</option>

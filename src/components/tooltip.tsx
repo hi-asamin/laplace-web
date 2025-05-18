@@ -135,7 +135,7 @@ export default function Tooltip({ children, content, title, position = 'top' }: 
                 {renderFormattedContent()}
               </div>
               {/* AIコメント（モザイク/ロックUI） */}
-              <div className="px-4 pb-4 pt-2">
+              {/* <div className="px-4 pb-4 pt-2">
                 <div className="flex items-center mb-1">
                   <span className="text-xs font-semibold text-[var(--color-primary)] mr-2">
                     【AIコメント】
@@ -158,7 +158,7 @@ export default function Tooltip({ children, content, title, position = 'top' }: 
                     </button>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </>

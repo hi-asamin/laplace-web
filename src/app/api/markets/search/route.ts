@@ -1,6 +1,4 @@
-import { NextResponse } from 'next/server';
 import { searchMarkets } from '@/lib/api/server-search';
-import { SearchResponse } from '@/types/api';
 
 /**
  * 銘柄検索API (BFF)
@@ -11,15 +9,15 @@ export async function GET(request: Request) {
   const query = searchParams.get('query') || '';
 
   if (!query.trim()) {
-    return NextResponse.json<SearchResponse>({ results: [], total: 0 });
+    return Response.json({ results: [], total: 0 });
   }
 
   try {
     const results = await searchMarkets(query);
-    return NextResponse.json(results);
+    return Response.json(results);
   } catch (error) {
     console.error('BFF検索エラー:', error);
-    return NextResponse.json(
+    return Response.json(
       {
         error: '検索処理でエラーが発生しました',
         detail: { code: 'SEARCH_ERROR', message: String(error) },

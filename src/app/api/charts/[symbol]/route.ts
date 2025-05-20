@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { apiGet } from '@/lib/api-client';
 import { ChartData } from '@/types/api';
 import { apiConfig } from '@/lib/config';
@@ -7,17 +6,14 @@ import { apiConfig } from '@/lib/config';
  * チャートデータAPI (BFF)
  * クライアントからのリクエストを受け取り、バックエンドAPIと通信する
  */
-export async function GET(
-  req: NextRequest,
-  context: { params: { symbol: string } }
-): Promise<NextResponse> {
-  const { symbol } = context.params;
+export async function GET(req: Request, { params }: { params: Promise<{ symbol: string }> }) {
+  const { symbol } = await params;
   const { searchParams } = new URL(req.url);
   const period = searchParams.get('period') || '3M';
   const interval = searchParams.get('interval') || '1D';
 
   if (!symbol) {
-    return NextResponse.json({ error: '銘柄シンボルが指定されていません' }, { status: 400 });
+    return Response.json({ error: '銘柄シンボルが指定されていません' }, { status: 400 });
   }
 
   try {
@@ -27,10 +23,10 @@ export async function GET(
     // APIからデータを取得
     const data = await apiGet<ChartData>(endpoint, { period, interval });
 
-    return NextResponse.json(data);
+    return Response.json(data);
   } catch (error) {
     console.error('チャートデータ取得エラー:', error);
-    return NextResponse.json(
+    return Response.json(
       {
         error: 'チャートデータの取得中にエラーが発生しました',
         detail: { code: 'CHART_DATA_ERROR', message: String(error) },

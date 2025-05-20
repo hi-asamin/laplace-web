@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { apiGet } from '@/lib/api-client';
 import { MarketDetails } from '@/types/api';
 import { apiConfig } from '@/lib/config';
@@ -7,11 +6,11 @@ import { apiConfig } from '@/lib/config';
  * 銘柄詳細情報API (BFF)
  * クライアントからのリクエストを受け取り、バックエンドAPIと通信する
  */
-export async function GET(request: Request, { params }: { params: { symbol: string } }) {
-  const { symbol } = params;
+export async function GET(_req: Request, { params }: { params: Promise<{ symbol: string }> }) {
+  const { symbol } = await params;
 
   if (!symbol) {
-    return NextResponse.json({ error: '銘柄シンボルが指定されていません' }, { status: 400 });
+    return Response.json({ error: '銘柄シンボルが指定されていません' }, { status: 400 });
   }
 
   try {
@@ -21,10 +20,10 @@ export async function GET(request: Request, { params }: { params: { symbol: stri
     // APIからデータを取得
     const data = await apiGet<MarketDetails>(endpoint);
 
-    return NextResponse.json(data);
+    return Response.json(data);
   } catch (error) {
     console.error('銘柄詳細情報取得エラー:', error);
-    return NextResponse.json(
+    return Response.json(
       {
         error: '銘柄詳細情報の取得中にエラーが発生しました',
         detail: { code: 'MARKET_DETAILS_ERROR', message: String(error) },

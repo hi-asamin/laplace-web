@@ -3,7 +3,7 @@
  * BFF経由のAPIアクセスとバックエンドへの直接アクセスの両方に対応
  */
 import { apiConfig } from './config';
-import { ApiErrorResponse } from '@/types/market';
+import { ApiErrorResponse } from '@/types/api';
 
 /**
  * クライアントサイドのAPIリクエストを判断し、適切なURLを構築する

@@ -1,614 +1,491 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, ChevronRight, LineChart, PieChart, Search, TrendingUp } from 'lucide-react';
-
-import { Button } from '@/components/button';
-import SimulationChart from '@/components/SimulationChart';
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-[#F7FAFC]">
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
-        <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/placeholder.svg?height=32&width=32"
-              alt="Laplace Logo"
-              width={32}
-              height={32}
-              className="rounded-full"
-            />
-            <span className="text-xl font-bold text-[#0F172A]">Laplace</span>
-          </div>
-          <nav className="hidden md:flex md:gap-6">
-            <Link
-              href="#features"
-              className="text-sm font-medium text-[#334155] hover:text-[#5965FF]"
+    <div className="flex flex-col min-h-screen bg-[#F7FAFC]">
+      {/* ヘッダー */}
+      <header className="w-full bg-white/80 backdrop-blur-md shadow-sm py-3 px-4 flex items-center justify-between fixed top-0 left-0 z-50">
+        <div className="flex items-center gap-2">
+          <span
+            className="text-2xl font-bold text-[#0F172A] tracking-tight"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            LAPLACE
+          </span>
+        </div>
+        <nav className="hidden md:flex gap-8 text-[#334155] text-base font-medium">
+          <Link href="#feature-simulation" className="hover:text-[#3B82F6] transition">
+            特徴
+          </Link>
+          <Link href="#howto" className="hover:text-[#3B82F6] transition">
+            使い方
+          </Link>
+        </nav>
+        <Link
+          href="/search"
+          className="px-6 py-2 rounded-full bg-[#3B82F6] text-white font-bold shadow hover:bg-[#2563EB] transition text-base"
+        >
+          無料で始める
+        </Link>
+      </header>
+
+      {/* ヒーローセクション */}
+      <section className="relative flex flex-col items-center justify-center min-h-[90vh] pt-40 pb-0 px-4 bg-gradient-to-br from-[#18181B] via-[#6366F1] to-[#38BDF8] overflow-hidden">
+        {/* グラデーションの上に重ねる */}
+        <div className="relative z-10 flex flex-col items-center w-full max-w-3xl mx-auto">
+          <h1
+            className="text-3xl md:text-5xl font-extrabold text-white text-center mb-10 tracking-wide leading-tight"
+            style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '-0.01em', lineHeight: '0.5' }}
+          >
+            <span>複雑な投資計算を</span>
+            <span
+              className="block text-3xl md:text-5xl tracking-wide leading-tight mt-8"
+              style={{ letterSpacing: '-0.01em', marginTop: '2rem' }}
             >
-              機能
-            </Link>
-            <Link
-              href="#problem"
-              className="text-sm font-medium text-[#334155] hover:text-[#5965FF]"
-            >
-              課題
-            </Link>
-            <Link
-              href="#target"
-              className="text-sm font-medium text-[#334155] hover:text-[#5965FF]"
-            >
-              対象ユーザー
-            </Link>
-            <Link href="#value" className="text-sm font-medium text-[#334155] hover:text-[#5965FF]">
-              価値提案
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" className="hidden md:flex">
-              ログイン
-            </Button>
-            <Button className="bg-[#5965FF] text-white hover:bg-[#414DFF] shadow-[0_2px_6px_rgba(89,101,255,0.3)]">
-              無料で始める
-            </Button>
+              ワンクリックで
+            </span>
+          </h1>
+          <p
+            className="text-lg md:text-xl text-white/90 text-center mb-6 max-w-xl"
+            style={{ fontFamily: 'Inter, sans-serif', lineHeight: '2' }}
+          >
+            将来の資産シミュレーションを行う場合や配当金の複利計算も
+            <br />
+            銘柄を選ぶだけで簡単に算出することができます。
+          </p>
+          <Link
+            href="/search"
+            className="mb-1 px-10 py-4 rounded-full bg-[#3B82F6] text-white text-lg font-bold shadow-lg hover:bg-[#2563EB] transition"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            シミュレーションする
+          </Link>
+          {/* グラフ＋スマホ画像を重ねて配置 */}
+          <div
+            className="relative w-full flex items-end justify-center mt-2"
+            style={{ minHeight: 320 }}
+          >
+            <Image src="/hero-graph.png" alt="グラフUI" width={974} height={578} />
           </div>
         </div>
-      </header>
-      <main className="flex-1">
-        {/* Hero + Simulation 統合セクション */}
-        <section className="relative flex flex-col md:flex-row items-center justify-center min-h-[80vh] bg-gradient-to-br from-[#5965FF]/10 to-[#ECF9F3]/30 py-8 md:py-16">
-          <div className="max-w-4xl w-full mx-auto flex flex-col md:flex-row gap-8 md:gap-12 items-center md:items-stretch px-4">
-            {/* 左：キャッチコピー＋CTA */}
-            <div className="flex-1 flex flex-col justify-center items-center md:items-start text-center md:text-left gap-4 md:gap-6">
-              <h1
-                className="text-3xl md:text-5xl font-bold text-[#0F172A] drop-shadow-sm leading-[40px] md:leading-[70px] tracking-tight"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                複雑な投資計算を
-                <br />
-                <span className="text-[#5965FF]">ワンクリックで</span>
-              </h1>
-              <p
-                className="text-lg md:text-2xl text-[#334155] font-medium mb-2"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                資産形成をもっと簡単に、より身近に
-              </p>
-              <Link
-                href="/search"
-                className="w-full max-w-xs h-14 rounded-full bg-[#5965FF] text-white text-lg font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-[#414DFF] transition mt-2 mb-2"
-                aria-label="無料でシミュレーションを始める"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                無料でシミュレーションを始める
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </div>
-            {/* 右：シミュレーションUIカード */}
-            <div className="flex-1 w-full max-w-md bg-white rounded-2xl shadow-[0_2px_12px_rgba(89,101,255,0.08)] flex flex-col md:min-h-[420px] p-6 md:p-8 gap-6 justify-center mx-auto">
-              <h3
-                className="text-[18px] font-semibold leading-7 tracking-tight text-[#0F172A] mb-2"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                シミュレーション
-              </h3>
-              <div className="bg-[#F7FAFC] rounded-xl p-4 flex flex-col gap-2">
-                <span
-                  className="text-[16px] leading-6 tracking-normal text-[#334155] mb-2"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                >
-                  選択中の銘柄
-                </span>
-                <button
-                  className="flex items-center gap-2 text-[#5965FF] text-[16px] font-medium leading-6 tracking-normal mb-2 hover:underline"
-                  style={{ fontFamily: 'Inter, sans-serif' }}
-                >
-                  <span>銘柄を追加する</span>
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#E2F1EA]">
-                    <svg
-                      width="16"
-                      height="16"
-                      fill="none"
-                      stroke="#5965FF"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 5v14m7-7H5" />
-                    </svg>
-                  </span>
-                </button>
-                <div className="flex flex-col gap-2">
-                  {['Google', 'Tesla', 'Nvidia'].map((name, idx) => (
-                    <div
-                      key={name}
-                      className="flex items-center justify-between bg-[#ECF9F3] rounded-[28px] px-4 py-2"
-                    >
-                      <span
-                        className="flex items-center gap-2 text-[#0F172A] font-medium text-[16px] leading-6 tracking-normal"
-                        style={{ fontFamily: 'Inter, sans-serif' }}
-                      >
-                        <span
-                          className="w-6 h-6 flex items-center justify-center rounded-full bg-[#E2F1EA] text-[12px] font-bold leading-5 text-[#5965FF]"
-                          style={{ fontFamily: 'Inter, sans-serif' }}
-                        >
-                          {idx + 1}
-                        </span>
-                        {name}
-                      </span>
-                      <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#E2F1EA]">
-                        <svg
-                          width="20"
-                          height="20"
-                          fill="none"
-                          stroke="#334155"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle cx="12" cy="12" r="1.5" />
-                          <circle cx="19" cy="12" r="1.5" />
-                          <circle cx="5" cy="12" r="1.5" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-col items-center justify-center mt-2">
-                <div className="flex items-end gap-2 mb-2">
-                  <span
-                    className="text-[16px] leading-6 tracking-normal text-[#334155]"
-                    style={{ fontFamily: 'Inter, sans-serif' }}
-                  >
-                    このまま積み立てた最終金額
-                  </span>
-                  <span
-                    className="text-[30px] font-bold leading-none tracking-tight text-[#5965FF] font-mono"
-                    style={{ fontFamily: 'Menlo, monospace' }}
-                  >
-                    1,800
-                  </span>
-                  <span
-                    className="text-[16px] leading-6 text-[#334155] mb-1"
-                    style={{ fontFamily: 'Inter, sans-serif' }}
-                  >
-                    万円
-                  </span>
-                </div>
-                <div className="w-full h-64 bg-[#F7FAFC] rounded-xl flex items-center justify-center border border-[#ECF9F3]">
-                  <SimulationChart />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* グラデーションの装飾（ぼかし） */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute -top-32 -left-32 w-[400px] h-[400px] bg-[#6366F1] opacity-30 rounded-full blur-3xl" />
+          <div className="absolute -bottom-32 -right-32 w-[400px] h-[400px] bg-[#38BDF8] opacity-30 rounded-full blur-3xl" />
+        </div>
+      </section>
 
-        {/* Features Section */}
-        <section id="features" className="py-12 md:py-20 bg-white">
-          <div className="max-w-4xl mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#0F172A] text-center mb-8">
-              Laplaceでできること
-            </h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-sm flex flex-col gap-2">
-                <div className="bg-[#E2F1EA] rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <Search className="h-6 w-6 text-[#5965FF]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-1">ワンクリック自動入力</h3>
-                <p className="text-[#334155] text-sm">
-                  銘柄コードやティッカーを入力するだけで株価・配当・PER/PBR・税率まで自動取得。初心者でも迷わず入力できます。
-                </p>
-              </div>
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-sm flex flex-col gap-2">
-                <div className="bg-[#E2F1EA] rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <TrendingUp className="h-6 w-6 text-[#5965FF]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-1">シナリオ横並び比較</h3>
-                <p className="text-[#334155] text-sm">
-                  複数の投資シナリオをカードUIで同時比較。株A×積立／ETF
-                  B×一括／預金など異種比較もワンクリックで切替。
-                </p>
-              </div>
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-sm flex flex-col gap-2">
-                <div className="bg-[#E2F1EA] rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <PieChart className="h-6 w-6 text-[#5965FF]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-1">インサイト自動提示</h3>
-                <p className="text-[#334155] text-sm">
-                  税引後配当総額、Yield-on-Cost、元本割れ許容幅など「意思決定に直結する3指標」を自動で大きく表示。
-                </p>
-              </div>
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-sm flex flex-col gap-2">
-                <div className="bg-[#E2F1EA] rounded-full w-10 h-10 flex items-center justify-center mb-2">
-                  <LineChart className="h-6 w-6 text-[#5965FF]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-1">
-                  リスク&不確実性の可視化
-                </h3>
-                <p className="text-[#334155] text-sm">
-                  ボラティリティを年率σで取り込み、モンテカルロ1,000本を1秒未満で描画。下位5パーセンタイルの評価額も可視化。
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Problem Section */}
-        <section id="problem" className="py-12 md:py-24 bg-[#F7FAFC]">
-          <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
-            <div className="flex flex-col items-center text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] mb-4">
-                資産形成ツールの機能ギャップと市場インパクト
-              </h2>
-              <p className="text-lg text-[#334155] max-w-[800px]">
-                現在の資産形成ツールには、重要な機能が欠けています。
-              </p>
-            </div>
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              <div className="bg-white rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-xl font-semibold text-[#0F172A] mb-2">
-                  シミュレーション・ギャップ
-                </h3>
-                <p className="text-[#334155]">
-                  <strong>家計金融資産の50.9%が現預金で滞留</strong>
-                  し、株式等は14.2%にとどまる（2024Q4資金循環統計）ため、「投資した場合に資産がどう増減するか」を可視化できるツールへのニーズは構造的に大きい。
-                </p>
-              </div>
-              <div className="bg-white rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-xl font-semibold text-[#0F172A] mb-2">比較不能・判断不能</h3>
-                <p className="text-[#334155]">
-                  既存ポータル（Yahoo!ファイナンス等）は<strong>点データ</strong>
-                  （株価・配当利回り）の提示に留まり、「配当再投資を含む将来総資産」や「何円下落まで許容できるか」を
-                  <strong>時系列で比較</strong>する機能がない。
-                </p>
-              </div>
-              <div className="bg-white rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-xl font-semibold text-[#0F172A] mb-2">金融リテラシーの壁</h3>
-                <p className="text-[#334155]">
-                  金融教育の受講経験はわずか<strong>8%</strong>
-                  に過ぎず、「複利の効果を理解できていない」ことが投資開始の障壁になっている。
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Target User Section */}
-        <section id="target" className="py-12 md:py-24 bg-white">
-          <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
-            <div className="flex flex-col items-center text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] mb-4">
-                対象ユーザー
-              </h2>
-              <p className="text-lg text-[#334155] max-w-[800px]">
-                Laplaceは、以下のようなユーザーに最適です。
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="py-4 px-6 text-left text-[#0F172A] font-semibold">項目</th>
-                    <th className="py-4 px-6 text-left text-[#0F172A] font-semibold">
-                      プライマリーユーザー
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-gray-200">
-                    <td className="py-4 px-6 text-[#334155] font-medium">投資経験</td>
-                    <td className="py-4 px-6 text-[#334155]">NISA・ETFなどを年1回以上売買</td>
-                  </tr>
-                  <tr className="border-b border-gray-200">
-                    <td className="py-4 px-6 text-[#334155] font-medium">年代</td>
-                    <td className="py-4 px-6 text-[#334155]">20〜40代前半</td>
-                  </tr>
-                  <tr className="border-b border-gray-200">
-                    <td className="py-4 px-6 text-[#334155] font-medium">世帯</td>
-                    <td className="py-4 px-6 text-[#334155]">単身／DINKs（子なし夫婦）</td>
-                  </tr>
-                  <tr className="border-b border-gray-200">
-                    <td className="py-4 px-6 text-[#334155] font-medium">年収</td>
-                    <td className="py-4 px-6 text-[#334155]">500万円以上</td>
-                  </tr>
-                  <tr className="border-b border-gray-200">
-                    <td className="py-4 px-6 text-[#334155] font-medium">月間投資額</td>
-                    <td className="py-4 px-6 text-[#334155]">手取りの20%（約3万円〜）</td>
-                  </tr>
-                  <tr>
-                    <td className="py-4 px-6 text-[#334155] font-medium">行動特性</td>
-                    <td className="py-4 px-6 text-[#334155]">
-                      家計簿／証券口座アプリ利用、株価指数を定期ウォッチ
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="text-sm text-[#94A3B8] mt-4 text-center">
-              ※投資未経験者は将来拡張ターゲット
+      {/* お悩みセクション（画像サイズ調整済み） */}
+      <section className="w-full bg-white py-24 px-4">
+        <div
+          className="text-[#3B82F6] font-bold text-base text-center mb-2"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+          投資初心者がぶつかる壁
+        </div>
+        <h2
+          className="text-2xl md:text-3xl font-bold text-[#0F172A] text-center mb-12"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+          こんなお悩みありませんか？
+        </h2>
+        <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto justify-center">
+          {/* 悩み1 */}
+          <div className="flex-1 flex flex-col items-center bg-[#F7FAFC] rounded-2xl shadow p-8 min-w-[260px] max-w-[340px] mx-auto">
+            <Image
+              src="/trouble1.png"
+              alt="投資リスクをイメージしづらい"
+              width={250}
+              height={250}
+              className="mb-4 object-contain"
+            />
+            <h3 className="font-bold text-lg mb-2 text-[#0F172A]">投資リスクをイメージしづらい</h3>
+            <p className="text-[#334155] text-sm text-center">
+              どれくらい下がると危険なのか、感覚でしか分からない
             </p>
           </div>
-        </section>
-
-        {/* Value Proposition Section */}
-        <section id="value" className="py-12 md:py-24 bg-[#F7FAFC]">
-          <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
-            <div className="flex flex-col items-center text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] mb-4">価値提案</h2>
-              <p className="text-lg text-[#334155] max-w-[800px]">Laplaceが提供する独自の価値</p>
-            </div>
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="bg-white rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="bg-[#E2F1EA] rounded-full w-10 h-10 flex items-center justify-center shrink-0">
-                    <span className="text-[#5965FF] font-bold">1</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-[#0F172A]">ワンクリック自動入力</h3>
-                </div>
-                <p className="text-[#334155]">
-                  銘柄コードorティッカーを入力するだけで株価・配当履歴・PER／PBR・税率までリアルタイムで取得。
-                  取込APIは冗長化しており、データ欠損時は自動フェイルオーバー（Yahoo Finance → IEX
-                  Cloud → 代替CSV）の3段階で完結させる。
-                  初心者でも「知識がなくて入力できない」壁がゼロになる。
-                </p>
-              </div>
-              <div className="bg-white rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="bg-[#E2F1EA] rounded-full w-10 h-10 flex items-center justify-center shrink-0">
-                    <span className="text-[#5965FF] font-bold">2</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-[#0F172A]">シナリオ横並び比較</h3>
-                </div>
-                <p className="text-[#334155]">
-                  単一銘柄の推移グラフに留まらず、"カード"UIでシナリオを同時表示。 株A×定期買付／ETF
-                  B×一括投資／預金0.02%といった異種比較がワンクリックで切替えられ、
-                  優劣は差分ハイライトで瞬時に把握できる。
-                </p>
-              </div>
-              <div className="bg-white rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="bg-[#E2F1EA] rounded-full w-10 h-10 flex items-center justify-center shrink-0">
-                    <span className="text-[#5965FF] font-bold">3</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-[#0F172A]">インサイト自動提示</h3>
-                </div>
-                <p className="text-[#334155]">
-                  シナリオ間の税引後配当総額、Yield-on-Cost、元本割れ許容幅を自動算出し、
-                  チャートより先に「意思決定に直結する3指標」を大きく表示。
-                  視覚的に"◯◯円下落しても配当で回収できる"まで分かるため、リスク許容度も具体的に測れる。
-                </p>
-              </div>
-              <div className="bg-white rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="bg-[#E2F1EA] rounded-full w-10 h-10 flex items-center justify-center shrink-0">
-                    <span className="text-[#5965FF] font-bold">4</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-[#0F172A]">
-                    リスク & 不確実性の可視化
-                  </h3>
-                </div>
-                <p className="text-[#334155]">
-                  ボラティリティを年率σとして取り込み、モンテカルロ1,000本を1秒未満で描画。
-                  「下位5パーセンタイルの10年後評価額」まで示すことで、値下がり許容度を数字で示す。
-                </p>
-              </div>
-            </div>
+          {/* 悩み2 */}
+          <div className="flex-1 flex flex-col items-center bg-[#F7FAFC] rounded-2xl shadow p-8 min-w-[260px] max-w-[340px] mx-auto">
+            <Image
+              src="/trouble2.png"
+              alt="新規銘柄が選びづらい"
+              width={250}
+              height={250}
+              className="mb-4 object-contain"
+            />
+            <h3 className="font-bold text-lg mb-2 text-[#0F172A]">新規銘柄が選びづらい</h3>
+            <p className="text-[#334155] text-sm text-center">
+              どの銘柄が自分に合うか、比較が難しい
+            </p>
           </div>
-        </section>
-
-        {/* Why Now Section */}
-        <section className="py-12 md:py-24 bg-white">
-          <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
-            <div className="flex flex-col items-center text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] mb-4">
-                Why Now?（背景）
-              </h2>
-              <p className="text-lg text-[#334155] max-w-[800px]">なぜ今、Laplaceが必要なのか</p>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-2">
-                  NISA口座は半期+130万件、残高+16%
-                </h3>
-                <p className="text-[#334155] text-sm">
-                  FSA統計によると2024-06→12で2,430→2,560万口座、残高45.4→52.7兆円。金融リテラシー層が急拡大。
-                </p>
-              </div>
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-2">
-                  家計の"現金50%依存"は維持
-                </h3>
-                <p className="text-[#334155] text-sm">
-                  家計資産は現金50.9%、株等14.2%（前年比+2.8pt）。"移行初期"にリスクとリターンを可視化するツールが不可欠。
-                </p>
-              </div>
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-2">
-                  拡張NISAの非課税枠の約88%が未使用
-                </h3>
-                <p className="text-[#334155] text-sm">
-                  1口座平均残高206万円＜終身上限1,800万円。枠の最適配分を試算する需要が高い。
-                </p>
-              </div>
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-2">
-                  ETF推奨率70%、若年層はETF志向
-                </h3>
-                <p className="text-[#334155] text-sm">
-                  アドバイザーの7割がETFを積極推奨、ミレニアルの購入意欲も急伸。複数銘柄シナリオ比較が求められる。
-                </p>
-              </div>
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-2">
-                  インフレ2.5%・金利+0.5ptで"現金劣化"が顕在化
-                </h3>
-                <p className="text-[#334155] text-sm">
-                  BOJの政策転換を受け、実質リターンを追求する層が増加。
-                </p>
-              </div>
-              <div className="bg-[#ECF9F3] rounded-[28px] p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-2">
-                  既存ツールは"現在資産の可視化"中心
-                </h3>
-                <p className="text-[#334155] text-sm">
-                  将来シミュレーションが弱く、ユーザーのニーズに応えられていない。
-                </p>
-              </div>
-            </div>
+          {/* 悩み3 */}
+          <div className="flex-1 flex flex-col items-center bg-[#F7FAFC] rounded-2xl shadow p-8 min-w-[260px] max-w-[340px] mx-auto">
+            <Image
+              src="/trouble3.png"
+              alt="手段の選択肢が多すぎる"
+              width={250}
+              height={250}
+              className="mb-4 object-contain"
+            />
+            <h3 className="font-bold text-lg mb-2 text-[#0F172A]">手段の選択肢が多すぎる</h3>
+            <p className="text-[#334155] text-sm text-center">
+              積立・一括・ETF…何がベストか分からない
+            </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* CTA Section */}
-        <section className="py-12 md:py-24 bg-[#5965FF]/10">
-          <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
-            <div className="flex flex-col items-center text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-[#0F172A] mb-4">
-                あなたの資産形成を、もっとスマートに
-              </h2>
-              <p className="text-lg text-[#334155] max-w-[800px] mb-8">
-                Laplaceを使って、あなたの投資判断をデータに基づいて最適化しましょう。
-                無料でシミュレーションを始めることができます。
+      {/* LAPLACEの特徴セクション（画像サイズ調整済み） */}
+      <section id="feature-laplace" className="w-full bg-[#F7FAFC] py-20 px-4">
+        <div
+          className="text-[#3B82F6] font-bold text-base text-center mb-2"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+          投資試算のあるあるを解決
+        </div>
+        <h2
+          className="text-2xl md:text-3xl font-bold text-[#0F172A] text-center mb-12"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+          LAPLACEの特徴
+        </h2>
+        <div className="flex flex-col gap-16 max-w-6xl mx-auto">
+          {/* 特徴1 */}
+          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+            <Image
+              src="/feature-pc-1.png"
+              alt="特徴1 PC画面"
+              width={560}
+              height={374}
+              className="rounded-xl shadow-lg object-cover w-full max-w-[560px]"
+            />
+            <div className="flex-1 min-w-[220px]">
+              <h3 className="font-bold text-2xl mb-4 text-[#0F172A]">1. 銘柄を選択</h3>
+              <p className="text-[#334155] text-base">
+                気になる銘柄を選ぶだけでOK。初心者でも迷わず操作できます。
               </p>
-              <Button
-                size="lg"
-                className="bg-[#5965FF] text-white hover:bg-[#414DFF] shadow-[0_2px_6px_rgba(89,101,255,0.3)] text-base"
+            </div>
+          </div>
+          {/* 特徴2 */}
+          <div className="flex flex-col md:flex-row-reverse items-center gap-10 md:gap-16">
+            <Image
+              src="/feature-pc-2.png"
+              alt="特徴2 スマホ画面"
+              width={560}
+              height={374}
+              className="rounded-xl shadow-lg object-cover w-full max-w-[560px]"
+            />
+            <div className="flex-1 min-w-[220px]">
+              <h3 className="font-bold text-2xl mb-4 text-[#0F172A]">2. 条件を入力</h3>
+              <p className="text-[#334155] text-base">
+                積立額や期間、利回りなどを入力するだけ。シンプルなUIで直感的に設定できます。
+              </p>
+            </div>
+          </div>
+          {/* 特徴3 */}
+          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+            <Image
+              src="/feature-pc-3.png"
+              alt="特徴3 PC画面"
+              width={560}
+              height={374}
+              className="rounded-xl shadow-lg object-cover w-full max-w-[560px]"
+            />
+            <div className="flex-1 min-w-[220px]">
+              <h3 className="font-bold text-2xl mb-4 text-[#0F172A]">3. 結果を確認</h3>
+              <p className="text-[#334155] text-base">
+                将来の資産推移やリスクをグラフで一目で確認できます。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* シミュレーション結果セクション */}
+      <section className="w-full bg-white py-20 px-4">
+        <div
+          className="text-[#3B82F6] font-bold text-base text-center mb-2"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+          10年後の総資産や配当金合計がすぐに確認できます
+        </div>
+        <div className="max-w-5xl mx-auto flex flex-col items-center">
+          <h2
+            className="text-2xl md:text-3xl font-bold text-[#0F172A] text-center mb-6"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            シミュレーション結果が一目瞭然
+          </h2>
+          <p className="text-[#334155] text-base text-center mb-10 max-w-2xl">
+            LAPLACEでは、シミュレーション結果をグラフで直感的に確認できます。
+            <br />
+            将来の資産推移やリスクを一目で把握できるので、投資判断がより明確に。
+          </p>
+          <div className="w-full flex flex-col items-center">
+            <Image
+              src="/result-graph.png"
+              alt="シミュレーション結果グラフ"
+              width={900}
+              height={420}
+              className="rounded-2xl shadow-2xl border border-[#E5E7EB] bg-white max-w-full"
+            />
+            <div className="flex flex-col md:flex-row gap-4 mt-8 w-full justify-center items-center">
+              <div className="bg-[#F7FAFC] rounded-xl px-6 py-3 text-center shadow text-[#0F172A] font-bold text-lg">
+                ¥12,498,931
+              </div>
+              <button className="px-8 py-3 rounded-full bg-[#3B82F6] text-white font-bold shadow hover:bg-[#2563EB] transition text-base">
+                2銘柄で比較してみる
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 将来資産シミュレーションを"リアルタイム"で最適化セクション */}
+      <section id="feature-simulation" className="w-full bg-[#0F172A] py-24 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 gap-16 items-center">
+          {/* 左カラム：テキスト＋メリット（PC時）/ テキストのみ（SP時） */}
+          <div className="flex flex-col gap-8 w-full">
+            <div>
+              <div
+                className="text-[#38BDF8] font-bold text-base text-left mb-2"
+                style={{ fontFamily: 'Inter, sans-serif' }}
               >
-                今すぐ無料で始める
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* ワンクリックシミュレーションの手順 */}
-        <section className="py-12 md:py-20 bg-[#F7FAFC]">
-          <div className="max-w-4xl mx-auto w-full px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#0F172A] text-center mb-8">
-              ワンクリックでシミュレーション
-            </h2>
-            <ol className="space-y-8 md:space-y-0 md:grid md:grid-cols-2 md:gap-8">
-              <li className="flex flex-col items-center text-center">
-                <div className="bg-[#E2F1EA] rounded-full w-16 h-16 flex items-center justify-center mb-3">
-                  <Search className="h-8 w-8 text-[#5965FF]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-1">銘柄を選択する</h3>
-                <p className="text-[#334155] text-sm mb-2">検索画面で気になる銘柄を選びます。</p>
-                <Link
-                  href="/search"
-                  className="inline-flex items-center text-[#5965FF] hover:underline text-sm font-medium"
-                >
-                  銘柄を検索する <ChevronRight className="w-4 h-4 ml-1" />
-                </Link>
-              </li>
-              <li className="flex flex-col items-center text-center">
-                <div className="bg-[#E2F1EA] rounded-full w-16 h-16 flex items-center justify-center mb-3">
-                  <TrendingUp className="h-8 w-8 text-[#5965FF]" />
-                </div>
-                <h3 className="text-lg font-semibold text-[#0F172A] mb-1">
-                  シミュレーションボタンを押す
-                </h3>
-                <p className="text-[#334155] text-sm mb-2">
-                  銘柄詳細ページで「この銘柄でシミュレーション」ボタンを押すだけ。
-                </p>
-                <span className="inline-flex items-center text-[#5965FF] text-sm font-medium opacity-60 cursor-not-allowed">
-                  シミュレーション画面へ <ChevronRight className="w-4 h-4 ml-1" />
-                </span>
-              </li>
-            </ol>
-          </div>
-        </section>
-      </main>
-      <footer className="bg-[#0F172A] text-white py-12">
-        <div className="max-w-4xl mx-auto w-full px-4 md:px-6">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Image
-                  src="/placeholder.svg?height=32&width=32"
-                  alt="Laplace Logo"
-                  width={32}
-                  height={32}
-                  className="rounded-full bg-white"
-                />
-                <span className="text-xl font-bold">Laplace</span>
+                根拠ある資産シミュレーションを簡単に
               </div>
-              <p className="text-sm text-gray-400 mb-4">
-                初心者でもワンクリックで意味のある将来比較ができる唯一の資産シミュレーター。
-                投資判断に不可欠なシナリオ比較と実データ自動入力を提供します。
+              <h2
+                className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                将来資産シミュレーションを
+                <br />
+                "リアルタイム"で最適化
+              </h2>
+              <p
+                className="text-[#CBD5E1] text-base md:text-lg mb-2 max-w-xl"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                リアルタイム計算エンジンにより、入力内容を更新した瞬間にグラフとKPIが再描画されます。
+                <br />
+                初心者でも迷わず操作できるガイド付きUIと合わせて、投資判断に必要な数字をワンストップで取得できます。
               </p>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">製品</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    機能
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    料金プラン
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    よくある質問
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    ロードマップ
-                  </Link>
-                </li>
-              </ul>
+            {/* SP時のみアイコン群をここに表示 */}
+            <div className="block lg:hidden w-full flex justify-center my-8">
+              <Image
+                src="/feature-icons.png"
+                alt="特徴アイコン群"
+                width={320}
+                height={320}
+                className="object-contain max-w-xs mx-auto"
+              />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">会社情報</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    私たちについて
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    ブログ
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    採用情報
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    お問い合わせ
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">法的情報</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    利用規約
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    プライバシーポリシー
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-gray-400 hover:text-white">
-                    特定商取引法に基づく表記
-                  </Link>
-                </li>
-              </ul>
+            {/* メリット3点 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              {/* メリット1 */}
+              <div className="flex flex-col items-start gap-3">
+                <Image
+                  src="/icon-merit-calendar.png"
+                  alt="自動パラメータ補完"
+                  width={48}
+                  height={48}
+                  className="mb-1"
+                />
+                <div className="font-bold text-white text-lg mb-1">自動パラメータ補完</div>
+                <div className="text-[#CBD5E1] text-sm">
+                  最新の配当利回り・PER・PBRをAPIで取得し、推奨値をワンクリック入力。手間なく"根拠ある"試算が可能。
+                </div>
+              </div>
+              {/* メリット2 */}
+              <div className="flex flex-col items-start gap-3">
+                <Image
+                  src="/icon-merit-bag.png"
+                  alt="リアルタイム資産推移"
+                  width={48}
+                  height={48}
+                  className="mb-1"
+                />
+                <div className="font-bold text-white text-lg mb-1">リアルタイム資産推移</div>
+                <div className="text-[#CBD5E1] text-sm">
+                  金額や年数を変えた瞬間にグラフとKPIを再計算。1・5・10年タブを切り替えながら増加イメージを直感把握。
+                </div>
+              </div>
+              {/* メリット3 */}
+              <div className="flex flex-col items-start gap-3">
+                <Image
+                  src="/icon-merit-chat.png"
+                  alt="シナリオ比較ダッシュボード"
+                  width={48}
+                  height={48}
+                  className="mb-1"
+                />
+                <div className="font-bold text-white text-lg mb-1">シナリオ比較ダッシュボード</div>
+                <div className="text-[#CBD5E1] text-sm">
+                  最大3パターンを並列表示し、総資産・配当累計・許容下落率をカード＆チャートで比較。勝ち筋が一目で分かる。
+                </div>
+              </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Laplace Inc. All rights reserved.</p>
+          {/* 右カラム：PC時のみアイコン群 */}
+          <div className="hidden lg:flex justify-center lg:justify-end w-full">
+            <Image
+              src="/feature-icons.png"
+              alt="特徴アイコン群"
+              width={400}
+              height={400}
+              className="object-contain max-w-full"
+            />
           </div>
+        </div>
+      </section>
+
+      {/* 誰でも使えるユーザビリティの高さセクション */}
+      <section className="w-full bg-[#F7FAFC] py-24 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+          {/* 左：スマホ画像 */}
+          <div className="flex-1 flex justify-center items-center mb-8 lg:mb-0">
+            <Image
+              src="/usability-phones.png"
+              alt="スマホ画面モック"
+              width={420}
+              height={420}
+              className="object-contain max-w-xs sm:max-w-md md:max-w-lg lg:max-w-full"
+            />
+          </div>
+          {/* 右：テキスト */}
+          <div className="flex-1 flex flex-col items-start justify-center max-w-xl mx-auto lg:mx-0">
+            <div
+              className="text-[#3B82F6] font-bold text-base text-left mb-2"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              誰でも使えるユーザビリティの高さ
+            </div>
+            <h2
+              className="text-2xl md:text-4xl font-bold text-[#0F172A] mb-6 leading-tight"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              スキマ時間に、かんたん資産シミュレーター
+            </h2>
+            <p
+              className="text-[#334155] text-base md:text-lg mb-2"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              スマホひとつで資産シミュレーションをいつでも再開。
+              <br />
+              モバイル専用レイアウトとワンタップ入力候補で、外出先でも片手でラクラク操作。
+              <br />
+              もうWeb検索して利回り実績を考えて入力する手間は不要です。
+            </p>
+          </div>
+        </div>
+        {/* メリット3点 */}
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+          {/* メリット1 */}
+          <div className="flex flex-col items-center text-center gap-3">
+            <Image
+              src="/icon-merit-restart.png"
+              alt="中断しても即リスタート"
+              width={48}
+              height={48}
+              className="mb-1"
+            />
+            <div className="font-bold text-[#0F172A] text-lg mb-1">中断しても即リスタート</div>
+            <div className="text-[#334155] text-sm">
+              アプリが操作履歴をクラウドに自動保存。次に開いた瞬間、最後の入力画面からそのまま続行できます。
+            </div>
+          </div>
+          {/* メリット2 */}
+          <div className="flex flex-col items-center text-center gap-3">
+            <Image
+              src="/icon-merit-bag.png"
+              alt="ワンタップ入力候補"
+              width={48}
+              height={48}
+              className="mb-1"
+            />
+            <div className="font-bold text-[#0F172A] text-lg mb-1">ワンタップ入力候補</div>
+            <div className="text-[#334155] text-sm">
+              積立額・年数・利回りを"推奨値"ボタンで一括入力。数字に迷わずシミュレーションを始められます。
+            </div>
+          </div>
+          {/* メリット3 */}
+          <div className="flex flex-col items-center text-center gap-3">
+            <Image
+              src="/icon-merit-agefree.png"
+              alt="年齢問わず操作可能"
+              width={48}
+              height={48}
+              className="mb-1"
+            />
+            <div className="font-bold text-[#0F172A] text-lg mb-1">年齢問わず操作可能</div>
+            <div className="text-[#334155] text-sm">
+              シンプルで直感的なインターフェースで、幅広い年齢層に適した操作性/催促を提供します。使いやすさと親しみやすさを追求し、誰もが簡単に利用できます。
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ラストCTAセクション */}
+      <section className="w-full bg-[#F7FAFC] py-12 px-4 flex justify-center items-center">
+        <div
+          className="relative w-full max-w-5xl rounded-3xl overflow-hidden shadow-xl flex flex-col md:flex-row items-center justify-between min-h-[320px]"
+          style={{ background: 'rgba(0,0,0,0.7)' }}
+        >
+          {/* 背景画像 */}
+          <Image
+            src="/cta-bg.png"
+            alt="海岸空撮"
+            fill
+            priority
+            className="object-cover w-full h-full absolute inset-0 z-0"
+            style={{ filter: 'brightness(0.7)' }}
+          />
+          {/* オーバーレイ */}
+          <div className="absolute inset-0 bg-black/40 z-10" />
+          {/* テキスト */}
+          <div className="relative z-20 flex-1 flex flex-col justify-center items-start px-8 py-12 md:py-0">
+            <div className="text-white/80 text-lg mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+              かんたんな入力で
+            </div>
+            <h2
+              className="text-2xl md:text-4xl font-bold text-white mb-6 leading-tight drop-shadow-xl"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              スグはじめられる
+              <br />
+              LAPLACEで試算しよう
+            </h2>
+          </div>
+          {/* CTAボタン */}
+          <div className="relative z-20 flex-1 flex justify-center md:justify-end items-center px-8 pb-8 md:pb-0">
+            <Link
+              href="/search"
+              className="flex items-center gap-3 px-8 py-4 rounded-full bg-[#18181B] text-white text-lg font-bold shadow-lg hover:bg-[#0F172A] transition min-w-[220px] justify-center"
+            >
+              シミュレーションする
+              <Image
+                src="/icon-arrow-right.png"
+                alt="矢印"
+                width={24}
+                height={24}
+                className="ml-2"
+              />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* フッター */}
+      <footer className="bg-[#F7FAFC] py-16 mt-8">
+        <div className="max-w-4xl mx-auto flex flex-col items-center justify-center gap-4 px-4">
+          <span
+            className="text-5xl font-extrabold tracking-widest text-[#0F172A]"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            LAPLACE
+          </span>
+          <span className="text-sm text-[#334155] mt-8">© 2023 example All Right Reserved.</span>
         </div>
       </footer>
     </div>

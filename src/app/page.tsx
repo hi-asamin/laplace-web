@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LandingPage() {
@@ -66,7 +65,7 @@ export default function LandingPage() {
             className="relative w-full flex items-end justify-center mt-2"
             style={{ minHeight: 320 }}
           >
-            <Image src="/hero-graph.png" alt="グラフUI" width={974} height={578} />
+            <img src="/hero-graph.png" alt="グラフUI" width={974} height={578} />
           </div>
         </div>
         {/* グラデーションの装飾（ぼかし） */}
@@ -93,7 +92,7 @@ export default function LandingPage() {
         <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto justify-center">
           {/* 悩み1 */}
           <div className="flex-1 flex flex-col items-center bg-[#F7FAFC] rounded-2xl shadow p-8 min-w-[260px] max-w-[340px] mx-auto">
-            <Image
+            <img
               src="/trouble1.png"
               alt="投資リスクをイメージしづらい"
               width={250}
@@ -107,7 +106,7 @@ export default function LandingPage() {
           </div>
           {/* 悩み2 */}
           <div className="flex-1 flex flex-col items-center bg-[#F7FAFC] rounded-2xl shadow p-8 min-w-[260px] max-w-[340px] mx-auto">
-            <Image
+            <img
               src="/trouble2.png"
               alt="新規銘柄が選びづらい"
               width={250}
@@ -121,7 +120,7 @@ export default function LandingPage() {
           </div>
           {/* 悩み3 */}
           <div className="flex-1 flex flex-col items-center bg-[#F7FAFC] rounded-2xl shadow p-8 min-w-[260px] max-w-[340px] mx-auto">
-            <Image
+            <img
               src="/trouble3.png"
               alt="手段の選択肢が多すぎる"
               width={250}
@@ -153,7 +152,7 @@ export default function LandingPage() {
         <div className="flex flex-col gap-16 max-w-6xl mx-auto">
           {/* 特徴1 */}
           <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
-            <Image
+            <img
               src="/feature-pc-1.png"
               alt="特徴1 PC画面"
               width={560}
@@ -169,7 +168,7 @@ export default function LandingPage() {
           </div>
           {/* 特徴2 */}
           <div className="flex flex-col md:flex-row-reverse items-center gap-10 md:gap-16">
-            <Image
+            <img
               src="/feature-pc-2.png"
               alt="特徴2 スマホ画面"
               width={560}
@@ -185,7 +184,7 @@ export default function LandingPage() {
           </div>
           {/* 特徴3 */}
           <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
-            <Image
+            <img
               src="/feature-pc-3.png"
               alt="特徴3 PC画面"
               width={560}
@@ -223,7 +222,7 @@ export default function LandingPage() {
             将来の資産推移やリスクを一目で把握できるので、投資判断がより明確に。
           </p>
           <div className="w-full flex flex-col items-center">
-            <Image
+            <img
               src="/result-graph.png"
               alt="シミュレーション結果グラフ"
               width={900}
@@ -273,7 +272,7 @@ export default function LandingPage() {
             </div>
             {/* SP時のみアイコン群をここに表示 */}
             <div className="block lg:hidden w-full flex justify-center my-8">
-              <Image
+              <img
                 src="/feature-icons.png"
                 alt="特徴アイコン群"
                 width={320}
@@ -285,7 +284,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               {/* メリット1 */}
               <div className="flex flex-col items-start gap-3">
-                <Image
+                <img
                   src="/icon-merit-calendar.png"
                   alt="自動パラメータ補完"
                   width={48}
@@ -299,7 +298,7 @@ export default function LandingPage() {
               </div>
               {/* メリット2 */}
               <div className="flex flex-col items-start gap-3">
-                <Image
+                <img
                   src="/icon-merit-bag.png"
                   alt="リアルタイム資産推移"
                   width={48}
@@ -313,7 +312,7 @@ export default function LandingPage() {
               </div>
               {/* メリット3 */}
               <div className="flex flex-col items-start gap-3">
-                <Image
+                <img
                   src="/icon-merit-chat.png"
                   alt="シナリオ比較ダッシュボード"
                   width={48}
@@ -329,7 +328,7 @@ export default function LandingPage() {
           </div>
           {/* 右カラム：PC時のみアイコン群 */}
           <div className="hidden lg:flex justify-center lg:justify-end w-full">
-            <Image
+            <img
               src="/feature-icons.png"
               alt="特徴アイコン群"
               width={400}
@@ -345,7 +344,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           {/* 左：スマホ画像 */}
           <div className="flex-1 flex justify-center items-center mb-8 lg:mb-0">
-            <Image
+            <img
               src="/usability-phones.png"
               alt="スマホ画面モック"
               width={420}
@@ -383,7 +382,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
           {/* メリット1 */}
           <div className="flex flex-col items-center text-center gap-3">
-            <Image
+            <img
               src="/icon-merit-restart.png"
               alt="中断しても即リスタート"
               width={48}
@@ -397,7 +396,7 @@ export default function LandingPage() {
           </div>
           {/* メリット2 */}
           <div className="flex flex-col items-center text-center gap-3">
-            <Image
+            <img
               src="/icon-merit-bag.png"
               alt="ワンタップ入力候補"
               width={48}
@@ -411,7 +410,7 @@ export default function LandingPage() {
           </div>
           {/* メリット3 */}
           <div className="flex flex-col items-center text-center gap-3">
-            <Image
+            <img
               src="/icon-merit-agefree.png"
               alt="年齢問わず操作可能"
               width={48}
@@ -433,11 +432,9 @@ export default function LandingPage() {
           style={{ background: 'rgba(0,0,0,0.7)' }}
         >
           {/* 背景画像 */}
-          <Image
+          <img
             src="/cta-bg.png"
             alt="海岸空撮"
-            fill
-            priority
             className="object-cover w-full h-full absolute inset-0 z-0"
             style={{ filter: 'brightness(0.7)' }}
           />
@@ -464,13 +461,7 @@ export default function LandingPage() {
               className="flex items-center gap-3 px-8 py-4 rounded-full bg-[#18181B] text-white text-lg font-bold shadow-lg hover:bg-[#0F172A] transition min-w-[220px] justify-center"
             >
               シミュレーションする
-              <Image
-                src="/icon-arrow-right.png"
-                alt="矢印"
-                width={24}
-                height={24}
-                className="ml-2"
-              />
+              <img src="/icon-arrow-right.png" alt="矢印" width={24} height={24} className="ml-2" />
             </Link>
           </div>
         </div>

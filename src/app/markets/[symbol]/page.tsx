@@ -193,7 +193,7 @@ export default function MarketDetailPage() {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [fundamentalData, setFundamentalData] = useState<FundamentalData | null>(null);
   const [relatedMarkets, setRelatedMarkets] = useState<RelatedMarket[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // シンボルをデコードする（例：URLでエンコードされた9432.Tなど）
   const decodedSymbol = typeof symbol === 'string' ? decodeURIComponent(symbol) : '';
@@ -205,14 +205,51 @@ export default function MarketDetailPage() {
     // 例: localStorage や API 呼び出しなど
   };
 
-  // チャートデータを読み込む
+  // 各APIのデータを個別に取得する関数
+  const loadMarketDetails = async () => {
+    try {
+      const data = await getMarketDetails(decodedSymbol);
+      setMarketData(data);
+      setErrors((prev) => ({ ...prev, marketDetails: '' }));
+    } catch (error) {
+      console.error('市場詳細データの読み込みエラー:', error);
+      setErrors((prev) => ({ ...prev, marketDetails: '市場詳細データを取得できませんでした' }));
+    }
+  };
+
   const loadChartData = async (symbolValue: string, period: string) => {
     try {
       const data = await getChartData(symbolValue, period);
       setChartData(data);
-    } catch (err) {
-      console.error('チャートデータの読み込みエラー:', err);
-      setError('チャートデータを取得できませんでした');
+      setErrors((prev) => ({ ...prev, chartData: '' }));
+    } catch (error) {
+      console.error('チャートデータの読み込みエラー:', error);
+      setErrors((prev) => ({ ...prev, chartData: 'チャートデータを取得できませんでした' }));
+    }
+  };
+
+  const loadFundamentalData = async () => {
+    try {
+      const data = await getFundamentalData(decodedSymbol);
+      setFundamentalData(data);
+      setErrors((prev) => ({ ...prev, fundamentalData: '' }));
+    } catch (error) {
+      console.error('ファンダメンタルデータの読み込みエラー:', error);
+      setErrors((prev) => ({
+        ...prev,
+        fundamentalData: 'ファンダメンタルデータを取得できませんでした',
+      }));
+    }
+  };
+
+  const loadRelatedMarkets = async () => {
+    try {
+      const data = await getRelatedMarkets(decodedSymbol);
+      setRelatedMarkets(data.items || []);
+      setErrors((prev) => ({ ...prev, relatedMarkets: '' }));
+    } catch (error) {
+      console.error('関連銘柄データの読み込みエラー:', error);
+      setErrors((prev) => ({ ...prev, relatedMarkets: '関連銘柄データを取得できませんでした' }));
     }
   };
 
@@ -239,40 +276,24 @@ export default function MarketDetailPage() {
   }, []);
 
   useEffect(() => {
-    // API呼び出しでデータを取得
-    const loadData = async () => {
-      if (!decodedSymbol) {
-        setError('銘柄シンボルが指定されていません');
-        setIsLoading(false);
-        return;
-      }
+    if (!decodedSymbol) {
+      setErrors((prev) => ({ ...prev, general: '銘柄シンボルが指定されていません' }));
+      setIsLoading(false);
+      return;
+    }
 
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setErrors({});
 
-      try {
-        // 並列でデータを取得
-        const [marketDetailsData, chartData, fundamentalsData, relatedData] = await Promise.all([
-          getMarketDetails(decodedSymbol),
-          getChartData(decodedSymbol, selectedPeriod),
-          getFundamentalData(decodedSymbol),
-          getRelatedMarkets(decodedSymbol),
-        ]);
-
-        setMarketData(marketDetailsData);
-        setChartData(chartData);
-        setFundamentalData(fundamentalsData);
-        setRelatedMarkets(relatedData.items || []);
-
-        setIsLoading(false);
-      } catch (error) {
-        console.error('データの読み込みエラー:', error);
-        setError('データの取得中にエラーが発生しました');
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
+    // 各APIを並列で呼び出し
+    Promise.all([
+      loadMarketDetails(),
+      loadChartData(decodedSymbol, selectedPeriod),
+      loadFundamentalData(),
+      loadRelatedMarkets(),
+    ]).finally(() => {
+      setIsLoading(false);
+    });
   }, [decodedSymbol, selectedPeriod]);
 
   // チャートのパスを生成
@@ -311,6 +332,18 @@ export default function MarketDetailPage() {
       ]
     : [];
 
+  // エラー表示コンポーネント
+  const ErrorMessage = ({ type }: { type: string }) => {
+    const error = errors[type];
+    if (!error) return null;
+
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+        {error}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] p-2 sm:p-4">
       <div className="max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto sm:px-4">
@@ -345,45 +378,50 @@ export default function MarketDetailPage() {
             <div className="h-6 bg-gray-200 rounded-md w-1/3"></div>
           </div>
         ) : (
-          <div className="flex items-center justify-between mb-6 w-full">
-            {/* 左: ロゴ＋銘柄名 */}
-            <div className="flex items-center space-x-3">
-              <img
-                src={marketData?.logoUrl || getFlagIcon(marketData?.market || 'global')}
-                alt={marketData?.name}
-                className="w-8 h-8 rounded-full"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = getFlagIcon(marketData?.market || 'global');
-                }}
-              />
-              <h1 className="text-[22px] font-semibold text-[var(--color-gray-900)]">
-                {marketData?.name}
-              </h1>
-            </div>
-            {/* 右: データ取得日時＋リアルタイム */}
-            {marketData?.lastUpdated && (
-              <div className="flex flex-col items-end text-xs text-[var(--color-gray-400)] min-w-[70px]">
-                <span>
-                  {(() => {
-                    try {
-                      // 不正なISO8601（+09:00Zなど）を修正
-                      const fixed = marketData.lastUpdated.replace(/([+-]\d{2}:\d{2})Z$/, '$1');
-                      const d = new Date(fixed);
-                      if (isNaN(d.getTime())) return '';
-                      const jstDate = d.toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' }); // 例: 2025/05/08
-                      const match = jstDate.match(/(\d{4})\/(\d{2})\/(\d{2})/);
-                      if (match) {
-                        return `${match[2]}/${match[3]}`;
-                      }
-                      return jstDate;
-                    } catch {
-                      return '';
-                    }
-                  })()}
-                </span>
+          <>
+            <ErrorMessage type="marketDetails" />
+            <div className="flex items-center justify-between mb-6 w-full">
+              {/* 左: ロゴ＋銘柄名 */}
+              <div className="flex items-center space-x-3">
+                <img
+                  src={marketData?.logoUrl || getFlagIcon(marketData?.market || 'global')}
+                  alt={marketData?.name}
+                  className="w-8 h-8 rounded-full"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = getFlagIcon(
+                      marketData?.market || 'global'
+                    );
+                  }}
+                />
+                <h1 className="text-[22px] font-semibold text-[var(--color-gray-900)]">
+                  {marketData?.name}
+                </h1>
               </div>
-            )}
-          </div>
+              {/* 右: データ取得日時＋リアルタイム */}
+              {marketData?.lastUpdated && (
+                <div className="flex flex-col items-end text-xs text-[var(--color-gray-400)] min-w-[70px]">
+                  <span>
+                    {(() => {
+                      try {
+                        // 不正なISO8601（+09:00Zなど）を修正
+                        const fixed = marketData.lastUpdated.replace(/([+-]\d{2}:\d{2})Z$/, '$1');
+                        const d = new Date(fixed);
+                        if (isNaN(d.getTime())) return '';
+                        const jstDate = d.toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' }); // 例: 2025/05/08
+                        const match = jstDate.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+                        if (match) {
+                          return `${match[2]}/${match[3]}`;
+                        }
+                        return jstDate;
+                      } catch {
+                        return '';
+                      }
+                    })()}
+                  </span>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {/* 価格情報 */}
@@ -393,23 +431,26 @@ export default function MarketDetailPage() {
             <div className="h-6 bg-gray-200 rounded-md w-1/4"></div>
           </div>
         ) : (
-          <div className="mb-6">
-            <div className="text-[36px] font-bold text-[var(--color-gray-900)]">
-              {marketData?.price}
+          <>
+            <ErrorMessage type="chartData" />
+            <div className="mb-6">
+              <div className="text-[36px] font-bold text-[var(--color-gray-900)]">
+                {marketData?.price}
+              </div>
+              <div
+                className={`flex items-center text-base ${
+                  marketData?.isPositive
+                    ? 'text-[var(--color-success)]'
+                    : 'text-[var(--color-danger)]'
+                }`}
+              >
+                <span className="mr-1">{marketData?.isPositive ? '↑' : '↓'}</span>
+                <span>
+                  {marketData?.change} ({marketData?.changePercent})
+                </span>
+              </div>
             </div>
-            <div
-              className={`flex items-center text-base ${
-                marketData?.isPositive
-                  ? 'text-[var(--color-success)]'
-                  : 'text-[var(--color-danger)]'
-              }`}
-            >
-              <span className="mr-1">{marketData?.isPositive ? '↑' : '↓'}</span>
-              <span>
-                {marketData?.change} ({marketData?.changePercent})
-              </span>
-            </div>
-          </div>
+          </>
         )}
 
         {/* 期間選択タブ */}
@@ -738,6 +779,7 @@ export default function MarketDetailPage() {
             </div>
           ) : (
             <>
+              <ErrorMessage type="fundamentalData" />
               {/* 四半期業績推移 */}
               <div className="bg-[var(--color-surface)] rounded-xl p-3 mb-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
                 <div className="flex items-center justify-between mb-4">
@@ -922,12 +964,8 @@ export default function MarketDetailPage() {
           </div>
         </div>
 
-        {/* エラー表示 */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
+        {/* 一般的なエラー表示 */}
+        <ErrorMessage type="general" />
       </div>
     </div>
   );

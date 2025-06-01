@@ -1,8 +1,16 @@
 ---
-description: 
-globs: *.tsx
-alwaysApply: false
+
+description: FRACTAL ダッシュボード UI 向けデザインガイドライン
+
+# 開発対象
+
+* Web（React / Next.js）
+* モバイル（PWA／ハイブリッド）
+  globs: *.tsx
+  alwaysApply: false
+
 ---
+
 # 目次
 
 1. ブランド & トーン
@@ -27,6 +35,7 @@ alwaysApply: false
 * **ビジュアルのキーワード**: *Pill‑shape・Soft Shadow・Pastel Tint*
 * 初心者が迷わず使える直感的な UI と、インタラクティブな即時フィードバック。
 * 「シンプル」「ミニマル」「情報は一目で」「ガイド付きナビゲーション」
+* データ重視ながらも初心者が迷わないシンプルさを担保する。
 
 ## 2. 色 (Color Tokens)
 
@@ -48,20 +57,20 @@ alwaysApply: false
 
 ### 配色ルール
 
-* 主要 CTA は画面に 1 箇所だけ。セカンダリ操作はアウトライン。
-* Green/Red のみで情報を伝えない。矢印アイコン + ラベルを併用。
+* 主要 CTA は画面ごとに 1 箇所。セカンダリ操作はアウトラインボタン。
+* チャートでは `--color-primary` と `--color-success` のみで意味を完結させず、凡例ラベルで補助説明。
 * リストアイテムは `--color-list-bg` をベース、ホバーで `brightness(0.97)`。
 * グラフの折れ線は `--color-success`、陰影 16% 不透明塗りで帯域を表現。
 
 ## 3. タイポグラフィ
 
-| スタイル       | フォント           | サイズ   | 行間    | 文字間    |
-| ---------- | -------------- | ----- | ----- | ------ |
-| `Display`  | Inter Bold     | 34 px | 42 px | -1 %   |
-| `Headline` | Inter SemiBold | 26 px | 34 px | -0.5 % |
-| `Subhead`  | Inter Medium   | 18 px | 28 px | 0 %    |
-| `Body`     | Inter Regular  | 16 px | 24 px | 0 %    |
-| `Caption`  | Inter Regular  | 12 px | 18 px | 0.4 %  |
+| スタイル       | フォント                                 | サイズ   | 行間    | 文字間    |
+| ---------- | ------------------------------------ | ----- | ----- | ------ |
+| `Display`  | Inter Bold / Noto Sans JP Bold       | 36 px | 44 px | -1 %   |
+| `Headline` | Inter SemiBold / Noto Sans JP Medium | 28 px | 36 px | -0.5 % |
+| `Subhead`  | Inter Medium                         | 18 px | 28 px | 0 %    |
+| `Body`     | Inter Regular                        | 16 px | 24 px | 0 %    |
+| `Caption`  | Inter Regular                        | 12 px | 18 px | 0.4 %  |
 
 * 数字は *Menlo* (等幅) を使用し、三桁区切りは国際標準表記。
 
@@ -69,15 +78,30 @@ alwaysApply: false
 
 * **Mobileファースト**で設計し、全画面でレスポンシブデザインを徹底する。
 * **主要ブレークポイント**: `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px), `2xl` (1536px)
-* **PC時の最大横幅**: `max-w-2xl` (672px)を推奨。必要に応じて`max-w-3xl` (768px)や`max-w-4xl` (1024px)も利用可。
+* **最大横幅**: `2xl:max-w-7xl mx-auto`。
 * **中央寄せ**: PC時は`mx-auto`で中央寄せ、左右余白は`px-4`以上を確保。
 * **2カラム化やサイドバー表示は不要**。1カラムで情報を縦積みし、可読性・操作性を優先。
 * **グリッド/カラム数**: モバイルは1カラム、PCは2カラム以上に分割する場合も`lg:grid-cols-2`等で柔軟に対応。
 * **カード・リスト・チャート**: 横幅は`w-full`を基本、PC時は`max-w`で制限。
+* **サイドバー**: 幅 72 px (アイコンのみ) → `lg: w-240` でテキスト出現。
 * **フォントサイズ・アイコンサイズ**: `sm`/`md`/`lg`で段階的に拡大。
-* **タッチ領域**: PCでも44px以上を維持。
+* **タッチ領域**: モバイルもデスクトップも 44×44 px を維持。
 
 ## 5. コンポーネントスタイル
+
+### サイドナビゲーション
+
+| 状態     | 背景                      | アイコン / テキスト        |
+| ------ | ----------------------- | ------------------ |
+| アクティブ  | `--color-nav-bg`        | `--color-primary`  |
+| ホバー    | `rgba(59,130,246,0.08)` | `--color-primary`  |
+| 非アクティブ | transparent             | `--color-gray-500` |
+
+### KPI カード
+
+* ラベル: `Caption` / 値: `Subhead` Bold。
+* 余白: `p-4`, 横幅 100%。
+* 右上に `lucide:more-vertical` でアクションメニュー。
 
 ### タブバー
 
@@ -125,28 +149,77 @@ alwaysApply: false
 
 ## 6. アイコン & イラスト
 
-* アイコンは `lucide-react`、stroke‑width 1.8, default 20 px。
-* イラストは *unDraw* 風、線幅 2 px、ブランドカラー 20 % 淡色をサブカラーに。
-* アバター・アイコン円背景は `--color-icon-bg` を共通化。
+* アイコンは `lucide-react`, stroke‑width 1.8, default 20 px。
+* イラストは *unDraw* ライク、線幅 2 px、ブランドカラー 20 % 淡色。
+* アバター背景は `--color-surface-alt` で統一。
 
 ## 7. チャート & データビジュアライゼーション
 
-* **ライブラリ**: Recharts。
-* 折れ線: `--color-primary`。リファレンスライン: `--color-gray-400` 点線。
-* y 軸: 通貨単位を prefix、少数 0 桁、三桁区切り。
-* 期間タブ: 1D / 1W / 1M / … 選択時、背景 `--color-primary` 16% 透過フィル。
-* ツールチップ: Card radius 16 px, shadow `0 1px 6px rgba(0,0,0,0.08)`。
+### 7.1 ライブラリ選定
 
-## 8. モーション
+| ライブラリ        | 特徴                          | FRACTAL 的メリット           | SSR 対応                     |
+| ------------ | --------------------------- | ----------------------- | -------------------------- |
+| **Recharts** | JSX ベースで API が直感的。基本チャート網羅。 | 角丸・Pastel Tint の表現が容易。  | `dynamic()` でクライアント側のみ読み込み |
+| Nivo         | D3 ベース＋高機能。テーマ一括設定可能。       | グラデーションやレーダーチャートに便利。    | 同上                         |
+| Visx         | 低レベルで D3 直結。カスタム性最強。        | KPI カード組み込みのスパークラインが柔軟。 | 同上                         |
 
-* **Durations**: 入力→結果 220 ms / ホバー 120 ms / ページ遷移 280 ms。
+> **推奨**: *Recharts* でガイドライン準拠を最短実装。高度な可視化が必要な場合のみ Nivo／Visx を検討。
+
+### 7.2 Next.js 実装フロー (SSR セーフ)
+
+1. **動的 import**
+
+   ```tsx
+   import dynamic from 'next/dynamic';
+   const PerfLineChart = dynamic(() => import('@/components/PerfLineChart'), { ssr: false });
+   ```
+2. **レスポンシブ**: Recharts の `<ResponsiveContainer width="100%" height={220}>` を必ず使用し、カード幅に追従。
+3. **色トークン適用**: `stroke="var(--color-primary)"` / `fill="var(--color-primary)" fillOpacity={0.16}` のように CSS カスタムプロパティだけを参照。
+4. **スケール**: 折れ線は `monotone`、棒グラフは `barSize={12}` & `radius={[4,4,0,0]}` で角丸を統一。
+5. **ツールチップ**: `contentStyle={{ borderRadius: 16, boxShadow: '0 1px 6px rgba(0,0,0,0.08)' }}` でカードと統一感。値は `v.toLocaleString()` で千区切り。
+
+### 7.3 グラフスタイルガイド
+
+| 要素    | トークン / スタイル                 | 備考                         |
+| ----- | --------------------------- | -------------------------- |
+| 主系列   | `--color-primary`           | 太さ 2 px、点 r=3 px           |
+| 比較系列  | `--color-success`           | 破線 `strokeDasharray="4 4"` |
+| 目標線   | `--color-gray-400` 点線       | `ReferenceLine` で y 指定     |
+| エリア塗り | 主系列色 16% 不透明                | 変動帯域を示す                    |
+| グリッド線 | `--color-gray-400` / 罫線 3 3 | Y 軸 4〜6 本に制限               |
+
+### 7.4 UI & アクセシビリティ
+
+* **期間タブ** (1D/1W/1M/…): 選択時に `background: var(--color-primary-16)` + `rounded-full`。`role="tab"` & `aria-controls="chartId"` を必須。
+* **キーボード操作**: `ArrowLeft/Right` で系列切替、`Enter` で選択確定。
+* **色弱対策**: 色だけで意味を持たせず、ラベル(↑↓)や凡例を併用。
+
+### 7.5 アニメーション
+
+* **ロード時**: Recharts デフォルトパスアニメ (`isAnimationActive`) を使用、`duration={450}`/`easing="ease-out"` に統一。
+* **インタラクション**: ホバー 120 ms、クリック 180 ms。`react-spring` でフェード + Path‑length アニメ→ガイドライン §8 と整合。
+
+### 7.6 品質を高めるコツ
+
+1. **Y 目盛は 4–6 本** に留めノイズを削減。
+2. **ラベル長** は 8 文字以内、折返し禁止。
+3. **データ欠損** は点線補間し、ツールチップで "No data" を表示。
+4. **ダミーデータ → API → 状態管理 (Jotai/Recoil)** の順で実装。
+5. **export**: PNG/CSV ダウンロードには `toBlob()` と `json2csv` を利用。
+
+## 8. モーション. モーション
+
+* **Durations**: 入力→結果 220 ms / ホバー 120 ms / クリック 180 ms / ページ遷移 280 ms。
 * **Easing**: `cubic-bezier(0.4,0,0.2,1)`。
+* KPI カードはロード時 `fade-up` (20 px) over 240 ms, stagger 60 ms。
 * リストアイテムはタップ時に `scale(0.98)` + shadow 消失で押し込み感を演出。
 * チャート描画は `react-spring` で 450 ms フェード + Path‑length アニメーション。
 
 ## 9. アクセシビリティ補足
 
 * コントラスト比 4.5:1 以上 (Primary と Surface で 4.68:1)。
+* キーボードタブ順序は DOM 順 = 視覚順に一致。
+* サイドバーは `aria-current="page"` で現在ページを示す。
 * VoiceOver 対策として、期間タブ・グラフを `aria-controls` で関連付け。
 * タップ領域は最小 44×44 px を確保。
 

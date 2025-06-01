@@ -9,6 +9,7 @@ import { getFlagIcon } from '@/utils';
 import Tooltip from '@/components/tooltip';
 import WithdrawalPlan from '@/components/WithdrawalPlan';
 import WithdrawalChart from '@/components/WithdrawalChart';
+import AnimatedNumber from '@/components/AnimatedNumber';
 
 // 投資方法のオプション
 const INVESTMENT_OPTIONS = [
@@ -593,7 +594,9 @@ export default function SimulationPage() {
             {/* 総資産額 */}
             <div className="flex items-center gap-1">
               <span className="text-xs text-[var(--color-gray-400)]">
-                {mode === 'withdrawal' ? '使える金額' : '貯まる金額'}
+                {mode === 'withdrawal'
+                  ? '使える金額'
+                  : `${contributionYears}年後のあなたの資産総額`}
               </span>
               <Tooltip
                 title={
@@ -625,11 +628,21 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
               </Tooltip>
             </div>
             <div className="text-[36px] font-bold text-[var(--color-gray-900)]">
-              {isReverseMode && targetAmount !== '' && !reverseError
-                ? `¥ ${Number(targetAmount).toLocaleString()}`
-                : simulationData.baseScenario.length > 0
-                  ? `¥ ${Math.round(simulationData.baseScenario[simulationData.baseScenario.length - 1].total).toLocaleString()}`
-                  : '-'}
+              {isReverseMode && targetAmount !== '' && !reverseError ? (
+                <AnimatedNumber
+                  value={Number(targetAmount)}
+                  className="text-[36px] font-bold text-[var(--color-gray-900)]"
+                />
+              ) : simulationData.baseScenario.length > 0 ? (
+                <AnimatedNumber
+                  value={Math.round(
+                    simulationData.baseScenario[simulationData.baseScenario.length - 1].total
+                  )}
+                  className="text-[36px] font-bold text-[var(--color-gray-900)]"
+                />
+              ) : (
+                '-'
+              )}
             </div>
             {/* 複利利益 */}
             {mode === 'simulation' && (
@@ -666,11 +679,24 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
                           currentInitialPrincipal +
                           currentContributionYears * currentMonthlyAmount * 12;
                         const profit = Number(targetAmount) - totalInvested;
-                        return profit >= 0
-                          ? `¥ ${Math.round(profit).toLocaleString()}`
-                          : '算出不可';
+                        return profit >= 0 ? (
+                          <AnimatedNumber
+                            value={Math.round(profit)}
+                            className="text-base text-[var(--color-success)]"
+                          />
+                        ) : (
+                          '算出不可'
+                        );
                       } else if (simulationData.baseScenario.length > 0) {
-                        return `¥ ${Math.round(simulationData.baseScenario[simulationData.baseScenario.length - 1].dividend).toLocaleString()}`;
+                        return (
+                          <AnimatedNumber
+                            value={Math.round(
+                              simulationData.baseScenario[simulationData.baseScenario.length - 1]
+                                .dividend
+                            )}
+                            className="text-base text-[var(--color-success)]"
+                          />
+                        );
                       } else {
                         return '-';
                       }

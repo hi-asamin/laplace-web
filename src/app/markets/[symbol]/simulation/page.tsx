@@ -631,48 +631,54 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
                   ? `¥ ${Math.round(simulationData.baseScenario[simulationData.baseScenario.length - 1].total).toLocaleString()}`
                   : '-'}
             </div>
-            {/* 累積配当金（複利利益） */}
-            <div className="mb-0.5 flex items-center gap-1 mt-2">
-              <span className="text-xs text-[var(--color-gray-400)]">累積配当金（複利利益）</span>
-              <Tooltip
-                title={SIMULATION_TERM_EXPLANATIONS['累積配当金'].title}
-                content={SIMULATION_TERM_EXPLANATIONS['累積配当金'].description}
-              >
-                <span className="sr-only">累積配当金（複利利益）の説明</span>
-              </Tooltip>
-            </div>
-            <div className="flex items-center text-base text-[var(--color-success)]">
-              <span className="mr-1">＋</span>
-              <span>
-                {(() => {
-                  if (isReverseMode && targetAmount !== '' && !reverseError) {
-                    let currentInitialPrincipal = initialPrincipal;
-                    let currentMonthlyAmount = monthlyAmount;
-                    let currentContributionYears = contributionYears;
+            {/* 複利利益 */}
+            {mode === 'simulation' && (
+              <>
+                <div className="mb-0.5 flex items-center gap-1 mt-2">
+                  <span className="text-xs text-[var(--color-gray-400)]">複利利益</span>
+                  <Tooltip
+                    title={SIMULATION_TERM_EXPLANATIONS['累積配当金'].title}
+                    content={SIMULATION_TERM_EXPLANATIONS['累積配当金'].description}
+                  >
+                    <span className="sr-only">複利利益の説明</span>
+                  </Tooltip>
+                </div>
+                <div className="flex items-center text-base text-[var(--color-success)]">
+                  <span className="mr-1">＋</span>
+                  <span>
+                    {(() => {
+                      if (isReverseMode && targetAmount !== '' && !reverseError) {
+                        let currentInitialPrincipal = initialPrincipal;
+                        let currentMonthlyAmount = monthlyAmount;
+                        let currentContributionYears = contributionYears;
 
-                    if (reverseTarget === 'initialPrincipal' && reversePrincipal !== null) {
-                      currentInitialPrincipal = reversePrincipal;
-                    }
-                    if (reverseTarget === 'monthlyAmount' && reverseMonthly !== null) {
-                      currentMonthlyAmount = reverseMonthly;
-                    }
-                    if (reverseTarget === 'contributionYears' && reverseYears !== null) {
-                      currentContributionYears = reverseYears;
-                    }
+                        if (reverseTarget === 'initialPrincipal' && reversePrincipal !== null) {
+                          currentInitialPrincipal = reversePrincipal;
+                        }
+                        if (reverseTarget === 'monthlyAmount' && reverseMonthly !== null) {
+                          currentMonthlyAmount = reverseMonthly;
+                        }
+                        if (reverseTarget === 'contributionYears' && reverseYears !== null) {
+                          currentContributionYears = reverseYears;
+                        }
 
-                    const totalInvested =
-                      currentInitialPrincipal +
-                      currentContributionYears * currentMonthlyAmount * 12;
-                    const profit = Number(targetAmount) - totalInvested;
-                    return profit >= 0 ? `¥ ${Math.round(profit).toLocaleString()}` : '算出不可';
-                  } else if (simulationData.baseScenario.length > 0) {
-                    return `¥ ${Math.round(simulationData.baseScenario[simulationData.baseScenario.length - 1].dividend).toLocaleString()}`;
-                  } else {
-                    return '-';
-                  }
-                })()}
-              </span>
-            </div>
+                        const totalInvested =
+                          currentInitialPrincipal +
+                          currentContributionYears * currentMonthlyAmount * 12;
+                        const profit = Number(targetAmount) - totalInvested;
+                        return profit >= 0
+                          ? `¥ ${Math.round(profit).toLocaleString()}`
+                          : '算出不可';
+                      } else if (simulationData.baseScenario.length > 0) {
+                        return `¥ ${Math.round(simulationData.baseScenario[simulationData.baseScenario.length - 1].dividend).toLocaleString()}`;
+                      } else {
+                        return '-';
+                      }
+                    })()}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         )}
 

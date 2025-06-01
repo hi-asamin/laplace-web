@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { ChevronLeft, Bookmark, ChevronRight, TrendingUp, Search } from 'lucide-react';
 import Link from 'next/link';
 import Tooltip from '@/components/tooltip';
@@ -15,6 +15,7 @@ import {
 } from '@/types/api';
 import { generateChartPath } from '@/utils/chart';
 import { getFlagIcon } from '@/utils';
+import Image from 'next/image';
 
 // 期間選択のタブオプション
 const PERIOD_OPTIONS = [
@@ -206,7 +207,7 @@ export default function MarketDetailPage() {
   };
 
   // 各APIのデータを個別に取得する関数
-  const loadMarketDetails = async () => {
+  const loadMarketDetails = useCallback(async () => {
     try {
       const data = await getMarketDetails(decodedSymbol);
       setMarketData(data);
@@ -215,9 +216,9 @@ export default function MarketDetailPage() {
       console.error('市場詳細データの読み込みエラー:', error);
       setErrors((prev) => ({ ...prev, marketDetails: '市場詳細データを取得できませんでした' }));
     }
-  };
+  }, [decodedSymbol]);
 
-  const loadChartData = async (symbolValue: string, period: string) => {
+  const loadChartData = useCallback(async (symbolValue: string, period: string) => {
     try {
       const data = await getChartData(symbolValue, period);
       setChartData(data);
@@ -226,9 +227,9 @@ export default function MarketDetailPage() {
       console.error('チャートデータの読み込みエラー:', error);
       setErrors((prev) => ({ ...prev, chartData: 'チャートデータを取得できませんでした' }));
     }
-  };
+  }, []);
 
-  const loadFundamentalData = async () => {
+  const loadFundamentalData = useCallback(async () => {
     try {
       const data = await getFundamentalData(decodedSymbol);
       setFundamentalData(data);
@@ -240,9 +241,9 @@ export default function MarketDetailPage() {
         fundamentalData: 'ファンダメンタルデータを取得できませんでした',
       }));
     }
-  };
+  }, [decodedSymbol]);
 
-  const loadRelatedMarkets = async () => {
+  const loadRelatedMarkets = useCallback(async () => {
     try {
       const data = await getRelatedMarkets(decodedSymbol);
       setRelatedMarkets(data.items || []);
@@ -251,7 +252,7 @@ export default function MarketDetailPage() {
       console.error('関連銘柄データの読み込みエラー:', error);
       setErrors((prev) => ({ ...prev, relatedMarkets: '関連銘柄データを取得できませんでした' }));
     }
-  };
+  }, [decodedSymbol]);
 
   // 期間変更ハンドラー
   const handlePeriodChange = (period: string) => {
@@ -294,7 +295,14 @@ export default function MarketDetailPage() {
     ]).finally(() => {
       setIsLoading(false);
     });
-  }, [decodedSymbol, selectedPeriod]);
+  }, [
+    decodedSymbol,
+    selectedPeriod,
+    loadMarketDetails,
+    loadChartData,
+    loadFundamentalData,
+    loadRelatedMarkets,
+  ]);
 
   // チャートのパスを生成
   const chartPaths = useMemo(() => {
@@ -383,9 +391,11 @@ export default function MarketDetailPage() {
             <div className="flex items-center justify-between mb-6 w-full">
               {/* 左: ロゴ＋銘柄名 */}
               <div className="flex items-center space-x-3">
-                <img
+                <Image
                   src={marketData?.logoUrl || getFlagIcon(marketData?.market || 'global')}
-                  alt={marketData?.name}
+                  alt={marketData?.name || ''}
+                  width={32}
+                  height={32}
                   className="w-8 h-8 rounded-full"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = getFlagIcon(

@@ -152,7 +152,6 @@ simulation_executed     // シミュレーション実行
 simulation_result_view  // 結果ページ表示
 scenario_saved          // シナリオ保存
 survey_submitted        // NPS アンケート送信
-purchase                // 課金
 ```
 
 ---

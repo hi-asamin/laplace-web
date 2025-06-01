@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
@@ -29,17 +30,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={inter.className}>
         <GoogleAnalytics />
-        <AnalyticsProvider>
-          {/* Google Tag Manager (noscript) */}
-          <noscript
-            dangerouslySetInnerHTML={{
-              __html: `<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PZRNRCGV"
+        <Suspense>
+          <AnalyticsProvider>
+            {/* Google Tag Manager (noscript) */}
+            <noscript
+              dangerouslySetInnerHTML={{
+                __html: `<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PZRNRCGV"
               height="0" width="0" style="display:none;visibility:hidden"></iframe>`,
-            }}
-          />
-          {/* End Google Tag Manager (noscript) */}
-          {children}
-        </AnalyticsProvider>
+              }}
+            />
+            {/* End Google Tag Manager (noscript) */}
+            {children}
+          </AnalyticsProvider>
+        </Suspense>
       </body>
     </html>
   );

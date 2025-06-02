@@ -2,14 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft, Bookmark, Search } from 'lucide-react';
+import { ChevronLeft, Bookmark, Search, BarChart2, X } from 'lucide-react';
 import { getMarketDetails, MarketDetails } from '@/lib/api';
 import { generateChartPath } from '@/utils/chart';
 import { getFlagIcon } from '@/utils';
 import Tooltip from '@/components/tooltip';
 import WithdrawalPlan from '@/components/WithdrawalPlan';
-import WithdrawalChart from '@/components/WithdrawalChart';
 import AnimatedNumber from '@/components/AnimatedNumber';
+import AnalysisDialog from '@/components/AnalysisDialog';
 
 // 投資方法のオプション
 const INVESTMENT_OPTIONS = [
@@ -197,6 +197,8 @@ export default function SimulationPage() {
   const [initialPrincipal, setInitialPrincipal] = useState(0); // 円
   const [monthlyAmount, setMonthlyAmount] = useState(30000); // 円
   const [contributionYears, setContributionYears] = useState(20); // 積立継続年数（デフォルト20年）
+  const [withdrawalAmount, setWithdrawalAmount] = useState(10); // 取崩額（万円）
+  const [withdrawalRate, setWithdrawalRate] = useState(4); // 取崩率（%）
 
   // 目標金額（初期値は空）
   const [targetAmount, setTargetAmount] = useState<string>('');
@@ -531,6 +533,33 @@ export default function SimulationPage() {
     }
   }, [mode, simulationData.baseScenario]);
 
+  const [isAnalysisDialogOpen, setIsAnalysisDialogOpen] = useState(false);
+  const [analysisMode, setAnalysisMode] = useState<'asset-building' | 'withdrawal'>(
+    'asset-building'
+  );
+  const [analysisVariable, setAnalysisVariable] = useState<'yield' | 'monthly' | 'years'>('yield');
+  const [analysisRange, setAnalysisRange] = useState({ min: 0, max: 10 });
+
+  // 分析ダイアログの参照を作成
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // ダイアログ外クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dialogRef.current && !dialogRef.current.contains(event.target as Node)) {
+        setIsAnalysisDialogOpen(false);
+      }
+    };
+
+    if (isAnalysisDialogOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isAnalysisDialogOpen]);
+
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] p-2 sm:p-4">
       <div className="max-w-3xl 2xl:max-w-5xl mx-auto px-2 sm:px-4 lg:px-8 xl:px-12">
@@ -688,12 +717,13 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
                           '算出不可'
                         );
                       } else if (simulationData.baseScenario.length > 0) {
+                        const lastData =
+                          simulationData.baseScenario[simulationData.baseScenario.length - 1];
+                        const totalInvested = lastData.principal;
+                        const profit = lastData.total - totalInvested;
                         return (
                           <AnimatedNumber
-                            value={Math.round(
-                              simulationData.baseScenario[simulationData.baseScenario.length - 1]
-                                .dividend
-                            )}
+                            value={Math.round(profit)}
                             className="text-base text-[var(--color-success)]"
                           />
                         );
@@ -1022,275 +1052,6 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
           </div>
         )}
 
-        {/* CTAボタン：x年後にいくら使える？ */}
-        <button
-          className="w-full mb-6 py-3 rounded-xl border-2 border-[var(--color-primary)] text-[var(--color-primary)] text-lg font-bold bg-transparent transition hover:bg-[var(--color-primary)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          type="button"
-          onClick={() => setMode(mode === 'simulation' ? 'withdrawal' : 'simulation')}
-        >
-          {mode === 'simulation'
-            ? `${contributionYears}年後にいくら使える？`
-            : 'シミュレーションをやり直す'}
-        </button>
-
-        {/* 取引情報（シミュレーション変数表示 or 取り崩しプラン） */}
-        {mode === 'simulation' ? (
-          <div className="grid grid-cols-2 gap-3 mb-6 w-full">
-            {/* 平均利回り率カード（逆算対象にできる） */}
-            <div
-              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'yield' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
-              aria-pressed={isReverseMode && reverseTarget === 'yield'}
-              tabIndex={isReverseMode ? 0 : -1}
-              onClick={() => isReverseMode && setReverseTarget('yield')}
-            >
-              <div className="flex items-center mb-1 cursor-pointer select-none">
-                <span className="text-xs text-[var(--color-gray-400)]">平均利回り率</span>
-                {isReverseMode && reverseTarget === 'yield' && (
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
-                    逆算中
-                  </span>
-                )}
-                <Tooltip
-                  content={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].description}
-                  title={SIMULATION_TERM_EXPLANATIONS['平均利回り率'].title}
-                >
-                  <span className="sr-only">平均利回り率の説明</span>
-                </Tooltip>
-              </div>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  step="0.1"
-                  min={0}
-                  max={99.9}
-                  value={
-                    isReverseMode && reverseTarget === 'yield' && reverseYield !== null
-                      ? reverseYield
-                      : averageYield
-                  }
-                  onChange={(e) =>
-                    setAverageYield(Math.max(0, Math.min(99.9, Number(e.target.value))))
-                  }
-                  className={`w-16 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'yield' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
-                  readOnly={isReverseMode && reverseTarget === 'yield'}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <span className="text-base font-semibold text-[var(--color-gray-900)]">%</span>
-              </div>
-            </div>
-            {/* 初期投資元本カード（逆算対象にできる） */}
-            <div
-              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'initialPrincipal' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
-              aria-pressed={isReverseMode && reverseTarget === 'initialPrincipal'}
-              tabIndex={isReverseMode ? 0 : -1}
-              onClick={() => isReverseMode && setReverseTarget('initialPrincipal')}
-            >
-              <div className="flex items-center mb-1 cursor-pointer select-none">
-                <span className="text-xs text-[var(--color-gray-400)]">初期投資元本</span>
-                {isReverseMode && reverseTarget === 'initialPrincipal' && (
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
-                    逆算中
-                  </span>
-                )}
-                <Tooltip
-                  content={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].description}
-                  title={SIMULATION_TERM_EXPLANATIONS['初期投資元本'].title}
-                >
-                  <span className="sr-only">初期投資元本の説明</span>
-                </Tooltip>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
-                <input
-                  type="number"
-                  step="1"
-                  min={0}
-                  value={
-                    isReverseMode &&
-                    reverseTarget === 'initialPrincipal' &&
-                    reversePrincipal !== null
-                      ? reversePrincipal
-                      : initialPrincipal
-                  }
-                  onChange={(e) => setInitialPrincipal(Math.max(0, Number(e.target.value)))}
-                  className={`w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'initialPrincipal' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
-                  readOnly={isReverseMode && reverseTarget === 'initialPrincipal'}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-            </div>
-            {/* 毎月積立金額カード（逆算対象にできる） */}
-            <div
-              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 ${isReverseMode && reverseTarget === 'monthlyAmount' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
-              aria-pressed={isReverseMode && reverseTarget === 'monthlyAmount'}
-              tabIndex={isReverseMode ? 0 : -1}
-              onClick={() => isReverseMode && setReverseTarget('monthlyAmount')}
-            >
-              <div className="flex items-center mb-1 cursor-pointer select-none">
-                <span className="text-xs text-[var(--color-gray-400)]">毎月積立金額</span>
-                {isReverseMode && reverseTarget === 'monthlyAmount' && (
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-[var(--color-primary)] text-white font-semibold">
-                    逆算中
-                  </span>
-                )}
-                <Tooltip
-                  content={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].description}
-                  title={SIMULATION_TERM_EXPLANATIONS['毎月積立金額'].title}
-                >
-                  <span className="sr-only">毎月積立金額の説明</span>
-                </Tooltip>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
-                <input
-                  type="number"
-                  step="1"
-                  min={0}
-                  value={
-                    isReverseMode && reverseTarget === 'monthlyAmount' && reverseMonthly !== null
-                      ? Math.floor(reverseMonthly)
-                      : monthlyAmount
-                  }
-                  onChange={(e) =>
-                    setMonthlyAmount(Math.max(0, Math.floor(Number(e.target.value))))
-                  }
-                  className={`w-24 px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold focus:outline-none focus:border-[var(--color-primary)] ${isReverseMode && reverseTarget === 'monthlyAmount' ? 'bg-[var(--color-surface-alt)] text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
-                  readOnly={isReverseMode && reverseTarget === 'monthlyAmount'}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-            </div>
-            {/* 積立継続年数スライダー（毎月積立金額の右隣に移動） */}
-            <div
-              className={`bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col justify-between transition-all duration-150 ${isReverseMode && reverseTarget === 'contributionYears' ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary)]/10' : ''} ${isReverseMode ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-primary)]/60' : ''}`}
-              aria-pressed={isReverseMode && reverseTarget === 'contributionYears'}
-              tabIndex={isReverseMode ? 0 : -1}
-              onClick={() => isReverseMode && setReverseTarget('contributionYears')}
-            >
-              <div className="flex items-center mb-1 cursor-pointer select-none">
-                <span className="text-xs text-[var(--color-gray-400)]">積立継続年数</span>
-                <Tooltip
-                  content={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].description}
-                  title={SIMULATION_TERM_EXPLANATIONS['積立継続年数'].title}
-                >
-                  <span className="sr-only">積立継続年数の説明</span>
-                </Tooltip>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="range"
-                  min={3}
-                  max={50}
-                  step={1}
-                  value={
-                    isReverseMode && reverseTarget === 'contributionYears' && reverseYears !== null
-                      ? Math.round(reverseYears)
-                      : contributionYears
-                  }
-                  onChange={(e) => {
-                    const newContributionYears = Math.max(3, Math.min(50, Number(e.target.value)));
-                    setContributionYears(newContributionYears);
-                  }}
-                  className={`w-full accent-[var(--color-primary)] ${isReverseMode && reverseTarget === 'contributionYears' ? 'bg-[var(--color-surface-alt)]' : ''}`}
-                  readOnly={isReverseMode && reverseTarget === 'contributionYears'}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <span
-                  className={`text-base font-semibold min-w-[2.5em] text-right ${isReverseMode && reverseTarget === 'contributionYears' ? 'text-[var(--color-primary)] font-bold' : 'text-[var(--color-gray-900)]'}`}
-                >
-                  {isReverseMode && reverseTarget === 'contributionYears' && reverseYears !== null
-                    ? `${reverseYears} 年`
-                    : `${contributionYears} 年`}
-                </span>
-              </div>
-            </div>
-            {/* 合計投資額 & 目標金額カード */}
-            <div className="col-span-2 grid grid-cols-2 gap-3">
-              {/* 合計投資額 */}
-              <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <div className="flex items-center mb-1">
-                  <span className="text-xs text-[var(--color-gray-400)]">合計投資額</span>
-                  <Tooltip
-                    content={SIMULATION_TERM_EXPLANATIONS['合計投資額'].description}
-                    title={SIMULATION_TERM_EXPLANATIONS['合計投資額'].title}
-                  >
-                    <span className="sr-only">合計投資額の説明</span>
-                  </Tooltip>
-                </div>
-                <div className="text-base font-semibold text-[var(--color-gray-900)]">
-                  {(() => {
-                    let principal = initialPrincipal;
-                    let monthly = monthlyAmount;
-                    let years = contributionYears;
-                    if (isReverseMode) {
-                      if (reverseTarget === 'initialPrincipal' && reversePrincipal !== null) {
-                        principal = reversePrincipal;
-                      }
-                      if (reverseTarget === 'monthlyAmount' && reverseMonthly !== null) {
-                        monthly = Math.floor(reverseMonthly);
-                      }
-                      if (reverseTarget === 'contributionYears' && reverseYears !== null) {
-                        years = Math.round(reverseYears);
-                      }
-                    }
-                    return `¥ ${(principal + years * monthly * 12).toLocaleString()}`;
-                  })()}
-                </div>
-              </div>
-              {/* 目標金額 */}
-              <div className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center">
-                    <span className="text-xs text-[var(--color-gray-400)]">目標金額</span>
-                    <Tooltip title="目標金額" content={'達成したい目標金額を入力してください。'}>
-                      <span className="sr-only">目標金額の説明</span>
-                    </Tooltip>
-                  </div>
-                  {isReverseMode && (
-                    <button
-                      onClick={() => setTargetAmount('')}
-                      className="text-xs text-[var(--color-primary)] hover:underline focus:outline-none"
-                      aria-label="逆算を解除"
-                    >
-                      解除
-                    </button>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-base font-semibold text-[var(--color-gray-900)]">¥</span>
-                  <input
-                    type="number"
-                    step="1000"
-                    min={0}
-                    value={targetAmount}
-                    onChange={(e) => setTargetAmount(e.target.value)}
-                    className="w-full px-1 py-0.5 border border-[var(--color-gray-300)] rounded text-right text-base font-semibold text-[var(--color-gray-900)] focus:outline-none focus:border-[var(--color-primary)]"
-                    placeholder="例: 10000000"
-                  />
-                </div>
-              </div>
-            </div>
-            {/* 逆算エラー表示 */}
-            {isReverseMode && reverseError && (
-              <div className="col-span-2 text-sm text-[var(--color-danger)] font-semibold mb-2">
-                {reverseError}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="mb-6 w-full">
-            <WithdrawalPlan
-              finalBalance={
-                simulationData.baseScenario.length > 0
-                  ? simulationData.baseScenario[simulationData.baseScenario.length - 1].total
-                  : 0
-              }
-              annualRate={averageYield}
-              mode="input"
-            />
-          </div>
-        )}
-
         {/* 注意事項 */}
         <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
           <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-2">注意事項</h2>
@@ -1320,6 +1081,179 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
           /* 何も指定しなくてOK。clipPathで制御 */
         }
       `}</style>
+
+      {/* 分析ボタン */}
+      <button
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-[var(--color-primary)] text-white shadow-lg hover:bg-[var(--color-primary-dark)] transition-colors duration-200 flex items-center justify-center"
+        onClick={() => setIsAnalysisDialogOpen(true)}
+        aria-label="分析画面を開く"
+      >
+        <BarChart2 className="w-6 h-6" />
+      </button>
+
+      {/* 分析ダイアログ */}
+      <AnalysisDialog
+        isOpen={isAnalysisDialogOpen}
+        onClose={() => setIsAnalysisDialogOpen(false)}
+        onExecute={(settings) => {
+          // 分析モードに応じて変数を更新
+          if (settings.mode === 'save') {
+            // 貯めるモードの場合
+            switch (settings.variable) {
+              case 'total-assets':
+                // いくら貯まる？を計算
+                setTargetAmount(settings.settings.targetAmount?.toString() || '');
+                setReverseTarget('yield');
+                // シミュレーション年数を更新
+                if (settings.settings.years) {
+                  setContributionYears(settings.settings.years);
+                }
+                // 利回りを更新
+                if (settings.settings.yield) {
+                  setAverageYield(settings.settings.yield);
+                }
+                // 毎月積立金額を更新
+                if (settings.settings.monthly) {
+                  setMonthlyAmount(settings.settings.monthly);
+                }
+                break;
+              case 'monthly':
+                // いくら必要？を計算
+                setTargetAmount(settings.settings.targetAmount?.toString() || '');
+                setReverseTarget('monthlyAmount');
+                // シミュレーション年数を更新
+                if (settings.settings.years) {
+                  setContributionYears(settings.settings.years);
+                }
+                // 毎月積立金額を更新
+                if (settings.settings.monthly) {
+                  setMonthlyAmount(settings.settings.monthly);
+                }
+                // 利回りを更新
+                if (settings.settings.yield) {
+                  setAverageYield(settings.settings.yield);
+                }
+                break;
+              case 'years':
+                // 何年かかる？を計算
+                setTargetAmount(settings.settings.targetAmount?.toString() || '');
+                setReverseTarget('contributionYears');
+                // シミュレーション年数を更新
+                if (settings.settings.years) {
+                  setContributionYears(settings.settings.years);
+                }
+                // 毎月積立金額を更新
+                if (settings.settings.monthly) {
+                  setMonthlyAmount(settings.settings.monthly);
+                }
+                // 利回りを更新
+                if (settings.settings.yield) {
+                  setAverageYield(settings.settings.yield);
+                }
+                break;
+            }
+            // 貯めるモードの場合は必ずsimulationモードに設定
+            setMode('simulation');
+
+            // シミュレーションデータを更新
+            const updatedData = {
+              baseScenario: generateMockData(
+                contributionYears,
+                initialPrincipal,
+                monthlyAmount,
+                averageYield,
+                contributionYears
+              ),
+              optimisticScenario: generateMockData(
+                contributionYears,
+                initialPrincipal,
+                monthlyAmount,
+                averageYield + 2,
+                contributionYears
+              ),
+              pessimisticScenario: generateMockData(
+                contributionYears,
+                initialPrincipal,
+                monthlyAmount,
+                Math.max(0, averageYield - 3),
+                contributionYears
+              ),
+            };
+
+            // 目標金額が設定されている場合、baseScenarioを調整
+            if (settings.settings.targetAmount) {
+              const targetAmount = Number(settings.settings.targetAmount);
+              const lastYear = updatedData.baseScenario[updatedData.baseScenario.length - 1];
+              const ratio = targetAmount / lastYear.total;
+
+              updatedData.baseScenario = updatedData.baseScenario.map((data) => ({
+                ...data,
+                total: data.total * ratio,
+                dividend: data.dividend * ratio,
+                price: data.price * ratio,
+              }));
+
+              updatedData.optimisticScenario = updatedData.optimisticScenario.map((data) => ({
+                ...data,
+                total: data.total * ratio,
+                dividend: data.dividend * ratio,
+                price: data.price * ratio,
+              }));
+
+              updatedData.pessimisticScenario = updatedData.pessimisticScenario.map((data) => ({
+                ...data,
+                total: data.total * ratio,
+                dividend: data.dividend * ratio,
+                price: data.price * ratio,
+              }));
+            }
+
+            setSimulationData(updatedData);
+          } else {
+            // 使うモードの場合
+            switch (settings.variable) {
+              case 'required-assets':
+                // いくら必要？を計算
+                setMode('withdrawal');
+                // シミュレーション年数を更新
+                if (settings.settings.years) {
+                  setContributionYears(settings.settings.years);
+                }
+                break;
+              case 'withdrawal-amount':
+                // いくら使える？を計算
+                setMode('withdrawal');
+                if (settings.withdrawalType === 'fixed-amount') {
+                  // 定額取崩の場合
+                  setWithdrawalAmount(settings.settings.withdrawalAmount || 0);
+                } else {
+                  // 定率取崩の場合
+                  setWithdrawalRate(settings.settings.withdrawalRate || 0);
+                }
+                // シミュレーション年数を更新
+                if (settings.settings.years) {
+                  setContributionYears(settings.settings.years);
+                }
+                break;
+              case 'years':
+                // 何年でなくなる？を計算
+                setMode('withdrawal');
+                if (settings.withdrawalType === 'fixed-amount') {
+                  setWithdrawalAmount(settings.settings.withdrawalAmount || 0);
+                } else {
+                  setWithdrawalRate(settings.settings.withdrawalRate || 0);
+                }
+                // シミュレーション年数を更新
+                if (settings.settings.years) {
+                  setContributionYears(settings.settings.years);
+                }
+                break;
+            }
+          }
+
+          setIsAnalysisDialogOpen(false);
+        }}
+      />
     </div>
   );
 }

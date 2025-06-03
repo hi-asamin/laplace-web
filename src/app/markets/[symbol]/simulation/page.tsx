@@ -10,6 +10,7 @@ import Tooltip from '@/components/tooltip';
 import WithdrawalPlan from '@/components/WithdrawalPlan';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import AnalysisDialog from '@/components/AnalysisDialog';
+import RelatedMarketCard from '@/components/RelatedMarketCard';
 
 // 投資方法のオプション
 const INVESTMENT_OPTIONS = [
@@ -1052,6 +1053,85 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
           </div>
         )}
 
+        {/* 利回り同水準銘柄セクション */}
+        <div className="mt-8 mb-8">
+          <div className="flex justify-between items-center mb-2 px-1">
+            <h2 className="text-lg font-bold text-[var(--color-gray-900)]">利回り同水準銘柄</h2>
+            <a href="/search" className="text-sm text-[var(--color-primary)] hover:underline">
+              See all
+            </a>
+          </div>
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+            {/* サンプルデータ: Apple, トヨタ, Microsoft, Netflix, Spotify */}
+            {[
+              {
+                logoUrl: '/placeholder-logo.svg',
+                name: 'Apple',
+                symbol: 'AAPL',
+                price: '$192.32',
+                change: '+$1.23',
+                changePercent: '+0.6%',
+                isPositive: true,
+                miniChartData: [180, 185, 190, 188, 192, 194, 192],
+              },
+              {
+                logoUrl: '/placeholder-logo.svg',
+                name: 'トヨタ自動車',
+                symbol: '7203.T',
+                price: '¥3,200',
+                change: '+¥18',
+                changePercent: '+0.5%',
+                isPositive: true,
+                miniChartData: [3100, 3120, 3150, 3200, 3180, 3210, 3200],
+              },
+              {
+                logoUrl: '/placeholder-logo.svg',
+                name: 'Microsoft',
+                symbol: 'MSFT',
+                price: '$410.50',
+                change: '-$2.10',
+                changePercent: '-0.5%',
+                isPositive: false,
+                miniChartData: [420, 418, 415, 412, 410, 409, 410],
+              },
+              {
+                logoUrl: '/placeholder-logo.svg',
+                name: 'Netflix',
+                symbol: 'NFLX',
+                price: '$600.10',
+                change: '+$3.20',
+                changePercent: '+0.5%',
+                isPositive: true,
+                miniChartData: [590, 595, 598, 600, 602, 601, 600],
+              },
+              {
+                logoUrl: '/placeholder-logo.svg',
+                name: 'Spotify',
+                symbol: 'SPOT',
+                price: '$320.00',
+                change: '-$1.20',
+                changePercent: '-0.4%',
+                isPositive: false,
+                miniChartData: [325, 324, 323, 322, 321, 320, 320],
+              },
+            ].map((stock, idx) => (
+              <div key={stock.symbol} className="flex-shrink-0">
+                <RelatedMarketCard
+                  logoUrl={stock.logoUrl}
+                  name={stock.name}
+                  symbol={stock.symbol}
+                  price={stock.price}
+                  change={stock.change}
+                  changePercent={stock.changePercent}
+                  isPositive={stock.isPositive}
+                  miniChartData={stock.miniChartData}
+                  onClick={() => router.push(`/markets/${stock.symbol}`)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* 注意事項 */}
         <div className="bg-[var(--color-surface)] rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:p-6 xl:p-8">
           <h2 className="text-base font-medium text-[var(--color-gray-900)] mb-2">注意事項</h2>
@@ -1221,32 +1301,66 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
                 }
                 break;
               case 'withdrawal-amount':
-                // いくら使える？を計算
+                // いくら使える？
                 setMode('withdrawal');
-                if (settings.withdrawalType === 'fixed-amount') {
-                  // 定額取崩の場合
-                  setWithdrawalAmount(settings.settings.withdrawalAmount || 0);
-                } else {
-                  // 定率取崩の場合
-                  setWithdrawalRate(settings.settings.withdrawalRate || 0);
+                if (settings.settings.requiredAssets) {
+                  setInitialPrincipal(settings.settings.requiredAssets);
                 }
-                // シミュレーション年数を更新
+                if (settings.settings.withdrawalAmount) {
+                  setWithdrawalAmount(settings.settings.withdrawalAmount);
+                }
+                if (settings.settings.yield) {
+                  setAverageYield(settings.settings.yield);
+                }
                 if (settings.settings.years) {
                   setContributionYears(settings.settings.years);
                 }
                 break;
               case 'years':
-                // 何年でなくなる？を計算
+                // 何年でなくなる？
                 setMode('withdrawal');
-                if (settings.withdrawalType === 'fixed-amount') {
-                  setWithdrawalAmount(settings.settings.withdrawalAmount || 0);
-                } else {
-                  setWithdrawalRate(settings.settings.withdrawalRate || 0);
+                // 必要なパラメータ取得
+                const principal = settings.settings.requiredAssets || initialPrincipal;
+                const inputWithdrawalRate = settings.settings.withdrawalRate || withdrawalRate;
+                const inputWithdrawalAmount =
+                  settings.settings.withdrawalAmount || withdrawalAmount;
+                const yieldRate = settings.settings.yield || averageYield;
+                // 取崩タイプ判定
+                const isFixedRate = settings.withdrawalType === 'fixed-rate';
+                // シミュレーション
+                let year = 0;
+                let balance = principal;
+                const simData: SimYearData[] = [];
+                while (balance > 0 && year < 100) {
+                  year++;
+                  // 運用益
+                  balance += balance * (yieldRate / 100);
+                  // 取崩し
+                  if (isFixedRate) {
+                    balance -= balance * (inputWithdrawalRate / 100);
+                  } else {
+                    balance -= inputWithdrawalAmount * 12 * 10000; // 万円→円
+                  }
+                  simData.push({
+                    year,
+                    price: balance,
+                    dividend: 0,
+                    total: balance,
+                    principal: principal,
+                    profit: 0,
+                  });
+                  if (balance <= 0) break;
                 }
-                // シミュレーション年数を更新
-                if (settings.settings.years) {
-                  setContributionYears(settings.settings.years);
-                }
+                setContributionYears(year);
+                setSimulationData({
+                  baseScenario: simData,
+                  optimisticScenario: simData,
+                  pessimisticScenario: simData,
+                });
+                setInitialPrincipal(principal);
+                setWithdrawalAmount(inputWithdrawalAmount);
+                setWithdrawalRate(inputWithdrawalRate);
+                setAverageYield(yieldRate);
                 break;
             }
           }

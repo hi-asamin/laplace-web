@@ -1053,6 +1053,194 @@ ${SIMULATION_TERM_EXPLANATIONS['貯まる金額'].description}`
           </div>
         )}
 
+        {/* KPI＋棒グラフ＋ドーナツチャート 横並び（横スクロール可） */}
+        <div className="w-full flex gap-4 overflow-x-auto no-scrollbar mb-8 pb-2">
+          {/* KPI＋棒グラフカード */}
+          <div
+            className="bg-white rounded-2xl shadow p-5 min-w-[220px] max-w-[320px] w-[260px] flex flex-col"
+            style={{ boxShadow: '0 2px 8px rgba(89,101,255,0.08)' }}
+          >
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-xs text-[var(--color-gray-400)]">デイリー</span>
+              <span className="text-xs font-semibold text-[var(--color-success)]">+2.46%</span>
+            </div>
+            <div className="flex items-end gap-1 mb-2">
+              <span className="text-[28px] font-bold text-[var(--color-gray-900)] leading-none">
+                2,579
+              </span>
+              <span className="text-xs text-[var(--color-gray-400)] mb-1">応募</span>
+            </div>
+            {/* 棒グラフ */}
+            <svg width="100%" height="56" viewBox="0 0 168 56" className="w-full h-14">
+              {/* 棒グラフ値: モック */}
+              {(() => {
+                const values = [18, 32, 24, 40, 48, 54, 44]; // 月〜日
+                const max = 56;
+                const barWidth = 16;
+                const gap = 8;
+                return values.map((v, i) => (
+                  <rect
+                    key={i}
+                    x={i * (barWidth + gap)}
+                    y={max - v}
+                    width={barWidth}
+                    height={v}
+                    rx={6}
+                    fill="url(#barGradient)"
+                  />
+                ));
+              })()}
+              {/* グラデーション定義 */}
+              <defs>
+                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#34e89e" />
+                  <stop offset="100%" stopColor="#00c3ff" stopOpacity="0.7" />
+                </linearGradient>
+              </defs>
+              {/* 曜日ラベル */}
+              {['月', '火', '水', '木', '金', '土', '日'].map((d, i) => (
+                <text
+                  key={d}
+                  x={i * 24 + 8}
+                  y={54}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fill="#94A3B8"
+                >
+                  {d}
+                </text>
+              ))}
+            </svg>
+          </div>
+          {/* ドーナツチャートカード */}
+          <div
+            className="bg-white rounded-2xl shadow p-5 min-w-[220px] max-w-[320px] w-[260px] flex flex-col items-center justify-center relative"
+            style={{ boxShadow: '0 2px 8px rgba(89,101,255,0.08)' }}
+          >
+            {/* ドーナツチャートSVG */}
+            <svg width="140" height="140" viewBox="0 0 140 140" className="mb-2">
+              {/* 3セグメント: 31%, 19%, 50% */}
+              {(() => {
+                // 円弧のパラメータ
+                const data = [31, 19, 50];
+                const colors = ['url(#donutGrad1)', 'url(#donutGrad2)', 'url(#donutGrad3)'];
+                const total = data.reduce((a, b) => a + b, 0);
+                let acc = 0;
+                const r = 54;
+                const cx = 70;
+                const cy = 70;
+                const strokeWidth = 18;
+                return data.map((val, i) => {
+                  const startAngle = (acc / total) * 2 * Math.PI - Math.PI / 2;
+                  acc += val;
+                  const endAngle = (acc / total) * 2 * Math.PI - Math.PI / 2;
+                  const x1 = cx + r * Math.cos(startAngle);
+                  const y1 = cy + r * Math.sin(startAngle);
+                  const x2 = cx + r * Math.cos(endAngle);
+                  const y2 = cy + r * Math.sin(endAngle);
+                  const largeArc = val / total > 0.5 ? 1 : 0;
+                  const pathData = [
+                    `M ${x1} ${y1}`,
+                    `A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`,
+                  ].join(' ');
+                  return (
+                    <path
+                      key={i}
+                      d={pathData}
+                      fill="none"
+                      stroke={colors[i]}
+                      strokeWidth={strokeWidth}
+                      strokeLinecap="round"
+                    />
+                  );
+                });
+              })()}
+              {/* グラデーション定義 */}
+              <defs>
+                <linearGradient id="donutGrad1" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#ff7e5f" />
+                  <stop offset="100%" stopColor="#feb47b" />
+                </linearGradient>
+                <linearGradient id="donutGrad2" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#43cea2" />
+                  <stop offset="100%" stopColor="#185a9d" />
+                </linearGradient>
+                <linearGradient id="donutGrad3" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#a044ff" />
+                  <stop offset="100%" stopColor="#6a3093" />
+                </linearGradient>
+              </defs>
+              {/* ラベル用線・テキスト */}
+              {/* 31% */}
+              <polyline points="40,30 20,20 20,10" stroke="#aaa" strokeWidth="1" fill="none" />
+              <text x="10" y="8" fontSize="11" fill="#555">
+                31%
+              </text>
+              {/* 19% */}
+              <polyline points="120,30 135,20 135,10" stroke="#aaa" strokeWidth="1" fill="none" />
+              <text x="137" y="8" fontSize="11" fill="#555">
+                19%
+              </text>
+              {/* 50% */}
+              <polyline points="70,130 70,145 60,145" stroke="#aaa" strokeWidth="1" fill="none" />
+              <text x="45" y="150" fontSize="11" fill="#555">
+                50%
+              </text>
+              {/* 中央KPI値 */}
+              <text
+                x="70"
+                y="70"
+                textAnchor="middle"
+                fontSize="28"
+                fontWeight="bold"
+                fill="#222"
+                dy="8"
+              >
+                2563
+              </text>
+              <text x="70" y="90" textAnchor="middle" fontSize="13" fill="#bbb">
+                Reservation
+              </text>
+            </svg>
+            {/* 凡例 */}
+            <div className="flex justify-center gap-4 mt-1 text-xs">
+              <div className="flex items-center gap-1">
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{ background: 'linear-gradient(90deg,#ff7e5f,#feb47b)' }}
+                ></span>
+                LASCRIE
+              </div>
+              <div className="flex items-center gap-1">
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{ background: 'linear-gradient(90deg,#a044ff,#6a3093)' }}
+                ></span>
+                DASCRIE
+              </div>
+              <div className="flex items-center gap-1">
+                <span
+                  className="inline-block w-3 h-3 rounded-full"
+                  style={{ background: 'linear-gradient(90deg,#43cea2,#185a9d)' }}
+                ></span>
+                TASCRIE
+              </div>
+            </div>
+            {/* 右上アイコン */}
+            <div className="absolute top-3 right-3 text-[var(--color-gray-400)]">
+              <svg width="18" height="18" viewBox="0 0 18 18">
+                <polyline
+                  points="5,7 9,11 13,7"
+                  fill="none"
+                  stroke="#bbb"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
         {/* 利回り同水準銘柄セクション */}
         <div className="mt-8 mb-8">
           <div className="flex justify-between items-center mb-2 px-1">

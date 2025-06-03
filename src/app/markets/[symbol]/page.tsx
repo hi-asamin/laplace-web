@@ -16,6 +16,7 @@ import {
 import { generateChartPath } from '@/utils/chart';
 import { getFlagIcon } from '@/utils';
 import Image from 'next/image';
+import RelatedMarketCard from '@/components/RelatedMarketCard';
 
 // 期間選択のタブオプション
 const PERIOD_OPTIONS = [
@@ -920,11 +921,7 @@ export default function MarketDetailPage() {
 
           <div className="grid grid-cols-2 gap-3">
             {(isLoading ? Array(2).fill(null) : relatedMarkets.slice(0, 2)).map((stock, index) => (
-              <div
-                key={stock?.symbol || index}
-                className="bg-[var(--color-surface)] rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-                onClick={() => stock && router.push(`/markets/${stock.symbol}`)}
-              >
+              <div key={stock?.symbol || index}>
                 {isLoading ? (
                   <div className="animate-pulse space-y-2">
                     <div className="flex items-center space-x-2">
@@ -938,35 +935,21 @@ export default function MarketDetailPage() {
                   </div>
                 ) : (
                   stock && (
-                    <>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <img
-                          src={stock.logoUrl || '/flags/global.svg'}
-                          alt={stock.name}
-                          className="w-6 h-6 rounded-full"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/flags/global.svg';
-                          }}
-                        />
-                        <div className="text-sm font-medium text-[var(--color-gray-900)]">
-                          {stock.name} ({stock.symbol})
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="text-base font-semibold text-[var(--color-gray-900)]">
-                          {stock.price || '-'}
-                        </div>
-                        <div
-                          className={`text-xs ${
-                            stock.isPositive
-                              ? 'text-[var(--color-success)]'
-                              : 'text-[var(--color-danger)]'
-                          }`}
-                        >
-                          {stock.change || '-'}
-                        </div>
-                      </div>
-                    </>
+                    <RelatedMarketCard
+                      logoUrl={stock.logoUrl || '/flags/global.svg'}
+                      name={stock.name}
+                      symbol={stock.symbol}
+                      price={stock.price || '-'}
+                      change={stock.change || '-'}
+                      changePercent={stock.changePercent || '-'}
+                      isPositive={!!stock.isPositive}
+                      miniChartData={
+                        Array.isArray(stock.priceHistory) && stock.priceHistory.length > 1
+                          ? stock.priceHistory
+                          : [100, 102, 101, 105, 103, 108, 110]
+                      }
+                      onClick={() => router.push(`/markets/${stock.symbol}`)}
+                    />
                   )
                 )}
               </div>

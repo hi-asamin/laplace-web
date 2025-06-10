@@ -1,20 +1,37 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { Inter } from 'next/font/google';
+import { Inter, Poppins, Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import AnalyticsProvider from '@/components/AnalyticsProvider';
 
 const inter = Inter({ subsets: ['latin'] });
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-poppins',
+});
+const notoSansJP = Noto_Sans_JP({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-noto-sans-jp',
+});
 
 export const metadata: Metadata = {
-  title: 'Laplace',
-  description: '資産形成シミュレーション',
+  title: 'Laplace - 資産シミュレーション | ワンクリックで未来の最適解を',
+  description:
+    'そのNISA、最適ですか？ワンクリックで意味のある将来比較ができる唯一の資産シミュレーター。自動データ入力・シナリオ比較・リスク可視化で、あなたの資産形成をサポート。',
+  keywords: 'NISA, 資産シミュレーション, 投資, 資産形成, 将来設計',
+  openGraph: {
+    title: 'Laplace - 資産シミュレーション',
+    description: 'ワンクリックで未来の最適解をシミュレーション',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja">
+    <html lang="ja" className={`${poppins.variable} ${notoSansJP.variable}`}>
       <head>
         {/* Google Tag Manager */}
         <script

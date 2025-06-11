@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLandingPageAnalytics } from '@/hooks/useLandingPageAnalytics';
 import Link from 'next/link';
 import {
   TrendingUp,
@@ -266,6 +267,7 @@ const OneClickExperienceSection = () => {
   const [placeholderText, setPlaceholderText] = useState('');
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [showBeforeAfter, setShowBeforeAfter] = useState(true);
+  const { trackStockChipClick, trackSectionView, trackFormInteraction } = useLandingPageAnalytics();
 
   const placeholders = [
     '例: Apple',
@@ -315,15 +317,42 @@ const OneClickExperienceSection = () => {
     setIsActive(true);
     setShowChips(true);
     setShowBeforeAfter(true);
+    trackFormInteraction('stock_search', 'click');
   };
 
   const handleStockClick = (stock: { name: string; symbol: string; type: string }) => {
+    // アナリティクス追跡
+    trackStockChipClick(stock.symbol, stock.name);
+
     // 実際のプロダクトページに遷移
     window.location.href = `/markets/${encodeURIComponent(stock.symbol)}`;
   };
 
+  // セクション表示の追跡
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          trackSectionView('one_click_experience');
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [trackSectionView]);
+
   return (
-    <section className="py-20 bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5">
+    <section
+      ref={sectionRef}
+      className="py-20 bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] mb-6 font-[var(--font-poppins)]">
@@ -471,6 +500,7 @@ const OneClickExperienceSection = () => {
           <div className="text-center mt-12">
             <Link
               href="/search"
+              onClick={() => trackCTAClick('experience', 'いますぐ銘柄を検索してみる', '/search')}
               className="inline-flex items-center gap-3 bg-[var(--color-lp-mint)] text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105 shadow-xl"
             >
               <Zap className="w-5 h-5" />
@@ -752,10 +782,65 @@ const HeroImage = () => {
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
+  const {
+    trackCTAClick,
+    trackNavigationClick,
+    trackSectionView,
+    trackScrollDepth,
+    trackFAQInteraction,
+    trackError,
+  } = useLandingPageAnalytics();
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
+
+  // スクロール深度の追跡
+  useEffect(() => {
+    let lastScrollDepth = 0;
+    const handleScroll = () => {
+      const scrollDepth = Math.round(
+        (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+      );
+
+      // 25%刻みで報告
+      if (scrollDepth >= 25 && lastScrollDepth < 25) {
+        trackScrollDepth(25);
+        lastScrollDepth = 25;
+      } else if (scrollDepth >= 50 && lastScrollDepth < 50) {
+        trackScrollDepth(50);
+        lastScrollDepth = 50;
+      } else if (scrollDepth >= 75 && lastScrollDepth < 75) {
+        trackScrollDepth(75);
+        lastScrollDepth = 75;
+      } else if (scrollDepth >= 90 && lastScrollDepth < 90) {
+        trackScrollDepth(100);
+        lastScrollDepth = 100;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [trackScrollDepth]);
+
+  // エラーハンドリング
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      trackError(new Error(event.message), 'window_error');
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      trackError(new Error(event.reason), 'unhandled_promise_rejection');
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, [trackError]);
 
   const features = [
     {
@@ -835,17 +920,30 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-slate-600 hover:text-slate-900 transition-colors">
+              <a
+                href="#features"
+                onClick={() => trackNavigationClick('機能', '#features')}
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+              >
                 機能
               </a>
-              <a href="#benefits" className="text-slate-600 hover:text-slate-900 transition-colors">
+              <a
+                href="#benefits"
+                onClick={() => trackNavigationClick('メリット', '#benefits')}
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+              >
                 メリット
               </a>
-              <a href="#faq" className="text-slate-600 hover:text-slate-900 transition-colors">
+              <a
+                href="#faq"
+                onClick={() => trackNavigationClick('FAQ', '#faq')}
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+              >
                 FAQ
               </a>
               <Link
                 href="/markets"
+                onClick={() => trackCTAClick('nav', '無料で始める', '/markets')}
                 className="bg-[var(--color-lp-mint)] text-white px-6 py-2 rounded-full hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105"
               >
                 無料で始める
@@ -875,6 +973,9 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                 <Link
                   href="/markets"
+                  onClick={() =>
+                    trackCTAClick('hero', '無料でシミュレーションを始める', '/markets')
+                  }
                   className="bg-[var(--color-lp-mint)] text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105 flex items-center gap-2"
                 >
                   <Play className="w-5 h-5" />
@@ -1108,6 +1209,7 @@ export default function LandingPage() {
           <p className="text-xl mb-8 opacity-90">ワンクリックで始める、新しい資産形成体験</p>
           <Link
             href="/markets"
+            onClick={() => trackCTAClick('final', '無料でシミュレーションを始める', '/markets')}
             className="inline-flex items-center gap-3 bg-white text-[var(--color-lp-navy)] px-10 py-5 rounded-full text-xl font-bold hover:bg-slate-100 transition-all hover:scale-105 shadow-2xl"
           >
             <Play className="w-6 h-6" />

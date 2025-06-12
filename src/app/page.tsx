@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLandingPageAnalytics } from '@/hooks/useLandingPageAnalytics';
 import Link from 'next/link';
 import {
@@ -8,19 +8,13 @@ import {
   BarChart3,
   Shield,
   Zap,
-  Eye,
-  Target,
   ArrowRight,
   CheckCircle,
   AlertCircle,
-  DollarSign,
   PieChart,
   Calendar,
-  Sparkles,
   Play,
   Star,
-  Smartphone,
-  Laptop,
   TrendingDown,
   Building2,
   Sprout,
@@ -267,7 +261,8 @@ const OneClickExperienceSection = () => {
   const [placeholderText, setPlaceholderText] = useState('');
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [showBeforeAfter, setShowBeforeAfter] = useState(true);
-  const { trackStockChipClick, trackSectionView, trackFormInteraction } = useLandingPageAnalytics();
+  const { trackCTAClick, trackStockChipClick, trackSectionView, trackFormInteraction } =
+    useLandingPageAnalytics();
 
   const placeholders = [
     '例: Apple',
@@ -846,7 +841,7 @@ export default function LandingPage() {
     {
       icon: Zap,
       title: 'ワンクリック自動入力',
-      description: '銘柄コードを入力するだけで、株価・配当履歴・税率まで自動取得',
+      description: '銘柄コードを入力するだけで、株価・配当履歴・を自動取得',
       benefit: '面倒な入力はゼロに',
     },
     {
@@ -966,9 +961,8 @@ export default function LandingPage() {
                 <span className="text-[var(--color-lp-mint)]">最適</span>ですか？
               </h1>
               <p className="text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto font-[var(--font-noto-sans-jp)]">
-                ワンクリックで
-                <span className="text-[var(--color-lp-blue)] font-semibold">"未来の最適解"</span>
-                をシミュレーション
+                資産形成を簡単に、
+                <span className="text-[var(--color-lp-blue)] font-semibold">"そして賢く"</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                 <Link
@@ -1176,7 +1170,7 @@ export default function LandingPage() {
             {[
               {
                 q: '利用料金はかかりますか？',
-                a: '基本機能は完全無料でご利用いただけます。',
+                a: '完全無料でご利用いただけます。',
               },
               {
                 q: '投資の知識がなくても使えますか？',

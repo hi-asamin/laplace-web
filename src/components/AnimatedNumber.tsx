@@ -4,12 +4,16 @@ interface AnimatedNumberProps {
   value: number;
   duration?: number;
   className?: string;
+  prefix?: string;
+  suffix?: string;
 }
 
 export default function AnimatedNumber({
   value,
   duration = 1500,
   className = '',
+  prefix = '¥ ',
+  suffix = '',
 }: AnimatedNumberProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -46,9 +50,18 @@ export default function AnimatedNumber({
     requestAnimationFrame(animate);
   }, [value, duration]);
 
+  const formatValue = (val: number) => {
+    if (suffix === '%' || suffix === '年') {
+      return val.toFixed(suffix === '%' ? 1 : 0);
+    }
+    return val.toLocaleString();
+  };
+
   return (
     <span className={`${className} ${isAnimating ? 'animate-pulse' : ''}`}>
-      ¥ {displayValue.toLocaleString()}
+      {prefix}
+      {formatValue(displayValue)}
+      {suffix}
     </span>
   );
 }

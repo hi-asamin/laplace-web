@@ -5,17 +5,17 @@
   --foreground: #171717;
 
   /* Color Tokens */
-  --color-primary: #5965ff;
-  --color-primary-dark: #414dff;
-  --color-success: #16a34a;
-  --color-danger: #dc2626;
+  --color-primary: #00d4a1;
+  --color-primary-dark: #00805d;
+  --color-success: #00d4a1;
+  --color-danger: #ff0000;
   --color-list-bg: #ecf9f3;
   --color-icon-bg: #e2f1ea;
-  --color-gray-900: #0f172a;
+  --color-gray-900: #0a2540;
   --color-gray-700: #334155;
   --color-gray-400: #94a3b8;
   --color-surface: #ffffff;
-  --color-surface-alt: #f7fafc;
+  --color-surface-alt: #f5f7fa;
 
   /* LP Color Palette */
   --color-lp-navy: #0a2540;

@@ -20,6 +20,7 @@ export interface MarketDetails {
   industry?: string;
   description?: string;
   website?: string;
+  dividendYield?: number;
   tradingInfo?: {
     previousClose?: string;
     open?: string;

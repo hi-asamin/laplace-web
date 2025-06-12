@@ -1,238 +1,392 @@
 ---
-
 description: FRACTAL ダッシュボード UI 向けデザインガイドライン
-
-# 開発対象
-
-* Web（React / Next.js）
-* モバイル（PWA／ハイブリッド）
-  globs: *.tsx
-  alwaysApply: false
-
+globs: *.tsx
+alwaysApply: false
 ---
+# Laplaceデザインガイドライン
 
-# 目次
-
-1. ブランド & トーン
-2. 色 (Color Tokens)
-3. タイポグラフィ
-4. グリッド & レイアウト
-5. コンポーネントスタイル
-6. アイコン & イラスト
-7. チャート & データビジュアライゼーション
-8. モーション
-9. アクセシビリティ補足
-10. ダークモード
+*適用範囲: Web (Next.js + Tailwind CSS)*
 
 ---
 
 ## 1. ブランド & トーン
 
-* **ブランド 3 語**: *Trustable・Playful・Clarity*
-* **Voice & Tone**
-  * テキストは平易な日本語 + 必要に応じて金融用語の英語併記。
-  * マイクロコピーは 18 字以内で行動を促す。(例: 「シミュレーションする」)
-* **ビジュアルのキーワード**: *Pill‑shape・Soft Shadow・Pastel Tint*
-* 初心者が迷わず使える直感的な UI と、インタラクティブな即時フィードバック。
-* 「シンプル」「ミニマル」「情報は一目で」「ガイド付きナビゲーション」
-* データ重視ながらも初心者が迷わないシンプルさを担保する。
+### ブランドキーワード
+- **Core Values**: *Trustable・Intuitive・Future-Focused*
+- **Visual Keywords**: *Clean・Professional・Approachable*
+- **UX Philosophy**: 初心者でも迷わず使える直感的なUI、即時フィードバック
 
-## 2. 色 (Color Tokens)
+### Voice & Tone
+- 平易な日本語 + 金融用語の英語併記
+- マイクロコピーは簡潔明瞭（18字以内）
+- 行動を促すポジティブな表現を重視
 
-> **アクセントカラー:** `#5965FF` (Indigo 500)
+---
 
-| Token                  | HEX     | 用途                      |
-| ---------------------- | ------- | ----------------------- |
-| `--color-primary`      | #5965FF | CTA ボタン、選択タブ下線、アクティブラベル |
-| `--color-primary-dark` | #414DFF | プレス状態、フォーカスリング          |
-| `--color-success`      | #16A34A | 上昇値、成功トースト              |
-| `--color-danger`       | #DC2626 | 下落値、エラー                 |
-| `--color-list-bg`      | #ECF9F3 | リストアイテム背景 (検索履歴など)      |
-| `--color-icon-bg`      | #E2F1EA | アイコン円背景                 |
-| `--color-gray-900`     | #0F172A | 見出しテキスト                 |
-| `--color-gray-700`     | #334155 | 本文テキスト                  |
-| `--color-gray-400`     | #94A3B8 | 境界線、無効ラベル               |
-| `--color-surface`      | #FFFFFF | カード・主要背景                |
-| `--color-surface-alt`  | #F7FAFC | ページ背景                   |
+## 2. カラーパレット
 
-### 配色ルール
+### メインカラー
+```css
+/* LP専用カラートークン */
+--color-lp-navy: #0a2540     /* メインテキスト、見出し */
+--color-lp-mint: #00d4a1     /* アクセント、CTA、ハイライト */
+--color-lp-blue: #4a90e2     /* サブアクセント、セカンダリ要素 */
+--color-lp-off-white: #f5f7fa /* セクション背景 */
 
-* 主要 CTA は画面ごとに 1 箇所。セカンダリ操作はアウトラインボタン。
-* チャートでは `--color-primary` と `--color-success` のみで意味を完結させず、凡例ラベルで補助説明。
-* リストアイテムは `--color-list-bg` をベース、ホバーで `brightness(0.97)`。
-* グラフの折れ線は `--color-success`、陰影 16% 不透明塗りで帯域を表現。
+/* 共通カラートークン */
+--color-primary: #00d4a1     /* システム全体の基本アクセント */
+--color-success: #00d4a1     /* 成功状態、上昇値 */
+--color-danger: #dc2626      /* エラー状態、下落値 */
+--color-surface: #ffffff     /* カード背景 */
+--color-surface-alt: #f7fafc /* ページ背景 */
+```
+
+### カラー使用ルール
+- **メインCTA**: `--color-lp-mint`（ミントグリーン）で統一
+- **見出し・重要テキスト**: `--color-lp-navy`（ネイビー）
+- **アクセント・補助色**: `--color-lp-blue`（ブルー）
+- **背景グラデーション**: `from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5`
+
+---
 
 ## 3. タイポグラフィ
 
-| スタイル       | フォント                                 | サイズ   | 行間    | 文字間    |
-| ---------- | ------------------------------------ | ----- | ----- | ------ |
-| `Display`  | Inter Bold / Noto Sans JP Bold       | 36 px | 44 px | -1 %   |
-| `Headline` | Inter SemiBold / Noto Sans JP Medium | 28 px | 36 px | -0.5 % |
-| `Subhead`  | Inter Medium                         | 18 px | 28 px | 0 %    |
-| `Body`     | Inter Regular                        | 16 px | 24 px | 0 %    |
-| `Caption`  | Inter Regular                        | 12 px | 18 px | 0.4 %  |
+### フォントファミリー
+```css
+--font-poppins: var(--font-poppins)        /* 英語見出し */
+--font-noto-sans-jp: var(--font-noto-sans-jp) /* 日本語本文 */
+```
 
-* 数字は *Menlo* (等幅) を使用し、三桁区切りは国際標準表記。
+### テキストスケール
+| スタイル | サイズ | 使用場面 | クラス例 |
+|---------|--------|----------|----------|
+| **Hero Title** | `text-5xl md:text-7xl` | ランディングページメイン見出し | `font-bold text-[var(--color-lp-navy)]` |
+| **Section Title** | `text-4xl md:text-5xl` | セクション見出し | `font-bold text-[var(--color-lp-navy)]` |
+| **Sub Title** | `text-2xl md:text-3xl` | サブセクション見出し | `font-bold text-[var(--color-lp-navy)]` |
+| **Body Large** | `text-xl` | リード文、重要な説明 | `text-slate-600` |
+| **Body** | `text-lg` | 標準本文 | `text-slate-600` |
+| **Caption** | `text-sm` | 注釈、サポートテキスト | `text-slate-500` |
 
-## 4. グリッド & レイアウト
+---
 
-* **Mobileファースト**で設計し、全画面でレスポンシブデザインを徹底する。
-* **主要ブレークポイント**: `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px), `2xl` (1536px)
-* **最大横幅**: `2xl:max-w-7xl mx-auto`。
-* **中央寄せ**: PC時は`mx-auto`で中央寄せ、左右余白は`px-4`以上を確保。
-* **2カラム化やサイドバー表示は不要**。1カラムで情報を縦積みし、可読性・操作性を優先。
-* **グリッド/カラム数**: モバイルは1カラム、PCは2カラム以上に分割する場合も`lg:grid-cols-2`等で柔軟に対応。
-* **カード・リスト・チャート**: 横幅は`w-full`を基本、PC時は`max-w`で制限。
-* **サイドバー**: 幅 72 px (アイコンのみ) → `lg: w-240` でテキスト出現。
-* **フォントサイズ・アイコンサイズ**: `sm`/`md`/`lg`で段階的に拡大。
-* **タッチ領域**: モバイルもデスクトップも 44×44 px を維持。
+## 4. レイアウト & グリッド
+
+### コンテナ設計
+```css
+/* 最大幅とセンタリング */
+max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
+
+/* セクション間隔 */
+py-20  /* 標準セクション間隔 */
+py-12  /* 小セクション間隔 */
+
+/* 要素間隔 */
+mb-16  /* セクション内大見出し下 */
+mb-12  /* セクション内中見出し下 */
+mb-6   /* 一般的な要素間 */
+```
+
+### レスポンシブグリッド
+```css
+/* 2カラムレイアウト */
+grid-cols-1 lg:grid-cols-2 gap-8
+
+/* 3カラムレイアウト */
+grid-cols-1 md:grid-cols-3 gap-8
+
+/* 特徴セクション（左右交互） */
+lg:flex-row-reverse  /* 奇数インデックスで反転 */
+```
+
+---
 
 ## 5. コンポーネントスタイル
 
-### サイドナビゲーション
-
-| 状態     | 背景                      | アイコン / テキスト        |
-| ------ | ----------------------- | ------------------ |
-| アクティブ  | `--color-nav-bg`        | `--color-primary`  |
-| ホバー    | `rgba(59,130,246,0.08)` | `--color-primary`  |
-| 非アクティブ | transparent             | `--color-gray-500` |
-
-### KPI カード
-
-* ラベル: `Caption` / 値: `Subhead` Bold。
-* 余白: `p-4`, 横幅 100%。
-* 右上に `lucide:more-vertical` でアクションメニュー。
-
-### タブバー
-
-| 状態     | スタイル                                               |
-| ------ | -------------------------------------------------- |
-| アクティブ  | テキスト `#FFFFFF`（ホワイト）、背景 `--color-primary` 10% 透過、フォント太め、下線 2 px `--color-primary` |
-| 非アクティブ | テキスト `--color-gray-400`                            |
-
-### 選択ボタン（ラジオボタン風・タブ含む）
-
-| 状態     | スタイル                                                                 |
-|----------|--------------------------------------------------------------------------|
-| アクティブ  | テキスト `#FFFFFF`（ホワイト）、背景 `--color-primary` 10% 透過、フォント太め |
-| 非アクティブ | テキスト `--color-gray-700` または `--color-gray-400`                |
-
-> ※タブ・ラジオボタン風ボタン共通でこのルールを適用
-
 ### ボタン
 
-| 種類        | 背景                                     | テキスト                     | シャドウ                             |
-| --------- | -------------------------------------- | ------------------------ | -------------------------------- |
-| Primary   | `--color-primary`                      | #FFFFFF                  | `0 2px 6px rgba(89,101,255,0.3)` |
-| Secondary | transparent / 1 px `--color-primary` 枠 | `--color-primary`        | none                             |
-| Ghost     | transparent                            | `--color-gray-900`       | none                             |
-| Disabled  | `--color-primary` 40% 透過               | `--color-surface` 60% 透過 | none                             |
+#### Primary Button (CTA)
+```css
+bg-[var(--color-lp-mint)] text-white 
+px-8 py-4 rounded-full text-lg font-semibold 
+hover:bg-[var(--color-lp-mint)]/90 
+transition-all hover:scale-105 
+shadow-xl
+```
+
+#### Secondary Button (ナビゲーション)
+```css
+bg-[var(--color-lp-mint)] text-white 
+px-6 py-2 rounded-full 
+hover:bg-[var(--color-lp-mint)]/90 
+transition-all hover:scale-105
+```
+
+#### Chip Button (インタラクティブタグ)
+```css
+bg-white border-2 border-[var(--color-lp-mint)]/20 
+hover:border-[var(--color-lp-mint)] 
+hover:bg-[var(--color-lp-mint)]/5 
+px-4 py-2 rounded-full 
+transition-all duration-200 
+hover:scale-105 hover:shadow-lg
+```
+
+### カード
+
+#### 標準情報カード
+```css
+bg-white rounded-2xl p-8 shadow-lg 
+hover:shadow-xl transition-all duration-300 
+hover:scale-105
+```
+
+#### 大型コンテンツカード
+```css
+bg-white rounded-3xl p-8 shadow-xl 
+border border-slate-200
+```
+
+#### アクセントカード（選択状態）
+```css
+border-[var(--color-lp-mint)] 
+bg-[var(--color-lp-mint)]/5 
+scale-105
+```
 
 ### 入力フィールド
 
-* 角丸 12 px、height 44 px。
-* デフォルト枠 `--color-gray-400`、フォーカス `--color-primary` 2 px outline。
-* クリアボタンは `lucide:x` アイコン、タップ領域 44×44 px。
+#### 検索ボックス
+```css
+w-full px-6 py-4 text-lg border-2 rounded-full 
+transition-all duration-300
+border-[var(--color-lp-mint)] 
+bg-[var(--color-lp-mint)]/5 
+outline-none shadow-lg
+```
 
-### リストアイテム (検索/閲覧履歴)
+### ナビゲーション
 
-* コンテナ: `--color-list-bg`, radius 28 px, padding 12 px 16 px。
-* ステータスアイコン: 28 px 円、背景 `--color-icon-bg`、Icon stroke 1.5。
-* プライス情報: 成功なら `--color-success`, 下落なら `--color-danger`。
-* 末尾アクション: ゴースト丸ボタン 28 px, Icon `ChevronRight`。
+#### 固定ナビゲーション
+```css
+fixed top-0 left-0 right-0 z-50 
+bg-white/90 backdrop-blur-md 
+border-b border-slate-200
+h-16
+```
 
-### 情報カード (統計パネル)
-
-* Width 48% (2‑col グリッド)。
-* 枠線 1 px `--color-gray-200`、radius 16 px、padding 16 px。
-* ラベルは `Caption`, 値は `Subhead` Bold。
+---
 
 ## 6. アイコン & イラスト
 
-* アイコンは `lucide-react`, stroke‑width 1.8, default 20 px。
-* イラストは *unDraw* ライク、線幅 2 px、ブランドカラー 20 % 淡色。
-* アバター背景は `--color-surface-alt` で統一。
+### アイコン仕様
+- **ライブラリ**: `lucide-react`
+- **デフォルトサイズ**: `w-5 h-5` (20px)
+- **大きいアイコン**: `w-8 h-8` (32px)
+- **装飾アイコン**: `w-16 h-16` (64px)
 
-## 7. チャート & データビジュアライゼーション
+### アイコン使用例
+```jsx
+// CTA内アイコン
+<Play className="w-5 h-5" />
 
-### 7.1 ライブラリ選定
+// 機能説明アイコン
+<feature.icon className="w-8 h-8 text-[var(--color-lp-mint)]" />
 
-| ライブラリ        | 特徴                          | FRACTAL 的メリット           | SSR 対応                     |
-| ------------ | --------------------------- | ----------------------- | -------------------------- |
-| **Recharts** | JSX ベースで API が直感的。基本チャート網羅。 | 角丸・Pastel Tint の表現が容易。  | `dynamic()` でクライアント側のみ読み込み |
-| Nivo         | D3 ベース＋高機能。テーマ一括設定可能。       | グラデーションやレーダーチャートに便利。    | 同上                         |
-| Visx         | 低レベルで D3 直結。カスタム性最強。        | KPI カード組み込みのスパークラインが柔軟。 | 同上                         |
+// 装飾背景アイコン
+<TrendingDown className="w-16 h-16 text-red-500" />
+```
 
-> **推奨**: *Recharts* でガイドライン準拠を最短実装。高度な可視化が必要な場合のみ Nivo／Visx を検討。
+---
 
-### 7.2 Next.js 実装フロー (SSR セーフ)
+## 7. アニメーション & インタラクション
 
-1. **動的 import**
+### アニメーション期間
+```css
+/* 基本トランジション */
+transition-all duration-300
 
-   ```tsx
-   import dynamic from 'next/dynamic';
-   const PerfLineChart = dynamic(() => import('@/components/PerfLineChart'), { ssr: false });
-   ```
-2. **レスポンシブ**: Recharts の `<ResponsiveContainer width="100%" height={220}>` を必ず使用し、カード幅に追従。
-3. **色トークン適用**: `stroke="var(--color-primary)"` / `fill="var(--color-primary)" fillOpacity={0.16}` のように CSS カスタムプロパティだけを参照。
-4. **スケール**: 折れ線は `monotone`、棒グラフは `barSize={12}` & `radius={[4,4,0,0]}` で角丸を統一。
-5. **ツールチップ**: `contentStyle={{ borderRadius: 16, boxShadow: '0 1px 6px rgba(0,0,0,0.08)' }}` でカードと統一感。値は `v.toLocaleString()` で千区切り。
+/* ホバーエフェクト */
+transition-all duration-200
 
-### 7.3 グラフスタイルガイド
+/* 長いアニメーション */
+transition-all duration-1000
 
-| 要素    | トークン / スタイル                 | 備考                         |
-| ----- | --------------------------- | -------------------------- |
-| 主系列   | `--color-primary`           | 太さ 2 px、点 r=3 px           |
-| 比較系列  | `--color-success`           | 破線 `strokeDasharray="4 4"` |
-| 目標線   | `--color-gray-400` 点線       | `ReferenceLine` で y 指定     |
-| エリア塗り | 主系列色 16% 不透明                | 変動帯域を示す                    |
-| グリッド線 | `--color-gray-400` / 罫線 3 3 | Y 軸 4〜6 本に制限               |
+/* 特殊エフェクト */
+duration-3000  /* スケールアニメーション */
+```
 
-### 7.4 UI & アクセシビリティ
+### インタラクションパターン
+```css
+/* ホバー時拡大 */
+hover:scale-105
 
-* **期間タブ** (1D/1W/1M/…): 選択時に `background: var(--color-primary-16)` + `rounded-full`。`role="tab"` & `aria-controls="chartId"` を必須。
-* **キーボード操作**: `ArrowLeft/Right` で系列切替、`Enter` で選択確定。
-* **色弱対策**: 色だけで意味を持たせず、ラベル(↑↓)や凡例を併用。
+/* ホバー時シャドウ */
+hover:shadow-xl
 
-### 7.5 アニメーション
+/* アクティブ時透明度変更 */
+hover:bg-[var(--color-lp-mint)]/90
 
-* **ロード時**: Recharts デフォルトパスアニメ (`isAnimationActive`) を使用、`duration={450}`/`easing="ease-out"` に統一。
-* **インタラクション**: ホバー 120 ms、クリック 180 ms。`react-spring` でフェード + Path‑length アニメ→ガイドライン §8 と整合。
+/* フェードイン */
+opacity-100 translate-y-0
+opacity-0 translate-y-10
+```
 
-### 7.6 品質を高めるコツ
+### カスタムキーフレーム
+```css
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
 
-1. **Y 目盛は 4–6 本** に留めノイズを削減。
-2. **ラベル長** は 8 文字以内、折返し禁止。
-3. **データ欠損** は点線補間し、ツールチップで "No data" を表示。
-4. **ダミーデータ → API → 状態管理 (Jotai/Recoil)** の順で実装。
-5. **export**: PNG/CSV ダウンロードには `toBlob()` と `json2csv` を利用。
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+```
 
-## 8. モーション. モーション
+---
 
-* **Durations**: 入力→結果 220 ms / ホバー 120 ms / クリック 180 ms / ページ遷移 280 ms。
-* **Easing**: `cubic-bezier(0.4,0,0.2,1)`。
-* KPI カードはロード時 `fade-up` (20 px) over 240 ms, stagger 60 ms。
-* リストアイテムはタップ時に `scale(0.98)` + shadow 消失で押し込み感を演出。
-* チャート描画は `react-spring` で 450 ms フェード + Path‑length アニメーション。
+## 8. セクション構造パターン
 
-## 9. アクセシビリティ補足
+### セクション共通構造
+```jsx
+<section className="py-20 [背景クラス]">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center mb-16">
+      <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] mb-6 font-[var(--font-poppins)]">
+        セクションタイトル
+      </h2>
+      <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+        セクション説明文
+      </p>
+    </div>
+    {/* コンテンツ */}
+  </div>
+</section>
+```
 
-* コントラスト比 4.5:1 以上 (Primary と Surface で 4.68:1)。
-* キーボードタブ順序は DOM 順 = 視覚順に一致。
-* サイドバーは `aria-current="page"` で現在ページを示す。
-* VoiceOver 対策として、期間タブ・グラフを `aria-controls` で関連付け。
-* タップ領域は最小 44×44 px を確保。
+### 背景バリエーション
+```css
+/* 標準背景 */
+[なし - 白背景]
 
-## 10. ダークモード
+/* 軽いアクセント */
+bg-[var(--color-lp-off-white)]
 
-| Token                 | Light   | Dark    |
-| --------------------- | ------- | ------- |
-| `--color-surface`     | #FFFFFF | #0F172A |
-| `--color-surface-alt` | #F7FAFC | #1E293B |
-| `--color-list-bg`     | #ECF9F3 | #15362B |
-| `--color-icon-bg`     | #E2F1EA | #1E4335 |
-| `--color-gray-900`    | #0F172A | #F8FAFC |
-| `--color-gray-700`    | #334155 | #CBD5E1 |
+/* グラデーション（アクセント） */
+bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5
 
-* `--color-primary` を 90% 彩度に抑え `#525EFF` を基調。
-* シャドウは `rgba(0,0,0,0.5)`、ペーパー感よりフラットに。
+/* グラデーション（強調） */
+bg-gradient-to-br from-[var(--color-lp-navy)] to-[var(--color-lp-blue)] text-white
+
+/* グラデーション（CTA） */
+bg-gradient-to-br from-[var(--color-lp-mint)] to-[var(--color-lp-blue)] text-white
+```
+
+---
+
+## 9. 装飾要素
+
+### 背景装飾
+```css
+/* ソフトブラー円 */
+w-32 h-32 bg-[var(--color-lp-mint)]/5 rounded-full blur-xl
+
+/* 波紋効果 */
+border-2 border-red-300 rounded-full animate-ping opacity-30
+```
+
+### グラデーション使用パターン
+```css
+/* ハイライト用 */
+bg-gradient-to-br from-[var(--color-lp-mint)]/10 to-[var(--color-lp-blue)]/10
+
+/* ボーダー強調 */
+border border-[var(--color-lp-mint)]/20
+
+/* インライン強調 */
+bg-gradient-to-r from-[var(--color-lp-mint)] to-[var(--color-lp-blue)]
+```
+
+---
+
+## 10. レスポンシブ対応
+
+### ブレークポイント
+```css
+sm: 640px   /* スマートフォン（大） */
+md: 768px   /* タブレット */
+lg: 1024px  /* デスクトップ（小） */
+xl: 1280px  /* デスクトップ（大） */
+2xl: 1536px /* デスクトップ（特大） */
+```
+
+### レスポンシブパターン
+```css
+/* テキストサイズ */
+text-4xl md:text-5xl
+text-xl md:text-2xl
+
+/* グリッド */
+grid-cols-1 lg:grid-cols-2
+grid-cols-1 md:grid-cols-3
+
+/* スペーシング */
+px-4 sm:px-6 lg:px-8
+gap-4 lg:gap-12
+
+/* フレックス */
+flex-col sm:flex-row
+```
+
+---
+
+## 11. 実装時のベストプラクティス
+
+### CSS変数の使用
+```jsx
+// ✅ 推奨: CSS変数を使用
+className="text-[var(--color-lp-navy)]"
+className="bg-[var(--color-lp-mint)]"
+
+// ❌ 非推奨: ハードコーディング
+className="text-blue-900"
+className="bg-green-400"
+```
+
+### アニメーション実装
+```jsx
+// Intersection Observer を使用したスクロールトリガー
+const [isVisible, setIsVisible] = useState(false);
+const ref = useRef<HTMLDivElement>(null);
+
+useEffect(() => {
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
+      }
+    },
+    { threshold: 0.3 }
+  );
+  
+  if (ref.current) {
+    observer.observe(ref.current);
+  }
+  
+  return () => observer.disconnect();
+}, []);
+```
+
+### コンポーネント分割
+```jsx
+// ✅ 推奨: 再利用可能なコンポーネント
+const AnimatedNumber = ({ end, duration, prefix, suffix }) => {
+  // アニメーションロジック
+};
+
+// ✅ 推奨: セクションごとのコンポーネント
+const OneClickExperienceSection = () => {
+  // セクション固有のロジック
+};
+```

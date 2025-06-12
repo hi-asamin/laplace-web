@@ -76,7 +76,7 @@ export default function WithdrawalChart({ data }: WithdrawalChartProps) {
               display: 'inline-block',
               width: 16,
               height: 8,
-              background: 'rgba(89,101,255,0.13)',
+              background: 'rgba(74,144,226,0.13)',
               borderRadius: 2,
             }}
           ></span>
@@ -88,7 +88,7 @@ export default function WithdrawalChart({ data }: WithdrawalChartProps) {
               display: 'inline-block',
               width: 16,
               height: 8,
-              background: 'rgba(89,101,255,0.38)',
+              background: 'rgba(74,144,226,0.38)',
               borderRadius: 2,
             }}
           ></span>
@@ -129,7 +129,7 @@ export default function WithdrawalChart({ data }: WithdrawalChartProps) {
         {points && points.length > 0 && (
           <path
             d={areaPath}
-            fill="rgba(89,101,255,0.38)"
+            fill="rgba(74,144,226,0.38)"
             className="chart-area-animation"
             style={{
               opacity: 0,
@@ -192,7 +192,7 @@ export default function WithdrawalChart({ data }: WithdrawalChartProps) {
             <span>
               <span
                 className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
-                style={{ background: 'rgba(89,101,255,0.13)' }}
+                style={{ background: 'rgba(74,144,226,0.13)' }}
               ></span>
               残高:{' '}
               <span className="font-medium text-[var(--color-gray-900)]">
@@ -202,7 +202,7 @@ export default function WithdrawalChart({ data }: WithdrawalChartProps) {
             <span>
               <span
                 className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
-                style={{ background: 'rgba(89,101,255,0.38)' }}
+                style={{ background: 'rgba(74,144,226,0.38)' }}
               ></span>
               取り崩し額:{' '}
               <span className="font-medium text-[var(--color-gray-900)]">

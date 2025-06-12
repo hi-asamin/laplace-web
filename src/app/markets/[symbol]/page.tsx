@@ -555,7 +555,7 @@ export default function MarketDetailPage() {
                 {chartPaths.areaPath && (
                   <path
                     d={chartPaths.areaPath}
-                    fill="rgba(89, 101, 255, 0.1)"
+                    fill="rgba(74, 144, 226, 0.1)"
                     className="chart-area-animation"
                     style={{
                       opacity: 0,
@@ -836,8 +836,8 @@ export default function MarketDetailPage() {
                             style={{
                               height: `${height}px`,
                               background:
-                                'linear-gradient(180deg, var(--color-primary) 0%, rgba(89, 101, 255, 0.6) 100%)',
-                              boxShadow: '0 2px 6px rgba(89, 101, 255, 0.2)',
+                                'linear-gradient(180deg, var(--color-primary) 0%, rgba(74, 144, 226, 0.6) 100%)',
+                              boxShadow: '0 2px 6px rgba(74, 144, 226, 0.2)',
                               transform: 'scaleY(0)',
                               animation: `bar-grow 0.8s ease-out ${index * 0.1}s forwards`,
                             }}

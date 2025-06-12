@@ -101,7 +101,7 @@ export default function WithdrawalPlan({
                     display: 'inline-block',
                     width: 16,
                     height: 8,
-                    background: 'rgba(89,101,255,0.13)',
+                    background: 'rgba(74,144,226,0.13)',
                     borderRadius: 2,
                   }}
                 ></span>
@@ -228,7 +228,7 @@ export default function WithdrawalPlan({
                     {/* エリア */}
                     <path
                       d={areaPath}
-                      fill="rgba(89,101,255,0.13)"
+                      fill="rgba(74,144,226,0.13)"
                       clipPath={`url(#${chartAreaClipId})`}
                     />
                     {/* 折れ線 */}
@@ -280,7 +280,7 @@ export default function WithdrawalPlan({
                   <span>
                     <span
                       className="inline-block w-2 h-2 rounded-sm mr-1 align-middle"
-                      style={{ background: 'rgba(89,101,255,0.13)' }}
+                      style={{ background: 'rgba(74,144,226,0.13)' }}
                     ></span>
                     残高:{' '}
                     <span className="font-medium text-[var(--color-gray-900)]">

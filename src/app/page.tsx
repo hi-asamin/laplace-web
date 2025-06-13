@@ -20,6 +20,11 @@ import {
   Sprout,
   Coins,
 } from 'lucide-react';
+import {
+  AutoInputDemo,
+  ScenarioComparisonDemo,
+  RiskVisualizationDemo,
+} from '@/components/FeatureDemoCharts';
 
 // アニメーション用のNumber カウントアップコンポーネント
 const AnimatedNumber = ({
@@ -841,7 +846,7 @@ export default function LandingPage() {
     {
       icon: Zap,
       title: 'ワンクリック自動入力',
-      description: '銘柄コードを入力するだけで、株価・配当履歴・を自動取得',
+      description: '銘柄を選択するだけで、株価・配当履歴・PER/PBRを自動取得',
       benefit: '面倒な入力はゼロに',
     },
     {
@@ -1063,12 +1068,10 @@ export default function LandingPage() {
                 </div>
                 <div className="flex-1">
                   <div className="bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5 rounded-3xl p-8 border border-slate-200">
-                    <div className="h-64 bg-white rounded-2xl shadow-inner flex items-center justify-center">
-                      <div className="text-slate-400 text-center">
-                        <feature.icon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p>機能デモ</p>
-                      </div>
-                    </div>
+                    {/* 機能別デモコンポーネント */}
+                    {index === 0 && <AutoInputDemo />}
+                    {index === 1 && <ScenarioComparisonDemo />}
+                    {index === 2 && <RiskVisualizationDemo />}
                   </div>
                 </div>
               </div>

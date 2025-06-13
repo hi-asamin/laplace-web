@@ -654,6 +654,11 @@ const HeroImage = () => {
     '#自動入力',
   ];
 
+  // 固定値の配列でSSR/CSRの一貫性を保つ
+  const barHeights = [
+    65, 45, 78, 52, 89, 34, 67, 55, 72, 41, 60, 75, 48, 83, 39, 64, 70, 46, 58, 92,
+  ];
+
   useEffect(() => {
     setIsAnimated(true);
 
@@ -756,7 +761,7 @@ const HeroImage = () => {
                         className="bg-[var(--color-lp-mint)] rounded-t"
                         style={{
                           width: '8px',
-                          height: `${Math.random() * 80 + 20}%`,
+                          height: `${barHeights[i]}%`,
                           opacity: 0.6,
                           animationDelay: `${i * 100}ms`,
                           animation: isAnimated ? `bar-grow 1s ease-out forwards` : 'none',
@@ -1052,8 +1057,8 @@ export default function LandingPage() {
                 FAQ
               </a>
               <Link
-                href="/markets"
-                onClick={() => trackCTAClick('nav', '無料で始める', '/markets')}
+                href="/markets/self/simulation"
+                onClick={() => trackCTAClick('nav', '無料で始める', '/markets/self/simulation')}
                 className="bg-[var(--color-lp-mint)] text-white px-6 py-2 rounded-full hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105"
               >
                 無料で始める
@@ -1081,9 +1086,13 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                 <Link
-                  href="/markets"
+                  href="/markets/self/simulation"
                   onClick={() =>
-                    trackCTAClick('hero', '無料でシミュレーションを始める', '/markets')
+                    trackCTAClick(
+                      'hero',
+                      '無料でシミュレーションを始める',
+                      '/markets/self/simulation'
+                    )
                   }
                   className="bg-[var(--color-lp-mint)] text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105 flex items-center gap-2"
                 >
@@ -1315,8 +1324,10 @@ export default function LandingPage() {
           </h2>
           <p className="text-xl mb-8 opacity-90">ワンクリックで始める、新しい資産形成体験</p>
           <Link
-            href="/markets"
-            onClick={() => trackCTAClick('final', '無料でシミュレーションを始める', '/markets')}
+            href="/markets/self/simulation"
+            onClick={() =>
+              trackCTAClick('final', '無料でシミュレーションを始める', '/markets/self/simulation')
+            }
             className="inline-flex items-center gap-3 bg-white text-[var(--color-lp-navy)] px-10 py-5 rounded-full text-xl font-bold hover:bg-slate-100 transition-all hover:scale-105 shadow-2xl"
           >
             <Play className="w-6 h-6" />

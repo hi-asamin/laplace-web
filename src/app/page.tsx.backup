@@ -19,13 +19,13 @@ import {
 
 // クライアントコンポーネントのインポート
 import {
-  HeroImage,
+  AnimatedNumber,
   InflationComparisonVisual,
   OneClickExperienceSection,
+  HeroImage,
   LandingPageClientFeatures,
 } from '@/components/LandingPageClient';
 import NavigationClient from '@/components/NavigationClient';
-
 import {
   AutoInputDemo,
   ScenarioComparisonDemo,
@@ -187,6 +187,40 @@ export default function LandingPage() {
       <LandingPageClientFeatures />
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+        {/* フローティング アニメーション用CSS */}
+        <style jsx>{`
+          @keyframes float {
+            0%,
+            100% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-10px);
+            }
+          }
+          @keyframes bar-grow {
+            from {
+              transform: scaleY(0);
+            }
+            to {
+              transform: scaleY(1);
+            }
+          }
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+              transform: translateY(-20px) scale(0.8);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+          .animate-fade-in {
+            animation: fade-in 1s ease-out forwards;
+          }
+        `}</style>
+
         {/* Navigation */}
         <NavigationClient />
 

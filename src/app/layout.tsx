@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import { Inter, Poppins, Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
@@ -22,11 +22,30 @@ export const metadata: Metadata = {
   description:
     'そのNISA、最適ですか？ワンクリックで意味のある将来比較ができる唯一の資産シミュレーター。自動データ入力・シナリオ比較・リスク可視化で、あなたの資産形成をサポート。',
   keywords: 'NISA, 資産シミュレーション, 投資, 資産形成, 将来設計',
+  manifest: '/manifest.json',
   openGraph: {
     title: 'Laplace - 資産シミュレーション',
     description: 'ワンクリックで未来の最適解をシミュレーション',
     type: 'website',
+    locale: 'ja_JP',
+    siteName: 'Laplace',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Laplace - 資産シミュレーション',
+    description: 'ワンクリックで未来の最適解をシミュレーション',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#00d4a1',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

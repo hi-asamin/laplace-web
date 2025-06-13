@@ -109,37 +109,81 @@ export default function SimulationPage() {
     }
   }, [activeTab]);
 
-  // Intersection Observerでセクションの表示状態を監視し、activeTabを自動更新
+  // スクロール位置に応じてタブを自動切り替え
   useEffect(() => {
     const accumulation = document.getElementById('accumulation');
     const distribution = document.getElementById('distribution');
     if (!accumulation || !distribution) return;
 
-    let ratios = { accumulation: 0, distribution: 0 };
-    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.target.id === 'accumulation') {
-          ratios.accumulation = entry.intersectionRatio;
-        } else if (entry.target.id === 'distribution') {
-          ratios.distribution = entry.intersectionRatio;
+    let isUserScrolling = false;
+    let scrollTimeout: NodeJS.Timeout;
+    let rafId: number;
+
+    const checkTabPosition = () => {
+      // ナビゲーションの高さを取得（sticky headerの分を考慮）
+      const navHeight = 120; // ページヘッダー + ナビゲーションの高さ
+      const scrollPosition = window.scrollY + navHeight;
+
+      const accumulationTop = accumulation.offsetTop;
+      const accumulationBottom = accumulationTop + accumulation.offsetHeight;
+      const distributionTop = distribution.offsetTop;
+
+      // スクロール位置に基づいてタブを決定
+      let newActiveTab = activeTab;
+
+      if (scrollPosition < accumulationBottom - 200) {
+        // 資産形成セクションの範囲内（下部200px手前まで）
+        newActiveTab = '#accumulation';
+      } else if (scrollPosition >= distributionTop - 100) {
+        // 資産活用セクションの範囲内（上部100px手前から）
+        newActiveTab = '#distribution';
+      }
+
+      // タブが変更された場合のみ更新
+      if (newActiveTab !== activeTab) {
+        setActiveTab(newActiveTab);
+        setPreviousTab(activeTab);
+
+        // ハッシュを更新（履歴に追加しない）
+        if (typeof window !== 'undefined' && window.history) {
+          window.history.replaceState(null, '', newActiveTab);
         }
-      });
-      if (ratios.accumulation >= 0.51 && activeTab !== '#accumulation') {
-        setActiveTab('#accumulation');
-      } else if (ratios.distribution >= 0.51 && activeTab !== '#distribution') {
-        setActiveTab('#distribution');
+
+        // タブ切り替えイベントをトラッキング
+        analytics.trackTabSwitch(activeTab.replace('#', ''), newActiveTab.replace('#', ''));
       }
     };
-    const observer = new window.IntersectionObserver(handleIntersect, {
-      root: null,
-      threshold: Array.from({ length: 101 }, (_, i) => i / 100), // 0, 0.01, ..., 1.0
-    });
-    observer.observe(accumulation);
-    observer.observe(distribution);
-    return () => {
-      observer.disconnect();
+
+    const handleScroll = () => {
+      isUserScrolling = true;
+      clearTimeout(scrollTimeout);
+
+      // スクロール停止を検出するためのタイムアウト
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+      }, 150);
+
+      // requestAnimationFrameでパフォーマンスを最適化
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+      rafId = requestAnimationFrame(checkTabPosition);
     };
-  }, [activeTab]);
+
+    // スクロールイベントリスナーを追加
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // 初期位置でのタブ設定
+    checkTabPosition();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, [activeTab, analytics]);
 
   return (
     <main className="min-h-screen bg-[var(--color-surface)]">
@@ -161,8 +205,24 @@ export default function SimulationPage() {
       <div className="bg-[var(--color-surface-alt)] border-b border-[var(--color-gray-200)] sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8 overflow-x-auto scrollbar-none">
-            <a
-              href="#accumulation"
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                const element = document.getElementById('accumulation');
+                if (element) {
+                  const navHeight = 120; // ページヘッダー + ナビゲーションの高さ
+                  const targetPosition = element.offsetTop - navHeight + 20;
+                  window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth',
+                  });
+                  // 手動でタブを設定
+                  setActiveTab('#accumulation');
+                  setPreviousTab(activeTab);
+                  history.replaceState(null, '', '#accumulation');
+                  analytics.trackTabSwitch(activeTab.replace('#', ''), 'accumulation');
+                }
+              }}
               className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === '#accumulation'
                   ? 'border-[var(--color-lp-mint)] text-[var(--color-lp-mint)]'
@@ -170,9 +230,25 @@ export default function SimulationPage() {
               }`}
             >
               資産形成
-            </a>
-            <a
-              href="#distribution"
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                const element = document.getElementById('distribution');
+                if (element) {
+                  const navHeight = 120; // ページヘッダー + ナビゲーションの高さ
+                  const targetPosition = element.offsetTop - navHeight + 20;
+                  window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth',
+                  });
+                  // 手動でタブを設定
+                  setActiveTab('#distribution');
+                  setPreviousTab(activeTab);
+                  history.replaceState(null, '', '#distribution');
+                  analytics.trackTabSwitch(activeTab.replace('#', ''), 'distribution');
+                }
+              }}
               className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === '#distribution'
                   ? 'border-[var(--color-lp-mint)] text-[var(--color-lp-mint)]'
@@ -180,7 +256,7 @@ export default function SimulationPage() {
               }`}
             >
               資産活用
-            </a>
+            </button>
           </nav>
         </div>
       </div>

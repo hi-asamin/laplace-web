@@ -321,6 +321,7 @@ export default function AssetDistributionSimulator({
             max={15}
             step={0.1}
             unit="%"
+            formatValue={(value) => `${value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}%`}
           />
         )}
 
@@ -778,6 +779,7 @@ export function AssetDistributionSettingsPanel({
             max={15}
             step={0.1}
             unit="%"
+            formatValue={(value) => `${value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}%`}
           />
         )}
 

@@ -10,7 +10,7 @@ import AssetDistributionSimulator, {
 } from '@/components/AssetDistributionSimulator';
 import {
   useAssetAccumulationSimulation,
-  useAssetDistributionSimulation,
+  useAssetDistributionWithInheritance,
 } from '@/hooks/useSimulation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import SimulationSettingsBottomSheet from '@/components/SimulationSettingsBottomSheet';
@@ -28,8 +28,8 @@ export default function SimulationPage() {
 
   // 資産形成シミュレーションの状態を追跡
   const accumulationSimulation = useAssetAccumulationSimulation();
-  const distributionSimulation = useAssetDistributionSimulation();
   const [inheritedAssets, setInheritedAssets] = useState<number | undefined>(undefined);
+  const distributionSimulation = useAssetDistributionWithInheritance(undefined, inheritedAssets);
 
   // URL パラメータから初期設定を取得
   const initialQuestionType = searchParams.get('q') || 'total-assets';

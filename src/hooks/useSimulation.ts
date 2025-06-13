@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   SimulationSettings,
   SimulationResult,
@@ -91,7 +91,6 @@ export function useSimulation({
 
   // 設定更新関数
   const updateSetting = useCallback((key: keyof SimulationSettings, value: any) => {
-    console.log(key, value);
     setSettings((prev) => ({
       ...prev,
       [key]: value,
@@ -213,4 +212,32 @@ export function useAssetDistributionSimulation(initialSettings?: Partial<Simulat
     purpose: 'use',
     initialSettings,
   });
+}
+
+// 資産活用シミュレーション（継承資産対応版）
+export function useAssetDistributionWithInheritance(
+  initialSettings?: Partial<SimulationSettings>,
+  inheritedAssets?: number
+) {
+  const simulation = useSimulation({
+    purpose: 'use',
+    initialSettings,
+  });
+
+  const prevInheritedAssetsRef = useRef<number | undefined>(undefined);
+
+  // inheritedAssets が変更されたときに initialAssets を自動更新
+  useEffect(() => {
+    if (
+      inheritedAssets !== undefined &&
+      inheritedAssets > 0 &&
+      inheritedAssets !== prevInheritedAssetsRef.current
+    ) {
+      prevInheritedAssetsRef.current = inheritedAssets;
+      simulation.updateSetting('initialAssets', inheritedAssets);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inheritedAssets]);
+
+  return simulation;
 }

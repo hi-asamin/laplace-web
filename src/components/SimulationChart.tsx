@@ -30,6 +30,12 @@ export default function SimulationChart({
 
   const chartAreaClipId = 'simulation-chart-area-clip';
 
+  // パディング定数
+  const leftPadding = 60;
+  const rightPadding = 20;
+  const topPadding = 40;
+  const bottomPadding = 40;
+
   // チャート外部クリックでホバー解除
   useEffect(() => {
     const handleMouseLeave = () => {
@@ -60,9 +66,12 @@ export default function SimulationChart({
   const generateChartElements = () => {
     if (!data || data.length === 0) return null;
 
-    const padding = 40; // パディングを増加してツールチップ領域を確保
-    const chartWidth = width - 2 * padding;
-    const chartHeight = height - 2 * padding;
+    const leftPadding = 60; // Y軸ラベル用に左側のパディングを増加
+    const rightPadding = 20; // 右側の余白を削減
+    const topPadding = 40;
+    const bottomPadding = 40;
+    const chartWidth = width - leftPadding - rightPadding;
+    const chartHeight = height - topPadding - bottomPadding;
 
     // スケール計算
     const values = data.map((d) => d.totalAssets);
@@ -75,14 +84,16 @@ export default function SimulationChart({
 
     // データポイントの座標計算
     const points = data.map((d, i) => {
-      const x = padding + (i / (data.length - 1)) * chartWidth;
-      const y = padding + chartHeight - ((d.totalAssets - effectiveMin) / valueRange) * chartHeight;
+      const x = leftPadding + (i / (data.length - 1)) * chartWidth;
+      const y =
+        topPadding + chartHeight - ((d.totalAssets - effectiveMin) / valueRange) * chartHeight;
       return { x, y, data: d };
     });
 
     const principalPoints = data.map((d, i) => {
-      const x = padding + (i / (data.length - 1)) * chartWidth;
-      const y = padding + chartHeight - ((d.principal - effectiveMin) / valueRange) * chartHeight;
+      const x = leftPadding + (i / (data.length - 1)) * chartWidth;
+      const y =
+        topPadding + chartHeight - ((d.principal - effectiveMin) / valueRange) * chartHeight;
       return { x, y };
     });
 
@@ -117,7 +128,7 @@ export default function SimulationChart({
 
     if (purpose === 'save') {
       // 積立元本エリア（底辺から元本ラインまで）
-      principalAreaPath = `M ${principalPoints[0].x} ${height - padding}`;
+      principalAreaPath = `M ${principalPoints[0].x} ${height - bottomPadding}`;
       // 元本ラインを描画
       principalPoints.forEach((p, i) => {
         if (i === 0) principalAreaPath += `L ${p.x} ${p.y}`;
@@ -128,8 +139,8 @@ export default function SimulationChart({
         }
       });
       // 右端から底辺に戻って閉じる
-      principalAreaPath += `L ${principalPoints[principalPoints.length - 1].x} ${height - padding}`;
-      principalAreaPath += `L ${principalPoints[0].x} ${height - padding} Z`;
+      principalAreaPath += `L ${principalPoints[principalPoints.length - 1].x} ${height - bottomPadding}`;
+      principalAreaPath += `L ${principalPoints[0].x} ${height - bottomPadding} Z`;
 
       // 複利利益エリア（元本ラインから総資産ラインまで）
       profitAreaPath = `M ${principalPoints[0].x} ${principalPoints[0].y}`;
@@ -161,40 +172,63 @@ export default function SimulationChart({
     } else {
       // 使うモード：資産残高エリア
       principalAreaPath = mainLinePath;
-      principalAreaPath += `L ${points[points.length - 1].x} ${height - padding}`;
-      principalAreaPath += `L ${points[0].x} ${height - padding} Z`;
+      principalAreaPath += `L ${points[points.length - 1].x} ${height - bottomPadding}`;
+      principalAreaPath += `L ${points[0].x} ${height - bottomPadding} Z`;
     }
 
     // Y軸の目盛り線を生成（改善版）
     const gridLines = [];
-    const gridCount = 4; // 目盛り数を減らしてすっきりと
-    for (let i = 0; i <= gridCount; i++) {
-      const y = padding + (chartHeight / gridCount) * i;
-      const value = effectiveMax - (effectiveMax - effectiveMin) * (i / gridCount);
 
-      gridLines.push(
-        <g key={`grid-${i}`}>
-          <line
-            x1={padding}
-            y1={y}
-            x2={width - padding}
-            y2={y}
-            stroke="#e2e8f0"
-            strokeWidth="0.5"
-            opacity="0.4"
-          />
-          <text
-            x={padding - 8}
-            y={y + 4}
-            textAnchor="end"
-            fontSize="12"
-            fill="#94A3B8"
-            fontFamily="Inter, sans-serif"
-          >
-            {Math.round(value / 10000)}万
-          </text>
-        </g>
-      );
+    // データの値に基づいて適切な目盛り間隔を計算
+    const range = effectiveMax - effectiveMin;
+    let step: number;
+
+    // 適切な目盛り間隔を決定
+    if (range <= 5000000) {
+      // 500万以下
+      step = 1000000; // 100万刻み
+    } else if (range <= 10000000) {
+      // 1000万以下
+      step = 2000000; // 200万刻み
+    } else if (range <= 50000000) {
+      // 5000万以下
+      step = 5000000; // 500万刻み
+    } else {
+      step = 10000000; // 1000万刻み
+    }
+
+    // 開始値を最も近い step の倍数に調整
+    const startValue = Math.floor(effectiveMin / step) * step;
+    const endValue = Math.ceil(effectiveMax / step) * step;
+
+    for (let value = startValue; value <= endValue; value += step) {
+      if (value >= effectiveMin && value <= effectiveMax) {
+        const y = topPadding + chartHeight - ((value - effectiveMin) / valueRange) * chartHeight;
+
+        gridLines.push(
+          <g key={`grid-${value}`}>
+            <line
+              x1={leftPadding}
+              y1={y}
+              x2={width - rightPadding}
+              y2={y}
+              stroke="#e2e8f0"
+              strokeWidth="0.5"
+              opacity="0.4"
+            />
+            <text
+              x={leftPadding - 8}
+              y={y + 4}
+              textAnchor="end"
+              fontSize="12"
+              fill="#94A3B8"
+              fontFamily="Inter, sans-serif"
+            >
+              {Math.round(value / 10000)}万
+            </text>
+          </g>
+        );
+      }
     }
 
     // X軸ラベル（改善版）
@@ -204,7 +238,7 @@ export default function SimulationChart({
 
     for (let i = 0; i < data.length; i += labelInterval) {
       const d = data[i];
-      const x = padding + (i / (data.length - 1)) * chartWidth;
+      const x = leftPadding + (i / (data.length - 1)) * chartWidth;
       xLabels.push(
         <text
           key={`xlabel-${d.year}`}
@@ -304,7 +338,7 @@ export default function SimulationChart({
 
           // 最も近いポイントを探す
           const pointWidth = chartElements.chartWidth / (chartElements.points.length - 1);
-          const dataIndex = Math.round((x - 40) / pointWidth);
+          const dataIndex = Math.round((x - 60) / pointWidth);
           const validIndex = Math.max(0, Math.min(dataIndex, chartElements.points.length - 1));
           const point = chartElements.points[validIndex];
           const principalPoint = chartElements.principalPoints[validIndex];
@@ -400,9 +434,9 @@ export default function SimulationChart({
                 {/* 垂直線 */}
                 <line
                   x1={hoveredPoint.x}
-                  y1="40"
+                  y1={topPadding}
                   x2={hoveredPoint.x}
-                  y2={height - 40}
+                  y2={height - bottomPadding}
                   stroke="var(--color-primary)"
                   strokeWidth="1"
                   strokeOpacity="0.3"

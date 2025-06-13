@@ -196,6 +196,7 @@ export function AssetAccumulationSettingsPanel({
             max={20}
             step={0.1}
             unit="%"
+            formatValue={(value) => `${value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}%`}
           />
         )}
 

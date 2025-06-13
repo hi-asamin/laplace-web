@@ -17,6 +17,7 @@ interface Stock {
 interface RelatedStocksSectionProps {
   currentSymbol?: string;
   className?: string;
+  onStockClick?: (clickedSymbol: string, currentSymbol: string, positionInList: number) => void;
 }
 
 // モックデータ
@@ -154,8 +155,14 @@ const StockCard: React.FC<{ stock: Stock; onClick: () => void }> = ({ stock, onC
 const RelatedStocksSection: React.FC<RelatedStocksSectionProps> = ({
   currentSymbol,
   className = '',
+  onStockClick,
 }) => {
-  const handleStockClick = (symbol: string) => {
+  const handleStockClick = (symbol: string, index: number) => {
+    // アナリティクスコールバック実行
+    if (onStockClick && currentSymbol) {
+      onStockClick(symbol, currentSymbol, index);
+    }
+
     // シミュレーションページに遷移
     window.location.href = `/markets/${symbol.toLowerCase()}/simulation`;
   };
@@ -182,11 +189,11 @@ const RelatedStocksSection: React.FC<RelatedStocksSectionProps> = ({
 
         {/* 関連銘柄グリッド */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {displayStocks.slice(0, 6).map((stock) => (
+          {displayStocks.slice(0, 6).map((stock, index) => (
             <StockCard
               key={stock.symbol}
               stock={stock}
-              onClick={() => handleStockClick(stock.symbol)}
+              onClick={() => handleStockClick(stock.symbol, index)}
             />
           ))}
         </div>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+// 開発環境でのアナリティクステスト用
+import '@/utils/analyticsTestUtils';
 import AssetAccumulationSimulator, {
   AssetAccumulationSettingsPanel,
 } from '@/components/AssetAccumulationSimulator';
@@ -13,6 +15,7 @@ import {
   useAssetAccumulationSimulation,
   useAssetDistributionWithInheritance,
 } from '@/hooks/useSimulation';
+import { useSimulationAnalytics } from '@/hooks/useSimulationAnalytics';
 import { SlidersHorizontal, X } from 'lucide-react';
 import SimulationSettingsBottomSheet from '@/components/SimulationSettingsBottomSheet';
 import { SimulationSettings, SimulationResult } from '@/types/simulationTypes';
@@ -32,20 +35,38 @@ export default function SimulationPage() {
   const [inheritedAssets, setInheritedAssets] = useState<number | undefined>(undefined);
   const distributionSimulation = useAssetDistributionWithInheritance(undefined, inheritedAssets);
 
+  // アナリティクストラッキング
+  const analytics = useSimulationAnalytics();
+
   // URL パラメータから初期設定を取得
   const initialQuestionType = searchParams.get('q') || 'total-assets';
   const showDistribution = searchParams.get('mode') === 'distribution';
 
   // ハッシュ監視
   const [activeTab, setActiveTab] = useState<string>('#accumulation');
+  const [previousTab, setPreviousTab] = useState<string>('#accumulation');
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setActiveTab(window.location.hash || '#accumulation');
-      const onHashChange = () => setActiveTab(window.location.hash || '#accumulation');
+      const currentHash = window.location.hash || '#accumulation';
+      setActiveTab(currentHash);
+
+      const onHashChange = () => {
+        const newHash = window.location.hash || '#accumulation';
+        const oldHash = activeTab;
+        setActiveTab(newHash);
+        setPreviousTab(oldHash);
+
+        // タブ切り替えイベントをトラッキング
+        if (oldHash !== newHash) {
+          analytics.trackTabSwitch(oldHash.replace('#', ''), newHash.replace('#', ''));
+        }
+      };
+
       window.addEventListener('hashchange', onHashChange);
       return () => window.removeEventListener('hashchange', onHashChange);
     }
-  }, []);
+  }, [activeTab, analytics]);
 
   // ボトムシート開閉
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
@@ -61,12 +82,21 @@ export default function SimulationPage() {
       accumulationSimulation.result.calculatedValue &&
       accumulationSimulation.settings.questionType === 'total-assets'
     ) {
-      setInheritedAssets(accumulationSimulation.result.calculatedValue);
+      const newInheritedAssets = accumulationSimulation.result.calculatedValue;
+      setInheritedAssets(newInheritedAssets);
+
+      // 資産連携イベントをトラッキング
+      analytics.trackAssetInheritance(
+        newInheritedAssets,
+        'accumulation_simulator',
+        'distribution_simulator'
+      );
     }
   }, [
     accumulationSimulation.result.calculatedValue,
     accumulationSimulation.result.isSuccess,
     accumulationSimulation.settings.questionType,
+    analytics,
   ]);
 
   // タブ切り替え時にpurposeを強制
@@ -158,7 +188,10 @@ export default function SimulationPage() {
       {/* モバイル用「条件を変更する」ボタン */}
       <div className="lg:hidden">
         <button
-          onClick={() => setIsSettingsPanelOpen(true)}
+          onClick={() => {
+            setIsSettingsPanelOpen(true);
+            analytics.trackBottomSheetInteraction('open', 'simulation_settings');
+          }}
           className="fixed bottom-6 right-6 bg-[var(--color-lp-mint)] text-white px-6 py-3 
                      rounded-full hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105
                      shadow-xl flex items-center gap-2 z-40"
@@ -170,7 +203,10 @@ export default function SimulationPage() {
         {/* 共通ボトムシート */}
         <SimulationSettingsBottomSheet
           open={isSettingsPanelOpen}
-          onClose={() => setIsSettingsPanelOpen(false)}
+          onClose={() => {
+            setIsSettingsPanelOpen(false);
+            analytics.trackBottomSheetInteraction('close', 'simulation_settings');
+          }}
           title="条件を変更する"
           initialSettings={
             activeTab === '#accumulation'
@@ -266,7 +302,12 @@ export default function SimulationPage() {
       </div>
 
       {/* 関連銘柄セクション */}
-      <RelatedStocksSection currentSymbol={symbol} />
+      <RelatedStocksSection
+        currentSymbol={symbol}
+        onStockClick={(clickedSymbol, currentSymbol, positionInList) => {
+          analytics.trackRelatedStockClick(clickedSymbol, currentSymbol, positionInList);
+        }}
+      />
     </main>
   );
 }

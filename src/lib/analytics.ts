@@ -143,3 +143,173 @@ export const sendError = (error: Error) => {
     label: error.message,
   });
 };
+
+// シミュレーションページ固有のイベント
+
+// ページ遷移（タブ切り替え）イベント
+export const sendSimulationTabSwitch = (params: { from_tab: string; to_tab: string }) => {
+  sendEvent({
+    action: 'tab_switch',
+    category: 'Simulation_Page',
+    label: `${params.from_tab}_to_${params.to_tab}`,
+    value: 1,
+  });
+};
+
+// 設定変更イベント
+export const sendSimulationSettingChange = (params: {
+  setting_name: string;
+  old_value: string | number;
+  new_value: string | number;
+  question_type: string;
+}) => {
+  sendEvent({
+    action: 'setting_change',
+    category: 'Simulation_Page',
+    label: `${params.setting_name}_${params.question_type}`,
+    value: typeof params.new_value === 'number' ? params.new_value : 1,
+  });
+};
+
+// 質問タイプ変更イベント
+export const sendQuestionTypeChange = (params: {
+  simulator_type: 'accumulation' | 'distribution';
+  old_question: string;
+  new_question: string;
+}) => {
+  sendEvent({
+    action: 'question_type_change',
+    category: 'Simulation_Page',
+    label: `${params.simulator_type}_${params.old_question}_to_${params.new_question}`,
+    value: 1,
+  });
+};
+
+// ボトムシート開閉イベント
+export const sendBottomSheetInteraction = (params: {
+  action: 'open' | 'close';
+  sheet_type: string;
+}) => {
+  sendEvent({
+    action: `bottom_sheet_${params.action}`,
+    category: 'Simulation_Page',
+    label: params.sheet_type,
+    value: 1,
+  });
+};
+
+// 関連銘柄クリックイベント
+export const sendRelatedStockClick = (params: {
+  clicked_symbol: string;
+  current_symbol: string;
+  position_in_list: number;
+}) => {
+  sendEvent({
+    action: 'related_stock_click',
+    category: 'Simulation_Page',
+    label: `${params.current_symbol}_to_${params.clicked_symbol}`,
+    value: params.position_in_list,
+  });
+};
+
+// 資産連携イベント（資産形成→資産活用）
+export const sendAssetInheritance = (params: {
+  inherited_amount: number;
+  from_simulator: string;
+  to_simulator: string;
+}) => {
+  sendEvent({
+    action: 'asset_inheritance',
+    category: 'Simulation_Page',
+    label: `${params.from_simulator}_to_${params.to_simulator}`,
+    value: params.inherited_amount,
+  });
+};
+
+// シミュレーション計算完了イベント
+export const sendSimulationCalculationComplete = (params: {
+  simulator_type: 'accumulation' | 'distribution';
+  question_type: string;
+  calculation_time_ms: number;
+  result_value: number;
+}) => {
+  sendEvent({
+    action: 'calculation_complete',
+    category: 'Simulation_Page',
+    label: `${params.simulator_type}_${params.question_type}`,
+    value: params.calculation_time_ms,
+  });
+};
+
+// チャート表示完了イベント
+export const sendChartRendered = (params: {
+  chart_type: string;
+  simulator_type: 'accumulation' | 'distribution';
+  data_points: number;
+}) => {
+  sendEvent({
+    action: 'chart_rendered',
+    category: 'Simulation_Page',
+    label: `${params.simulator_type}_${params.chart_type}`,
+    value: params.data_points,
+  });
+};
+
+// セクション滞在時間イベント
+export const sendSectionTimeSpent = (params: {
+  section_name: string;
+  time_spent_ms: number;
+  session_total_time_ms: number;
+}) => {
+  sendEvent({
+    action: 'section_time_spent',
+    category: 'Simulation_Page',
+    label: params.section_name,
+    value: params.time_spent_ms,
+  });
+
+  // GA4推奨イベントも送信
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'timing_complete', {
+      name: params.section_name,
+      value: params.time_spent_ms,
+      custom_parameters: {
+        section_engagement_ratio: (
+          (params.time_spent_ms / params.session_total_time_ms) *
+          100
+        ).toFixed(2),
+        session_total_time: params.session_total_time_ms,
+      },
+    });
+  }
+};
+
+// ページ離脱時の詳細滞在時間
+export const sendPageSessionComplete = (params: {
+  total_time_ms: number;
+  accumulation_time_ms: number;
+  distribution_time_ms: number;
+  tab_switches: number;
+  interactions_count: number;
+}) => {
+  sendEvent({
+    action: 'session_complete',
+    category: 'Simulation_Page',
+    label: 'page_session',
+    value: params.total_time_ms,
+  });
+
+  // GA4推奨イベントも送信
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'session_complete', {
+      session_duration: params.total_time_ms,
+      custom_parameters: {
+        accumulation_section_time: params.accumulation_time_ms,
+        distribution_section_time: params.distribution_time_ms,
+        tab_switches: params.tab_switches,
+        total_interactions: params.interactions_count,
+        engagement_score: Math.min(100, params.interactions_count * 10 + params.tab_switches * 5),
+      },
+    });
+  }
+};

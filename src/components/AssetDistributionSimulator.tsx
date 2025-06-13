@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { useAssetDistributionSimulation } from '@/hooks/useSimulation';
-import { USE_QUESTIONS, UseQuestionType } from '@/types/simulationTypes';
+import {
+  USE_QUESTIONS,
+  UseQuestionType,
+  SimulationSettings,
+  SimulationResult,
+} from '@/types/simulationTypes';
 import { formatCurrency, formatNumber, formatPercentage } from '@/utils/simulationCalculations';
 import SimulationChart from '@/components/SimulationChart';
 import AnimatedNumber from '@/components/AnimatedNumber';
@@ -12,18 +17,35 @@ interface AssetDistributionSimulatorProps {
   className?: string;
   defaultQuestionType?: UseQuestionType;
   inheritedAssets?: number; // 資産形成シミュレーターからの引き継ぎ
+  // 外部から設定状態を受け取る場合
+  externalSettings?: SimulationSettings;
+  externalResult?: SimulationResult;
+  externalIsCalculating?: boolean;
+  externalUpdateSetting?: (key: keyof SimulationSettings, value: any) => void;
+  externalSetQuestionType?: (questionType: UseQuestionType) => void;
 }
 
 export default function AssetDistributionSimulator({
   className = '',
   defaultQuestionType = 'asset-lifespan',
   inheritedAssets,
+  externalSettings,
+  externalResult,
+  externalIsCalculating,
+  externalUpdateSetting,
+  externalSetQuestionType,
 }: AssetDistributionSimulatorProps) {
-  const { settings, result, isCalculating, updateSetting, setQuestionType } =
-    useAssetDistributionSimulation({
-      questionType: defaultQuestionType,
-      initialAssets: inheritedAssets || 10000000,
-    });
+  const internalSimulation = useAssetDistributionSimulation({
+    questionType: defaultQuestionType,
+    initialAssets: inheritedAssets || 10000000,
+  });
+
+  // 外部設定がある場合はそれを使用、なければ内部設定を使用
+  const settings = externalSettings || internalSimulation.settings;
+  const result = externalResult || internalSimulation.result;
+  const isCalculating = externalIsCalculating ?? internalSimulation.isCalculating;
+  const updateSetting = externalUpdateSetting || internalSimulation.updateSetting;
+  const setQuestionType = externalSetQuestionType || internalSimulation.setQuestionType;
 
   const [isQuestionDropdownOpen, setIsQuestionDropdownOpen] = useState(false);
   const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
@@ -244,7 +266,7 @@ export default function AssetDistributionSimulator({
                 <button
                   key={question.value}
                   onClick={() => {
-                    setQuestionType(question.value);
+                    setQuestionType(question.value as UseQuestionType);
                     setIsQuestionDropdownOpen(false);
                   }}
                   className={`w-full text-left p-3 hover:bg-[var(--color-surface-alt)] transition-colors ${
@@ -490,54 +512,6 @@ export default function AssetDistributionSimulator({
               )}
             </div>
           </div>
-
-          {/* フローティングボタン */}
-          <button
-            onClick={() => setIsSettingsPanelOpen(true)}
-            className="fixed bottom-6 right-6 bg-[var(--color-lp-mint)] text-white px-6 py-3 
-                       rounded-full hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105
-                       shadow-xl flex items-center gap-2 z-40"
-          >
-            <SlidersHorizontal className="w-5 h-5" />
-            <span className="font-medium">条件を変更する</span>
-          </button>
-
-          {/* ボトムシート */}
-          {isSettingsPanelOpen && (
-            <div className="fixed inset-0 z-50">
-              {/* オーバーレイ */}
-              <div
-                className="absolute inset-0 bg-black/50"
-                onClick={() => setIsSettingsPanelOpen(false)}
-              />
-
-              {/* ボトムシート */}
-              <div
-                className="absolute bottom-0 left-0 right-0 bg-[var(--color-surface)] 
-                             rounded-t-2xl max-h-[80vh] overflow-y-auto
-                             transform transition-transform duration-300
-                             animate-in slide-in-from-bottom"
-              >
-                <div className="p-4">
-                  {/* ハンドル */}
-                  <div className="w-12 h-1 bg-[var(--color-gray-300)] rounded-full mx-auto mb-4" />
-
-                  {/* 閉じるボタン */}
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-[var(--color-gray-900)]">設定を変更</h3>
-                    <button
-                      onClick={() => setIsSettingsPanelOpen(false)}
-                      className="text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)] p-2"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <SettingsPanel isMobile />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* エラー表示 */}
@@ -548,5 +522,328 @@ export default function AssetDistributionSimulator({
         )}
       </div>
     </section>
+  );
+}
+
+export function AssetDistributionSettingsPanel({
+  settings,
+  updateSetting,
+  setQuestionType,
+  isQuestionDropdownOpen,
+  setIsQuestionDropdownOpen,
+  isMobile = false,
+  inheritedAssets,
+  result,
+}: {
+  settings: SimulationSettings;
+  updateSetting: (key: keyof SimulationSettings, value: any) => void;
+  setQuestionType: (questionType: UseQuestionType) => void;
+  isQuestionDropdownOpen: boolean;
+  setIsQuestionDropdownOpen: (open: boolean) => void;
+  isMobile?: boolean;
+  inheritedAssets?: number;
+  result: any;
+}) {
+  // InputField, SelectField, OutputField, isInputField, isOutputField, getCurrentQuestionを再定義
+  const InputField = ({
+    label,
+    value,
+    onChange,
+    min,
+    max,
+    step,
+    unit = '',
+    formatValue,
+  }: {
+    label: string;
+    value: number;
+    onChange: (value: number) => void;
+    min: number;
+    max: number;
+    step: number;
+    unit?: string;
+    formatValue?: (value: number) => string;
+  }) => (
+    <div className="space-y-3">
+      <div className="flex justify-between items-center">
+        <label className="text-sm font-medium text-[var(--color-gray-700)]">{label}</label>
+        <span className="text-sm font-bold text-[var(--color-lp-navy)]">
+          {formatValue ? formatValue(value) : `${formatNumber(value)}${unit}`}
+        </span>
+      </div>
+      <div className="space-y-2">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-full h-2 bg-[var(--color-lp-mint)]/20 rounded-lg appearance-none cursor-pointer
+                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--color-lp-mint)]
+                     [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg
+                     [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
+        />
+        <input
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-full px-3 py-2 border border-[var(--color-lp-mint)]/30 rounded-lg
+                     focus:border-[var(--color-lp-mint)] focus:ring-2 focus:ring-[var(--color-lp-mint)]/20
+                     focus:outline-none transition-all text-sm"
+        />
+      </div>
+    </div>
+  );
+
+  const SelectField = ({
+    label,
+    value,
+    onChange,
+    options,
+  }: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    options: Array<{ value: string; label: string }>;
+  }) => (
+    <div className="space-y-3">
+      <label className="text-sm font-medium text-[var(--color-gray-700)]">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2 border border-[var(--color-lp-mint)]/30 rounded-lg
+                   focus:border-[var(--color-lp-mint)] focus:ring-2 focus:ring-[var(--color-lp-mint)]/20
+                   focus:outline-none transition-all text-sm bg-white"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const OutputField = ({
+    label,
+    value,
+    unit = '',
+    formatValue,
+  }: {
+    label: string;
+    value: number | undefined;
+    unit?: string;
+    formatValue?: (value: number) => string;
+  }) => (
+    <div className="bg-[var(--color-primary)]/10 rounded-lg p-4 border-2 border-[var(--color-primary)]/20">
+      <label className="block text-sm font-medium text-[var(--color-gray-700)] mb-2">{label}</label>
+      <div className="text-2xl font-bold text-[var(--color-primary)]">
+        {value !== undefined
+          ? formatValue
+            ? formatValue(value)
+            : `${formatNumber(value)}${unit}`
+          : '計算中...'}
+      </div>
+    </div>
+  );
+
+  const isInputField = (field: string) => {
+    switch (settings.questionType) {
+      case 'asset-lifespan':
+        return ['initialAssets', 'averageYield', 'withdrawalAmount', 'withdrawalType'].includes(
+          field
+        );
+      case 'required-assets':
+        return ['averageYield', 'years', 'withdrawalAmount', 'withdrawalType'].includes(field);
+      case 'withdrawal-amount':
+        return ['initialAssets', 'averageYield', 'years', 'withdrawalType'].includes(field);
+      default:
+        return false;
+    }
+  };
+
+  const isOutputField = (field: string) => {
+    switch (settings.questionType) {
+      case 'asset-lifespan':
+        return field === 'years';
+      case 'required-assets':
+        return field === 'initialAssets';
+      case 'withdrawal-amount':
+        return field === 'withdrawalAmount';
+      default:
+        return false;
+    }
+  };
+
+  const getCurrentQuestion = () => {
+    return USE_QUESTIONS.find((q) => q.value === settings.questionType);
+  };
+
+  return (
+    <div
+      className={`bg-[var(--color-surface)] rounded-2xl p-6 shadow-lg ${isMobile ? 'border-t border-[var(--color-gray-200)]' : ''}`}
+    >
+      {/* 問い選択ドロップダウン */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-[var(--color-gray-700)] mb-3">
+          知りたいことは？
+        </label>
+        <div className="relative">
+          <button
+            onClick={() => setIsQuestionDropdownOpen(!isQuestionDropdownOpen)}
+            className="w-full flex items-center justify-between p-3 border border-[var(--color-gray-300)] 
+                       rounded-lg text-left hover:border-[var(--color-lp-mint)] transition-colors"
+          >
+            <div>
+              <div className="font-medium text-[var(--color-gray-900)]">
+                {getCurrentQuestion()?.label}
+              </div>
+              <div className="text-xs text-[var(--color-gray-400)] mt-1">
+                {getCurrentQuestion()?.description}
+              </div>
+            </div>
+            <ChevronDown
+              className={`w-5 h-5 text-[var(--color-gray-400)] transition-transform ${
+                isQuestionDropdownOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          {isQuestionDropdownOpen && (
+            <div
+              className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-surface)] border 
+                           border-[var(--color-gray-300)] rounded-lg shadow-lg z-20"
+            >
+              {USE_QUESTIONS.map((question) => (
+                <button
+                  key={question.value}
+                  onClick={() => {
+                    setQuestionType(question.value as UseQuestionType);
+                    setIsQuestionDropdownOpen(false);
+                  }}
+                  className={`w-full text-left p-3 hover:bg-[var(--color-surface-alt)] transition-colors ${
+                    question.value === settings.questionType
+                      ? 'bg-[var(--color-primary)] bg-opacity-10'
+                      : ''
+                  }`}
+                >
+                  <div className="font-medium text-[var(--color-gray-900)]">{question.label}</div>
+                  <div className="text-xs text-[var(--color-gray-400)] mt-1">
+                    {question.description}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 引き継ぎ情報表示 */}
+      {inheritedAssets && (
+        <div className="mb-6 p-3 bg-[var(--color-lp-mint)]/10 rounded-lg border border-[var(--color-lp-mint)]/20">
+          <div className="text-xs text-[var(--color-lp-navy)] font-medium mb-1">
+            資産形成シミュレーターからの引き継ぎ
+          </div>
+          <div className="text-sm font-bold text-[var(--color-lp-navy)]">
+            想定元本: {formatCurrency(inheritedAssets)}
+          </div>
+        </div>
+      )}
+
+      {/* 入力項目 */}
+      <div className="space-y-6">
+        {isInputField('initialAssets') && (
+          <InputField
+            label="保有資産額"
+            value={settings.initialAssets || 0}
+            onChange={(value) => updateSetting('initialAssets', value)}
+            min={1000000}
+            max={100000000}
+            step={100000}
+            formatValue={(value) => formatCurrency(value)}
+          />
+        )}
+
+        {isInputField('averageYield') && (
+          <InputField
+            label="運用利回り"
+            value={settings.averageYield}
+            onChange={(value) => updateSetting('averageYield', value)}
+            min={0}
+            max={15}
+            step={0.1}
+            unit="%"
+          />
+        )}
+
+        {isInputField('years') && (
+          <InputField
+            label="取り崩し期間"
+            value={settings.years}
+            onChange={(value) => updateSetting('years', value)}
+            min={1}
+            max={50}
+            step={1}
+            unit="年"
+          />
+        )}
+
+        {isInputField('withdrawalAmount') && (
+          <InputField
+            label="月間取り崩し額"
+            value={settings.withdrawalAmount || 0}
+            onChange={(value) => updateSetting('withdrawalAmount', value)}
+            min={1}
+            max={100}
+            step={1}
+            unit="万円"
+          />
+        )}
+
+        {isInputField('withdrawalType') && (
+          <SelectField
+            label="取り崩し方法"
+            value={settings.withdrawalType || 'fixed'}
+            onChange={(value) => updateSetting('withdrawalType', value)}
+            options={[
+              { value: 'fixed', label: '定額取り崩し（毎月一定額）' },
+              { value: 'percentage', label: '定率取り崩し（資産の一定割合）' },
+            ]}
+          />
+        )}
+      </div>
+
+      {/* 出力項目 */}
+      <div className="mt-6 space-y-4">
+        {isOutputField('years') && (
+          <OutputField
+            label="資産寿命"
+            value={result.calculatedValue}
+            formatValue={(value) => `${value.toFixed(1)}年`}
+          />
+        )}
+
+        {isOutputField('initialAssets') && (
+          <OutputField
+            label="必要資産額"
+            value={result.calculatedValue}
+            formatValue={(value) => formatCurrency(value)}
+          />
+        )}
+
+        {isOutputField('withdrawalAmount') && (
+          <OutputField
+            label="可能取り崩し額"
+            value={result.calculatedValue}
+            formatValue={(value) => `${formatNumber(value)}万円`}
+          />
+        )}
+      </div>
+    </div>
   );
 }

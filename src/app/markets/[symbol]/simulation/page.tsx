@@ -2,9 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import AssetAccumulationSimulator from '@/components/AssetAccumulationSimulator';
-import AssetDistributionSimulator from '@/components/AssetDistributionSimulator';
-import { useAssetAccumulationSimulation } from '@/hooks/useSimulation';
+import AssetAccumulationSimulator, {
+  AssetAccumulationSettingsPanel,
+} from '@/components/AssetAccumulationSimulator';
+import AssetDistributionSimulator, {
+  AssetDistributionSettingsPanel,
+} from '@/components/AssetDistributionSimulator';
+import {
+  useAssetAccumulationSimulation,
+  useAssetDistributionSimulation,
+} from '@/hooks/useSimulation';
+import { SlidersHorizontal, X } from 'lucide-react';
+import SimulationSettingsBottomSheet from '@/components/SimulationSettingsBottomSheet';
+import { SimulationSettings, SimulationResult } from '@/types/simulationTypes';
 
 interface PageParams {
   symbol: string;
@@ -18,11 +28,30 @@ export default function SimulationPage() {
 
   // 資産形成シミュレーションの状態を追跡
   const accumulationSimulation = useAssetAccumulationSimulation();
+  const distributionSimulation = useAssetDistributionSimulation();
   const [inheritedAssets, setInheritedAssets] = useState<number | undefined>(undefined);
 
   // URL パラメータから初期設定を取得
   const initialQuestionType = searchParams.get('q') || 'total-assets';
   const showDistribution = searchParams.get('mode') === 'distribution';
+
+  // ハッシュ監視
+  const [activeTab, setActiveTab] = useState<string>('#accumulation');
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setActiveTab(window.location.hash || '#accumulation');
+      const onHashChange = () => setActiveTab(window.location.hash || '#accumulation');
+      window.addEventListener('hashchange', onHashChange);
+      return () => window.removeEventListener('hashchange', onHashChange);
+    }
+  }, []);
+
+  // ボトムシート開閉
+  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+
+  // ドロップダウン開閉state
+  const [isAccumulationDropdownOpen, setIsAccumulationDropdownOpen] = useState(false);
+  const [isDistributionDropdownOpen, setIsDistributionDropdownOpen] = useState(false);
 
   // 資産形成の結果が変更されたときに、資産活用シミュレーターに連携
   useEffect(() => {
@@ -38,6 +67,48 @@ export default function SimulationPage() {
     accumulationSimulation.result.isSuccess,
     accumulationSimulation.settings.questionType,
   ]);
+
+  // タブ切り替え時にpurposeを強制
+  useEffect(() => {
+    if (activeTab === '#accumulation' && accumulationSimulation.settings.purpose !== 'save') {
+      accumulationSimulation.resetToDefaults();
+    }
+    if (activeTab === '#distribution' && distributionSimulation.settings.purpose !== 'use') {
+      distributionSimulation.resetToDefaults();
+    }
+  }, [activeTab]);
+
+  // Intersection Observerでセクションの表示状態を監視し、activeTabを自動更新
+  useEffect(() => {
+    const accumulation = document.getElementById('accumulation');
+    const distribution = document.getElementById('distribution');
+    if (!accumulation || !distribution) return;
+
+    let ratios = { accumulation: 0, distribution: 0 };
+    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.target.id === 'accumulation') {
+          ratios.accumulation = entry.intersectionRatio;
+        } else if (entry.target.id === 'distribution') {
+          ratios.distribution = entry.intersectionRatio;
+        }
+      });
+      if (ratios.accumulation >= 0.51 && activeTab !== '#accumulation') {
+        setActiveTab('#accumulation');
+      } else if (ratios.distribution >= 0.51 && activeTab !== '#distribution') {
+        setActiveTab('#distribution');
+      }
+    };
+    const observer = new window.IntersectionObserver(handleIntersect, {
+      root: null,
+      threshold: Array.from({ length: 101 }, (_, i) => i / 100), // 0, 0.01, ..., 1.0
+    });
+    observer.observe(accumulation);
+    observer.observe(distribution);
+    return () => {
+      observer.disconnect();
+    };
+  }, [activeTab]);
 
   return (
     <main className="min-h-screen bg-[var(--color-surface)]">
@@ -61,13 +132,21 @@ export default function SimulationPage() {
           <nav className="flex space-x-8 overflow-x-auto scrollbar-none">
             <a
               href="#accumulation"
-              className="whitespace-nowrap py-3 px-1 border-b-2 border-[var(--color-lp-mint)] text-[var(--color-lp-mint)] font-medium text-sm"
+              className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === '#accumulation'
+                  ? 'border-[var(--color-lp-mint)] text-[var(--color-lp-mint)]'
+                  : 'border-transparent text-[var(--color-gray-500)] hover:text-[var(--color-gray-700)] hover:border-[var(--color-gray-300)]'
+              }`}
             >
               資産形成
             </a>
             <a
               href="#distribution"
-              className="whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-[var(--color-gray-500)] hover:text-[var(--color-gray-700)] hover:border-[var(--color-gray-300)] font-medium text-sm"
+              className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === '#distribution'
+                  ? 'border-[var(--color-lp-mint)] text-[var(--color-lp-mint)]'
+                  : 'border-transparent text-[var(--color-gray-500)] hover:text-[var(--color-gray-700)] hover:border-[var(--color-gray-300)]'
+              }`}
             >
               資産活用
             </a>
@@ -75,9 +154,88 @@ export default function SimulationPage() {
         </div>
       </div>
 
+      {/* モバイル用「条件を変更する」ボタン */}
+      <div className="lg:hidden">
+        <button
+          onClick={() => setIsSettingsPanelOpen(true)}
+          className="fixed bottom-6 right-6 bg-[var(--color-lp-mint)] text-white px-6 py-3 
+                     rounded-full hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105
+                     shadow-xl flex items-center gap-2 z-40"
+        >
+          <SlidersHorizontal className="w-5 h-5" />
+          <span className="font-medium">条件を変更する</span>
+        </button>
+
+        {/* 共通ボトムシート */}
+        <SimulationSettingsBottomSheet
+          open={isSettingsPanelOpen}
+          onClose={() => setIsSettingsPanelOpen(false)}
+          title="条件を変更する"
+          initialSettings={
+            activeTab === '#accumulation'
+              ? accumulationSimulation.settings
+              : distributionSimulation.settings
+          }
+          onAnalyze={(newSettings: SimulationSettings) => {
+            if (activeTab === '#accumulation') {
+              accumulationSimulation.updateMultipleSettings(newSettings);
+              accumulationSimulation.executeSimulation();
+            } else {
+              distributionSimulation.updateMultipleSettings(newSettings);
+              distributionSimulation.executeSimulation();
+            }
+            setIsSettingsPanelOpen(false);
+          }}
+          isAnalyzing={false}
+        >
+          {({
+            localSettings,
+            setLocalSettings,
+            localResult,
+          }: {
+            localSettings: SimulationSettings;
+            setLocalSettings: (settings: SimulationSettings) => void;
+            localResult: SimulationResult;
+          }) =>
+            activeTab === '#accumulation' ? (
+              <AssetAccumulationSettingsPanel
+                settings={localSettings}
+                updateSetting={(key, value) => setLocalSettings({ ...localSettings, [key]: value })}
+                setQuestionType={(questionType) =>
+                  setLocalSettings({ ...localSettings, questionType })
+                }
+                isQuestionDropdownOpen={isAccumulationDropdownOpen}
+                setIsQuestionDropdownOpen={setIsAccumulationDropdownOpen}
+                isMobile={true}
+                result={localResult}
+              />
+            ) : (
+              <AssetDistributionSettingsPanel
+                settings={localSettings}
+                updateSetting={(key, value) => setLocalSettings({ ...localSettings, [key]: value })}
+                setQuestionType={(questionType) =>
+                  setLocalSettings({ ...localSettings, questionType })
+                }
+                isQuestionDropdownOpen={isDistributionDropdownOpen}
+                setIsQuestionDropdownOpen={setIsDistributionDropdownOpen}
+                isMobile={true}
+                result={localResult}
+              />
+            )
+          }
+        </SimulationSettingsBottomSheet>
+      </div>
+
       {/* 資産形成シミュレーター */}
       <div id="accumulation">
-        <AssetAccumulationSimulator defaultQuestionType={initialQuestionType as any} />
+        <AssetAccumulationSimulator
+          defaultQuestionType={initialQuestionType as any}
+          externalSettings={accumulationSimulation.settings}
+          externalResult={accumulationSimulation.result}
+          externalIsCalculating={accumulationSimulation.isCalculating}
+          externalUpdateSetting={accumulationSimulation.updateSetting}
+          externalSetQuestionType={accumulationSimulation.setQuestionType}
+        />
       </div>
 
       {/* 連携インジケーター */}
@@ -96,7 +254,14 @@ export default function SimulationPage() {
 
       {/* 資産活用シミュレーター */}
       <div id="distribution">
-        <AssetDistributionSimulator inheritedAssets={inheritedAssets} />
+        <AssetDistributionSimulator
+          inheritedAssets={inheritedAssets}
+          externalSettings={distributionSimulation.settings}
+          externalResult={distributionSimulation.result}
+          externalIsCalculating={distributionSimulation.isCalculating}
+          externalUpdateSetting={distributionSimulation.updateSetting}
+          externalSetQuestionType={distributionSimulation.setQuestionType}
+        />
       </div>
     </main>
   );

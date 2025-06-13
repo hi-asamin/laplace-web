@@ -37,7 +37,6 @@ export default function SimulationSettingsPanel({
       purpose,
       questionType: defaultQuestionType,
       // パラメータの初期化
-      initialPrincipal: purpose === 'save' ? 0 : 10000000,
       monthlyAmount: purpose === 'save' ? 30000 : undefined,
       targetAmount: purpose === 'save' ? undefined : undefined,
       initialAssets: purpose === 'use' ? 10000000 : undefined,
@@ -75,15 +74,13 @@ export default function SimulationSettingsPanel({
     if (settings.purpose === 'save') {
       switch (settings.questionType) {
         case 'total-assets':
-          return ['averageYield', 'years', 'initialPrincipal', 'monthlyAmount'].includes(field);
+          return ['averageYield', 'years', 'monthlyAmount'].includes(field);
         case 'required-yield':
-          return ['targetAmount', 'years', 'initialPrincipal', 'monthlyAmount'].includes(field);
+          return ['targetAmount', 'years', 'monthlyAmount'].includes(field);
         case 'required-monthly':
-          return ['targetAmount', 'averageYield', 'years', 'initialPrincipal'].includes(field);
+          return ['targetAmount', 'averageYield', 'years'].includes(field);
         case 'required-years':
-          return ['targetAmount', 'averageYield', 'initialPrincipal', 'monthlyAmount'].includes(
-            field
-          );
+          return ['targetAmount', 'averageYield', 'monthlyAmount'].includes(field);
       }
     } else {
       switch (settings.questionType) {
@@ -283,44 +280,6 @@ export default function SimulationSettingsPanel({
         {/* 貯めるモードの設定項目 */}
         {settings.purpose === 'save' && (
           <>
-            {/* 初期投資元本 */}
-            {isInputField('initialPrincipal') && (
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-gray-700)]">
-                  初期投資元本（万円）
-                  <Tooltip
-                    title="初期投資元本"
-                    content="最初に一括で投資する金額を設定します。0万円〜1000万円の範囲で設定できます。"
-                  >
-                    <span className="sr-only">初期投資元本の説明</span>
-                  </Tooltip>
-                </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min={0}
-                    max={10000000}
-                    step={10000}
-                    value={settings.initialPrincipal || 0}
-                    onChange={(e) => updateSetting('initialPrincipal', Number(e.target.value))}
-                    className="flex-1 accent-[var(--color-primary)]"
-                  />
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={0}
-                      value={Math.round((settings.initialPrincipal || 0) / 10000)}
-                      onChange={(e) =>
-                        updateSetting('initialPrincipal', Number(e.target.value) * 10000)
-                      }
-                      className="w-20 px-2 py-1 border border-[var(--color-gray-300)] rounded text-right text-sm"
-                    />
-                    <span className="text-sm text-[var(--color-gray-700)]">万円</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* 毎月積立金額 */}
             {isInputField('monthlyAmount') && (
               <div className="space-y-2">

@@ -24,6 +24,7 @@ interface UseSimulationReturn {
   updateMultipleSettings: (updates: Partial<SimulationSettings>) => void;
   setQuestionType: (questionType: SaveQuestionType | UseQuestionType) => void;
   resetToDefaults: () => void;
+  executeSimulation: () => void;
 }
 
 // デフォルト設定
@@ -65,8 +66,6 @@ export function useSimulation({
 
   // 計算結果をメモ化
   const result = useMemo((): SimulationResult => {
-    setIsCalculating(true);
-
     try {
       const calculationResult =
         purpose === 'save'
@@ -80,14 +79,19 @@ export function useSimulation({
         isSuccess: false,
         errorMessage: error instanceof Error ? error.message : '計算エラーが発生しました',
       };
-    } finally {
-      // 計算完了を少し遅延させてローディング状態を見せる
-      setTimeout(() => setIsCalculating(false), 100);
     }
+  }, [settings, purpose]);
+
+  // 計算状態の管理
+  useEffect(() => {
+    setIsCalculating(true);
+    const timer = setTimeout(() => setIsCalculating(false), 100);
+    return () => clearTimeout(timer);
   }, [settings, purpose]);
 
   // 設定更新関数
   const updateSetting = useCallback((key: keyof SimulationSettings, value: any) => {
+    console.log(key, value);
     setSettings((prev) => ({
       ...prev,
       [key]: value,
@@ -178,6 +182,11 @@ export function useSimulation({
     }
   }, [purpose, settings.purpose]);
 
+  // 再計算を強制トリガーする関数
+  const executeSimulation = useCallback(() => {
+    setSettings((prev) => ({ ...prev })); // 新しい参照で再計算をトリガー
+  }, []);
+
   return {
     settings,
     result,
@@ -186,6 +195,7 @@ export function useSimulation({
     updateMultipleSettings,
     setQuestionType,
     resetToDefaults,
+    executeSimulation,
   };
 }
 

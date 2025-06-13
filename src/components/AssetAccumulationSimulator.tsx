@@ -3,84 +3,40 @@
 import { useState } from 'react';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { useAssetAccumulationSimulation } from '@/hooks/useSimulation';
-import { SAVE_QUESTIONS, SaveQuestionType } from '@/types/simulationTypes';
+import { SAVE_QUESTIONS, SaveQuestionType, UseQuestionType } from '@/types/simulationTypes';
 import { formatCurrency, formatNumber, formatPercentage } from '@/utils/simulationCalculations';
 import SimulationChart from '@/components/SimulationChart';
 import AnimatedNumber from '@/components/AnimatedNumber';
+import { SimulationSettings, SimulationResult } from '@/types/simulationTypes';
 
 interface AssetAccumulationSimulatorProps {
   className?: string;
   defaultQuestionType?: SaveQuestionType;
+  // 外部から設定状態を受け取る場合
+  externalSettings?: SimulationSettings;
+  externalResult?: SimulationResult;
+  externalIsCalculating?: boolean;
+  externalUpdateSetting?: (key: keyof SimulationSettings, value: any) => void;
+  externalSetQuestionType?: (questionType: SaveQuestionType | UseQuestionType) => void;
 }
 
-export default function AssetAccumulationSimulator({
-  className = '',
-  defaultQuestionType = 'total-assets',
-}: AssetAccumulationSimulatorProps) {
-  const { settings, result, isCalculating, updateSetting, setQuestionType } =
-    useAssetAccumulationSimulation({
-      questionType: defaultQuestionType,
-    });
-
-  const [isQuestionDropdownOpen, setIsQuestionDropdownOpen] = useState(false);
-  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
-
-  // 現在選択中の問いの情報を取得
-  const getCurrentQuestion = () => {
-    return SAVE_QUESTIONS.find((q) => q.value === settings.questionType);
-  };
-
-  // 入力項目かどうかの判定
-  const isInputField = (field: string) => {
-    switch (settings.questionType) {
-      case 'total-assets':
-        return ['averageYield', 'years', 'initialPrincipal', 'monthlyAmount'].includes(field);
-      case 'required-yield':
-        return ['targetAmount', 'years', 'initialPrincipal', 'monthlyAmount'].includes(field);
-      case 'required-monthly':
-        return ['targetAmount', 'averageYield', 'years', 'initialPrincipal'].includes(field);
-      case 'required-years':
-        return ['targetAmount', 'averageYield', 'initialPrincipal', 'monthlyAmount'].includes(
-          field
-        );
-      default:
-        return false;
-    }
-  };
-
-  // 出力項目かどうかの判定
-  const isOutputField = (field: string) => {
-    switch (settings.questionType) {
-      case 'total-assets':
-        return field === 'totalAssets';
-      case 'required-yield':
-        return field === 'averageYield';
-      case 'required-monthly':
-        return field === 'monthlyAmount';
-      case 'required-years':
-        return field === 'years';
-      default:
-        return false;
-    }
-  };
-
-  // サマリーラベルの生成
-  const getSummaryLabel = () => {
-    switch (settings.questionType) {
-      case 'total-assets':
-        return `${settings.years}年後のあなたの資産総額`;
-      case 'required-yield':
-        return '目標達成に必要な利回り';
-      case 'required-monthly':
-        return '目標達成に必要な積立額';
-      case 'required-years':
-        return '目標達成に必要な期間';
-      default:
-        return `${settings.years}年後の資産総額`;
-    }
-  };
-
-  // 入力フィールドコンポーネント
+export function AssetAccumulationSettingsPanel({
+  settings,
+  updateSetting,
+  setQuestionType,
+  isQuestionDropdownOpen,
+  setIsQuestionDropdownOpen,
+  isMobile = false,
+  result,
+}: {
+  settings: SimulationSettings;
+  updateSetting: (key: keyof SimulationSettings, value: any) => void;
+  setQuestionType: (questionType: SaveQuestionType | UseQuestionType) => void;
+  isQuestionDropdownOpen: boolean;
+  setIsQuestionDropdownOpen: (open: boolean) => void;
+  isMobile?: boolean;
+  result: SimulationResult;
+}) {
   const InputField = ({
     label,
     value,
@@ -136,32 +92,41 @@ export default function AssetAccumulationSimulator({
     </div>
   );
 
-  // 出力フィールドコンポーネント
-  const OutputField = ({
-    label,
-    value,
-    unit = '',
-    formatValue,
-  }: {
-    label: string;
-    value: number | undefined;
-    unit?: string;
-    formatValue?: (value: number) => string;
-  }) => (
-    <div className="bg-[var(--color-primary)]/10 rounded-lg p-4 border-2 border-[var(--color-primary)]/20">
-      <label className="block text-sm font-medium text-[var(--color-gray-700)] mb-2">{label}</label>
-      <div className="text-2xl font-bold text-[var(--color-primary)]">
-        {value !== undefined
-          ? formatValue
-            ? formatValue(value)
-            : `${formatNumber(value)}${unit}`
-          : '計算中...'}
-      </div>
-    </div>
-  );
+  // 入力項目かどうかの判定
+  const isInputField = (field: string) => {
+    switch (settings.questionType as SaveQuestionType) {
+      case 'total-assets':
+        return ['averageYield', 'years', 'initialPrincipal', 'monthlyAmount'].includes(field);
+      case 'required-yield':
+        return ['targetAmount', 'years', 'initialPrincipal', 'monthlyAmount'].includes(field);
+      case 'required-monthly':
+        return ['targetAmount', 'averageYield', 'years', 'initialPrincipal'].includes(field);
+      case 'required-years':
+        return ['targetAmount', 'averageYield', 'initialPrincipal', 'monthlyAmount'].includes(
+          field
+        );
+      default:
+        return false;
+    }
+  };
 
-  // 設定パネルの内容
-  const SettingsPanel = ({ isMobile = false }: { isMobile?: boolean }) => (
+  // 出力項目かどうかの判定
+  const isOutputField = (field: string) => {
+    switch (settings.questionType as SaveQuestionType) {
+      case 'total-assets':
+        return field === 'totalAssets';
+      case 'required-yield':
+        return field === 'averageYield';
+      case 'required-monthly':
+        return field === 'monthlyAmount';
+      case 'required-years':
+        return field === 'years';
+      default:
+        return false;
+    }
+  };
+
+  return (
     <div
       className={`bg-[var(--color-surface)] rounded-2xl p-6 shadow-lg ${isMobile ? 'border-t border-[var(--color-gray-200)]' : ''}`}
     >
@@ -178,10 +143,10 @@ export default function AssetAccumulationSimulator({
           >
             <div>
               <div className="font-medium text-[var(--color-gray-900)]">
-                {getCurrentQuestion()?.label}
+                {SAVE_QUESTIONS.find((q) => q.value === settings.questionType)?.label}
               </div>
               <div className="text-xs text-[var(--color-gray-400)] mt-1">
-                {getCurrentQuestion()?.description}
+                {SAVE_QUESTIONS.find((q) => q.value === settings.questionType)?.description}
               </div>
             </div>
             <ChevronDown
@@ -246,18 +211,6 @@ export default function AssetAccumulationSimulator({
           />
         )}
 
-        {isInputField('initialPrincipal') && (
-          <InputField
-            label="初期投資元本"
-            value={settings.initialPrincipal || 0}
-            onChange={(value) => updateSetting('initialPrincipal', value)}
-            min={0}
-            max={50000000}
-            step={10000}
-            formatValue={(value) => formatCurrency(value)}
-          />
-        )}
-
         {isInputField('monthlyAmount') && (
           <InputField
             label="毎月積立額"
@@ -270,7 +223,9 @@ export default function AssetAccumulationSimulator({
           />
         )}
 
-        {isInputField('targetAmount') && (
+        {(settings.questionType === 'required-yield' ||
+          settings.questionType === 'required-monthly' ||
+          settings.questionType === 'required-years') && (
           <InputField
             label="目標金額"
             value={settings.targetAmount || 0}
@@ -284,11 +239,90 @@ export default function AssetAccumulationSimulator({
       </div>
 
       {/* 出力項目 */}
-      <div className="space-y-4">
-        {/* 出力フィールドはサマリー部分で表示されるため、ここでは非表示 */}
+      <div className="mt-6 space-y-4">
+        {isOutputField('totalAssets') && (
+          <div className="bg-[var(--color-primary)]/10 rounded-lg p-4 border-2 border-[var(--color-primary)]/20">
+            <div className="text-sm font-medium text-[var(--color-gray-700)] mb-2">予想資産額</div>
+            <div className="text-2xl font-bold text-[var(--color-primary)]">
+              {formatCurrency(result.calculatedValue || 0)}
+            </div>
+          </div>
+        )}
+
+        {isOutputField('averageYield') && (
+          <div className="bg-[var(--color-primary)]/10 rounded-lg p-4 border-2 border-[var(--color-primary)]/20">
+            <div className="text-sm font-medium text-[var(--color-gray-700)] mb-2">必要利回り</div>
+            <div className="text-2xl font-bold text-[var(--color-primary)]">
+              {formatPercentage(result.calculatedValue || 0)}
+            </div>
+          </div>
+        )}
+
+        {isOutputField('monthlyAmount') && (
+          <div className="bg-[var(--color-primary)]/10 rounded-lg p-4 border-2 border-[var(--color-primary)]/20">
+            <div className="text-sm font-medium text-[var(--color-gray-700)] mb-2">必要積立額</div>
+            <div className="text-2xl font-bold text-[var(--color-primary)]">
+              {formatCurrency(result.calculatedValue || 0)}
+            </div>
+          </div>
+        )}
+
+        {isOutputField('years') && (
+          <div className="bg-[var(--color-primary)]/10 rounded-lg p-4 border-2 border-[var(--color-primary)]/20">
+            <div className="text-sm font-medium text-[var(--color-gray-700)] mb-2">必要期間</div>
+            <div className="text-2xl font-bold text-[var(--color-primary)]">
+              {formatNumber(result.calculatedValue || 0)}年
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
+}
+
+export default function AssetAccumulationSimulator({
+  className = '',
+  defaultQuestionType = 'total-assets',
+  externalSettings,
+  externalResult,
+  externalIsCalculating,
+  externalUpdateSetting,
+  externalSetQuestionType,
+}: AssetAccumulationSimulatorProps) {
+  const internalSimulation = useAssetAccumulationSimulation({
+    questionType: defaultQuestionType,
+  });
+
+  // 外部設定がある場合はそれを使用、なければ内部設定を使用
+  const settings = externalSettings || internalSimulation.settings;
+  const result = externalResult || internalSimulation.result;
+  const isCalculating = externalIsCalculating ?? internalSimulation.isCalculating;
+  const updateSetting = externalUpdateSetting || internalSimulation.updateSetting;
+  const setQuestionType = externalSetQuestionType || internalSimulation.setQuestionType;
+
+  const [isQuestionDropdownOpen, setIsQuestionDropdownOpen] = useState(false);
+  const [isSettingsPanelOpen, setIsSettingsPanelOpen] = useState(false);
+
+  // 現在選択中の問いの情報を取得
+  const getCurrentQuestion = () => {
+    return SAVE_QUESTIONS.find((q) => q.value === settings.questionType);
+  };
+
+  // サマリーラベルの生成
+  const getSummaryLabel = () => {
+    switch (settings.questionType) {
+      case 'total-assets':
+        return `${settings.years}年後のあなたの資産総額`;
+      case 'required-yield':
+        return '目標達成に必要な利回り';
+      case 'required-monthly':
+        return '目標達成に必要な積立額';
+      case 'required-years':
+        return '目標達成に必要な期間';
+      default:
+        return `${settings.years}年後の資産総額`;
+    }
+  };
 
   return (
     <section className={`py-8 bg-[var(--color-lp-off-white)] ${className}`}>
@@ -296,7 +330,15 @@ export default function AssetAccumulationSimulator({
         {/* デスクトップレイアウト */}
         <div className="hidden lg:grid lg:grid-cols-2 gap-8">
           {/* 設定パネル */}
-          <SettingsPanel />
+          <AssetAccumulationSettingsPanel
+            settings={settings}
+            updateSetting={updateSetting}
+            setQuestionType={setQuestionType}
+            isQuestionDropdownOpen={isQuestionDropdownOpen}
+            setIsQuestionDropdownOpen={setIsQuestionDropdownOpen}
+            isMobile={false}
+            result={result}
+          />
 
           {/* チャート&サマリー */}
           <div className="space-y-6">
@@ -482,54 +524,6 @@ export default function AssetAccumulationSimulator({
               )}
             </div>
           </div>
-
-          {/* フローティングボタン */}
-          <button
-            onClick={() => setIsSettingsPanelOpen(true)}
-            className="fixed bottom-6 right-6 bg-[var(--color-lp-mint)] text-white px-6 py-3 
-                       rounded-full hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105
-                       shadow-xl flex items-center gap-2 z-40"
-          >
-            <SlidersHorizontal className="w-5 h-5" />
-            <span className="font-medium">条件を変更する</span>
-          </button>
-
-          {/* ボトムシート */}
-          {isSettingsPanelOpen && (
-            <div className="fixed inset-0 z-50">
-              {/* オーバーレイ */}
-              <div
-                className="absolute inset-0 bg-black/50"
-                onClick={() => setIsSettingsPanelOpen(false)}
-              />
-
-              {/* ボトムシート */}
-              <div
-                className="absolute bottom-0 left-0 right-0 bg-[var(--color-surface)] 
-                             rounded-t-2xl max-h-[80vh] overflow-y-auto
-                             transform transition-transform duration-300
-                             animate-in slide-in-from-bottom"
-              >
-                <div className="p-4">
-                  {/* ハンドル */}
-                  <div className="w-12 h-1 bg-[var(--color-gray-300)] rounded-full mx-auto mb-4" />
-
-                  {/* 閉じるボタン */}
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-[var(--color-gray-900)]">設定を変更</h3>
-                    <button
-                      onClick={() => setIsSettingsPanelOpen(false)}
-                      className="text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)] p-2"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <SettingsPanel isMobile />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* エラー表示 */}

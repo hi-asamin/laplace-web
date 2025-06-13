@@ -8,6 +8,7 @@ import AssetAccumulationSimulator, {
 import AssetDistributionSimulator, {
   AssetDistributionSettingsPanel,
 } from '@/components/AssetDistributionSimulator';
+import RelatedStocksSection from '@/components/RelatedStocksSection';
 import {
   useAssetAccumulationSimulation,
   useAssetDistributionWithInheritance,
@@ -263,6 +264,9 @@ export default function SimulationPage() {
           externalSetQuestionType={distributionSimulation.setQuestionType}
         />
       </div>
+
+      {/* 関連銘柄セクション */}
+      <RelatedStocksSection currentSymbol={symbol} />
     </main>
   );
 }

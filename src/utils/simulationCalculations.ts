@@ -286,6 +286,7 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
         let remainingAssets = initialAssets;
         let yearCount = 0;
         const monthlyWithdrawal = withdrawalAmount * 10000; // 万円を円に変換
+        const maxYears = 100; // 最大100年まで計算可能
 
         data.push({
           year: 0,
@@ -295,16 +296,39 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
           withdrawalAmount: 0,
         });
 
-        for (let year = 1; year <= years; year++) {
+        // 月ごとに計算して正確な資産寿命を求める
+        for (let month = 0; month < maxYears * 12; month++) {
+          if (remainingAssets <= 0) break;
+
+          // 運用益を加算
+          remainingAssets *= 1 + monthlyYield;
+
+          // 取り崩し
+          const withdrawal =
+            withdrawalType === 'fixed'
+              ? monthlyWithdrawal
+              : remainingAssets * (averageYield / 100 / 12);
+
+          remainingAssets -= withdrawal;
+
+          if (remainingAssets <= 0) {
+            yearCount = (month + 1) / 12;
+            remainingAssets = 0;
+            break;
+          }
+        }
+
+        // 年次データを生成（表示用）
+        remainingAssets = initialAssets;
+        const maxDisplayYears = Math.min(Math.ceil(yearCount) + 5, 50); // 表示は最大50年
+
+        for (let year = 1; year <= maxDisplayYears; year++) {
           let yearlyWithdrawal = 0;
 
           for (let month = 0; month < 12; month++) {
             if (remainingAssets <= 0) break;
 
-            // 運用益を加算
             remainingAssets *= 1 + monthlyYield;
-
-            // 取り崩し
             const withdrawal =
               withdrawalType === 'fixed'
                 ? monthlyWithdrawal
@@ -314,7 +338,6 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
             yearlyWithdrawal += withdrawal;
 
             if (remainingAssets <= 0) {
-              yearCount = year + month / 12;
               remainingAssets = 0;
               break;
             }

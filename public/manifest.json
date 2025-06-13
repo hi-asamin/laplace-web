@@ -1,17 +1,54 @@
 {
-  "name": "Laplace - 資産シミュレーター",
+  "name": "Laplace - 資産シミュレーター | NISA・投資信託シミュレーション",
   "short_name": "Laplace",
-  "description": "初心者でもワンクリックで意味のある将来比較ができる唯一の資産シミュレーター",
+  "description": "NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。初心者でも迷わない資産形成ツール。",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#00d4a1",
   "icons": [
     {
+      "src": "/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512x512.png",
@@ -20,7 +57,37 @@
       "purpose": "maskable any"
     }
   ],
-  "categories": ["finance", "productivity"],
+  "categories": ["finance", "productivity", "education"],
   "lang": "ja",
-  "orientation": "portrait-primary"
+  "dir": "ltr",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "新しいシミュレーション",
+      "short_name": "新規作成",
+      "description": "新しい資産シミュレーションを開始",
+      "url": "/markets/self/simulation",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "銘柄検索",
+      "short_name": "検索",
+      "description": "投資銘柄を検索してシミュレーション",
+      "url": "/search",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "iarc_rating_id": ""
 }

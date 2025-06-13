@@ -2,62 +2,75 @@ import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://laplace.jp';
+  const currentDate = new Date();
 
-  return [
+  // 人気銘柄リスト（検索頻度の高い銘柄）
+  const popularStocks = [
+    // 米国ETF
+    'VOO',
+    'VTI',
+    'VEA',
+    'VWO',
+    'QQQ',
+    'SPY',
+    'IVV',
+    'SCHD',
+    // 米国個別株
+    'AAPL',
+    'MSFT',
+    'GOOGL',
+    'AMZN',
+    'NVDA',
+    'TSLA',
+    'META',
+    'NFLX',
+    // 日本株
+    '7203',
+    '6758',
+    '8306',
+    '9984',
+    '8411',
+    '7974',
+    '6861',
+    '4689',
+  ];
+
+  const staticPages = [
     {
       url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
       priority: 1,
     },
     {
       url: `${baseUrl}/markets/self/simulation`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
       priority: 0.9,
     },
     {
       url: `${baseUrl}/search`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
       priority: 0.8,
     },
-    // 人気銘柄の個別ページ
-    {
-      url: `${baseUrl}/markets/AAPL/simulation`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/markets/MSFT/simulation`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/markets/VOO/simulation`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/markets/7203/simulation`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/markets/NVDA/simulation`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/markets/VTI/simulation`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
   ];
+
+  // 人気銘柄の個別シミュレーションページ
+  const stockPages = popularStocks.map((symbol) => ({
+    url: `${baseUrl}/markets/${symbol}/simulation`,
+    lastModified: currentDate,
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }));
+
+  // 人気銘柄の個別詳細ページ
+  const stockDetailPages = popularStocks.map((symbol) => ({
+    url: `${baseUrl}/markets/${symbol}`,
+    lastModified: currentDate,
+    changeFrequency: 'daily' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...stockPages, ...stockDetailPages];
 }

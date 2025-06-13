@@ -38,25 +38,31 @@ export const metadata: Metadata = {
   description:
     'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。初心者でも迷わない資産形成ツール。',
   keywords:
-    'NISA, 投資信託, 資産シミュレーション, 配当, 株式投資, ETF, インデックスファンド, 積立投資, 資産形成',
-  authors: [{ name: 'Laplace' }],
+    'NISA, 投資信託, 資産シミュレーション, 配当, 株式投資, ETF, インデックスファンド, 積立投資, 資産形成, 金融リテラシー, 投資教育, つみたてNISA, iDeCo, 資産運用',
+  authors: [{ name: 'Laplace', url: 'https://laplace.jp' }],
   creator: 'Laplace',
   publisher: 'Laplace',
+  category: 'Finance',
+  classification: 'FinTech',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
+  manifest: '/manifest.json',
   metadataBase: new URL('https://laplace.jp'),
   alternates: {
     canonical: '/',
+    languages: {
+      'ja-JP': '/',
+    },
   },
   openGraph: {
-    title: 'Laplace - その積立設定、最適ですか？',
+    title: 'Laplace - その積立設定、最適ですか？｜初心者向け資産シミュレーター',
     description:
-      'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。',
+      'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。投資初心者でも迷わない資産形成ツール。',
     url: 'https://laplace.jp',
-    siteName: 'Laplace',
+    siteName: 'Laplace - 資産シミュレーター',
     locale: 'ja_JP',
     type: 'website',
     images: [
@@ -64,23 +70,38 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
+        alt: 'Laplace - 資産シミュレーター | NISA・投資信託の将来シミュレーション',
+        type: 'image/png',
+      },
+      {
+        url: '/og-image-square.png',
+        width: 600,
+        height: 600,
         alt: 'Laplace - 資産シミュレーター',
+        type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Laplace - その積立設定、最適ですか？',
+    site: '@laplace_jp',
+    creator: '@laplace_jp',
+    title: 'Laplace - その積立設定、最適ですか？｜初心者向け資産シミュレーター',
     description:
       'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。',
-    images: ['/og-image.png'],
+    images: {
+      url: '/og-image.png',
+      alt: 'Laplace - 資産シミュレーター | NISA・投資信託の将来シミュレーション',
+    },
   },
   robots: {
     index: true,
     follow: true,
+    nocache: false,
     googleBot: {
       index: true,
       follow: true,
+      noimageindex: false,
       'max-video-preview': -1,
       'max-image-preview': 'large',
       'max-snippet': -1,
@@ -88,6 +109,16 @@ export const metadata: Metadata = {
   },
   verification: {
     google: 'your-google-site-verification-code',
+    yandex: 'your-yandex-verification-code',
+    yahoo: 'your-yahoo-verification-code',
+  },
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'Laplace',
+    'application-name': 'Laplace',
+    'msapplication-TileColor': '#00d4a1',
+    'theme-color': '#00d4a1',
   },
 };
 
@@ -96,21 +127,139 @@ const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'Laplace',
+  alternateName: 'ラプラス',
   description: '初心者でもワンクリックで意味のある将来比較ができる唯一の資産シミュレーター',
   url: 'https://laplace.jp',
   applicationCategory: 'FinanceApplication',
+  applicationSubCategory: 'Investment Simulator',
   operatingSystem: 'Web',
+  browserRequirements: 'HTML5, CSS3, JavaScript',
+  permissions: 'free',
+  softwareVersion: '1.0.0',
+  featureList: [
+    'NISA積立シミュレーション',
+    'ワンクリック自動データ入力',
+    'シナリオ横並び比較',
+    'リスク可視化',
+    'モンテカルロシミュレーション',
+    '配当キャッシュフロー分析',
+  ],
   offers: {
     '@type': 'Offer',
     price: '0',
     priceCurrency: 'JPY',
+    availability: 'https://schema.org/InStock',
+    eligibleRegion: 'JP',
+    category: 'Free',
   },
   author: {
     '@type': 'Organization',
     name: 'Laplace',
+    url: 'https://laplace.jp',
+    sameAs: ['https://twitter.com/laplace_jp'],
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Laplace',
+    url: 'https://laplace.jp',
   },
   datePublished: '2024-01-01',
+  dateModified: new Date().toISOString(),
   inLanguage: 'ja-JP',
+  isAccessibleForFree: true,
+  keywords: [
+    'NISA',
+    '資産シミュレーション',
+    '投資',
+    '資産形成',
+    '初心者',
+    'ETF',
+    'インデックスファンド',
+  ],
+  audience: {
+    '@type': 'Audience',
+    audienceType: '投資初心者',
+    geographicArea: 'Japan',
+  },
+  about: [
+    {
+      '@type': 'Thing',
+      name: 'NISA',
+      description: '少額投資非課税制度',
+    },
+    {
+      '@type': 'Thing',
+      name: '資産形成',
+      description: '長期的な資産運用による財産形成',
+    },
+    {
+      '@type': 'Thing',
+      name: 'ETF',
+      description: '上場投資信託',
+    },
+  ],
+};
+
+// FAQ構造化データ
+const faqStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: '利用料金はかかりますか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '完全無料でご利用いただけます。登録も不要で、すべての機能を無料でお使いいただけます。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '投資の知識がなくても使えますか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'はい。初心者の方でも簡単にシミュレーションができるよう設計されています。銘柄を選ぶだけで、必要なデータは自動で入力されます。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'データの精度はどの程度ですか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '複数のデータソースから最新の市場データを取得し、高い精度を保っています。株価、配当、PER/PBRなどの指標をリアルタイムで更新しています。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'NISAのシミュレーションはできますか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'はい。つみたてNISAや一般NISAでの積立投資、一括投資のシミュレーションが可能です。非課税効果も含めて将来の資産額を計算できます。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'どのような投資商品に対応していますか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '米国株、日本株、ETF、投資信託など幅広い投資商品に対応しています。人気のS&P500連動ETFや高配当ETFなども簡単にシミュレーションできます。',
+      },
+    },
+  ],
+};
+
+// パンくずリスト構造化データ
+const breadcrumbStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'ホーム',
+      item: 'https://laplace.jp',
+    },
+  ],
 };
 
 // 静的データ定義
@@ -181,6 +330,14 @@ export default function LandingPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
       />
 
       {/* クライアント機能 */}

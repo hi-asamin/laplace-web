@@ -18,27 +18,52 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: 'Laplace - 資産シミュレーション | ワンクリックで未来の最適解を',
+  title: {
+    default: 'Laplace - 資産シミュレーター | 初心者向けNISA・投資信託シミュレーション',
+    template: '%s | Laplace - 資産シミュレーター',
+  },
   description:
-    'そのNISA、最適ですか？ワンクリックで意味のある将来比較ができる唯一の資産シミュレーター。自動データ入力・シナリオ比較・リスク可視化で、あなたの資産形成をサポート。',
-  keywords: 'NISA, 資産シミュレーション, 投資, 資産形成, 将来設計',
+    'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。投資初心者でも迷わない資産形成ツール。',
+  keywords:
+    'NISA, 資産シミュレーション, 投資, 資産形成, 将来設計, ETF, インデックスファンド, 投資信託, つみたてNISA, iDeCo',
+  authors: [{ name: 'Laplace', url: 'https://laplace.jp' }],
+  creator: 'Laplace',
+  publisher: 'Laplace',
   manifest: '/manifest.json',
+  metadataBase: new URL('https://laplace.jp'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: 'Laplace - 資産シミュレーション',
-    description: 'ワンクリックで未来の最適解をシミュレーション',
+    title: 'Laplace - 資産シミュレーター | 初心者向けNISA・投資信託シミュレーション',
+    description:
+      'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。',
     type: 'website',
     locale: 'ja_JP',
-    siteName: 'Laplace',
+    siteName: 'Laplace - 資産シミュレーター',
+    url: 'https://laplace.jp',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Laplace - 資産シミュレーション',
-    description: 'ワンクリックで未来の最適解をシミュレーション',
+    site: '@laplace_jp',
+    creator: '@laplace_jp',
+    title: 'Laplace - 資産シミュレーター | 初心者向けNISA・投資信託シミュレーション',
+    description:
+      'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。',
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
+  category: 'Finance',
+  classification: 'FinTech',
 };
 
 export const viewport: Viewport = {

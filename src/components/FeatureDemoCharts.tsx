@@ -43,25 +43,29 @@ export const AutoInputDemo = () => {
 
   if (!selectedStock || !showDetails) {
     return (
-      <div className="h-64 bg-white rounded-2xl shadow-inner p-6 flex flex-col justify-center">
+      <div className="h-64 bg-white dark:bg-[var(--color-surface-1)] rounded-2xl shadow-inner p-6 flex flex-col justify-center">
         {/* 選択前の状態 */}
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="w-3 h-3 bg-[var(--color-lp-mint)] rounded-full"></div>
-            <span className="text-sm font-medium text-[var(--color-gray-700)]">銘柄を選択</span>
+            <span className="text-sm font-medium text-[var(--color-gray-700)] dark:text-[var(--color-text-secondary)]">
+              銘柄を選択
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
             {stocks.map((stock) => (
               <button
                 key={stock.symbol}
                 onClick={() => handleStockSelect(stock)}
-                className="p-4 rounded-xl border-2 border-gray-200 hover:border-[var(--color-lp-mint)]/50 
-                          transition-all text-center hover:scale-105 active:scale-95 bg-white"
+                className="p-4 rounded-xl border-2 border-gray-200 dark:border-[var(--color-surface-3)] hover:border-[var(--color-lp-mint)]/50 
+                          transition-all text-center hover:scale-105 active:scale-95 bg-white dark:bg-[var(--color-surface-2)]"
               >
-                <div className="font-mono text-lg font-bold text-[var(--color-lp-navy)] mb-1">
+                <div className="font-mono text-lg font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-1">
                   {stock.symbol}
                 </div>
-                <div className="text-xs text-gray-600">{stock.name}</div>
+                <div className="text-xs text-gray-600 dark:text-[var(--color-text-muted)]">
+                  {stock.name}
+                </div>
               </button>
             ))}
           </div>
@@ -80,13 +84,13 @@ export const AutoInputDemo = () => {
   }
 
   return (
-    <div className="h-64 bg-white rounded-2xl shadow-inner p-6 flex flex-col">
+    <div className="h-64 bg-white dark:bg-[var(--color-surface-1)] rounded-2xl shadow-inner p-6 flex flex-col">
       {/* 選択後の詳細表示 */}
       <div className="flex-1 animate-in fade-in duration-500">
         {/* ヘッダー */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="font-mono text-xl font-bold text-[var(--color-lp-navy)]">
+            <div className="font-mono text-xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
               {selectedStockData!.symbol}
             </div>
             <div className="w-4 h-4 text-[var(--color-lp-blue)]">
@@ -104,15 +108,17 @@ export const AutoInputDemo = () => {
 
         {/* 会社情報 */}
         <div className="mb-4">
-          <h3 className="text-lg font-bold text-[var(--color-lp-navy)] mb-1">
+          <h3 className="text-lg font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-1">
             {selectedStockData!.name}
           </h3>
-          <p className="text-sm text-gray-600">{selectedStockData!.fullName}</p>
+          <p className="text-sm text-gray-600 dark:text-[var(--color-text-secondary)]">
+            {selectedStockData!.fullName}
+          </p>
         </div>
 
         {/* 価格情報 */}
         <div className="mb-4">
-          <div className="text-3xl font-bold text-[var(--color-lp-navy)] mb-1">
+          <div className="text-3xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-1">
             {selectedStockData!.price}
           </div>
           <div className="text-sm text-[var(--color-success)] font-medium">
@@ -122,10 +128,12 @@ export const AutoInputDemo = () => {
 
         {/* フッター情報 */}
         <div className="flex justify-between items-center text-xs">
-          <div className="px-3 py-1 bg-[var(--color-lp-blue)]/10 rounded-full text-[var(--color-lp-blue)]">
+          <div className="px-3 py-1 bg-[var(--color-lp-blue)]/10 dark:bg-[var(--color-lp-blue)]/20 rounded-full text-[var(--color-lp-blue)]">
             {selectedStockData!.sector}
           </div>
-          <div className="text-gray-500">{selectedStockData!.marketCap}</div>
+          <div className="text-gray-500 dark:text-[var(--color-text-muted)]">
+            {selectedStockData!.marketCap}
+          </div>
         </div>
 
         {/* リセットボタン */}
@@ -198,17 +206,17 @@ export const ScenarioComparisonDemo = () => {
   };
 
   return (
-    <div className="h-64 bg-white rounded-2xl shadow-inner p-6">
+    <div className="h-64 bg-white dark:bg-[var(--color-surface-1)] rounded-2xl shadow-inner p-6">
       {/* シナリオタブ */}
-      <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1">
+      <div className="flex gap-1 mb-4 bg-gray-100 dark:bg-[var(--color-surface-2)] rounded-lg p-1">
         {scenarios.map((scenario, index) => (
           <button
             key={index}
             onClick={() => setActiveScenario(index)}
             className={`flex-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
               activeScenario === index
-                ? 'bg-white text-[var(--color-lp-navy)] shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-white dark:bg-[var(--color-surface-1)] text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] shadow-sm'
+                : 'text-gray-600 dark:text-[var(--color-text-muted)] hover:text-gray-800 dark:hover:text-[var(--color-text-secondary)]'
             }`}
           >
             {scenario.name}
@@ -224,7 +232,7 @@ export const ScenarioComparisonDemo = () => {
             className={`p-3 rounded-lg border-2 transition-all cursor-pointer ${
               activeScenario === index
                 ? 'border-[var(--color-lp-mint)] bg-[var(--color-lp-mint)]/5'
-                : 'border-gray-200 hover:border-gray-300'
+                : 'border-gray-200 dark:border-[var(--color-surface-3)] hover:border-gray-300 dark:hover:border-[var(--color-surface-4)]'
             }`}
             onClick={() => setActiveScenario(index)}
           >
@@ -232,7 +240,9 @@ export const ScenarioComparisonDemo = () => {
               <div className="text-lg font-bold" style={{ color: scenario.color }}>
                 {scenario.finalAmount}万
               </div>
-              <div className="text-xs text-gray-600">{scenario.risk}リスク</div>
+              <div className="text-xs text-gray-600 dark:text-[var(--color-text-muted)]">
+                {scenario.risk}リスク
+              </div>
             </div>
 
             <svg viewBox="0 0 200 80" className="w-full h-8">
@@ -255,12 +265,12 @@ export const ScenarioComparisonDemo = () => {
       </div>
 
       {/* アクティブシナリオの詳細 */}
-      <div className="bg-gray-50 rounded-lg p-3">
+      <div className="bg-gray-50 dark:bg-[var(--color-surface-2)] rounded-lg p-3">
         <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-[var(--color-lp-navy)]">
+          <span className="text-sm font-medium text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
             {scenarios[activeScenario].name}
           </span>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-gray-600 dark:text-[var(--color-text-secondary)]">
             10年後:{' '}
             <span className="font-bold text-[var(--color-lp-mint)]">
               {scenarios[activeScenario].finalAmount}万円
@@ -319,19 +329,21 @@ export const RiskVisualizationDemo = () => {
   const optimisticScenario = [1000, 1250, 1600, 1850, 2100, 2400, 2700, 3100, 3500, 3900];
 
   return (
-    <div className="h-64 bg-white rounded-2xl shadow-inner p-6">
+    <div className="h-64 bg-white dark:bg-[var(--color-surface-1)] rounded-2xl shadow-inner p-6">
       {/* ヘッダー */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-[var(--color-lp-blue)]" />
-          <span className="text-sm font-medium text-[var(--color-lp-navy)]">
+          <span className="text-sm font-medium text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
             リスクシナリオ分析
           </span>
         </div>
         <button
           onClick={() => setShowRisk(!showRisk)}
           className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-            showRisk ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+            showRisk
+              ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300'
+              : 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
           }`}
         >
           {showRisk ? '最悪ケース表示中' : '期待値表示中'}
@@ -402,7 +414,7 @@ export const RiskVisualizationDemo = () => {
         </svg>
 
         {/* 凡例 */}
-        <div className="grid grid-cols-1 gap-2 text-xs">
+        <div className="grid grid-cols-1 gap-2 text-xs text-[var(--color-text-secondary)]">
           {showRisk ? (
             <>
               <div className="flex items-center gap-2">
@@ -414,8 +426,10 @@ export const RiskVisualizationDemo = () => {
                 <span>悲観シナリオ (下位5%の成果)</span>
               </div>
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-3 h-3 text-orange-500" />
-                <span className="text-orange-700">最悪の場合でも元本割れリスクは限定的</span>
+                <AlertTriangle className="w-3 h-3 text-orange-500 dark:text-orange-400" />
+                <span className="text-orange-700 dark:text-orange-300">
+                  最悪の場合でも元本割れリスクは限定的
+                </span>
               </div>
             </>
           ) : (

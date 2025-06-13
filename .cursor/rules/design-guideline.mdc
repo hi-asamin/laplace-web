@@ -25,7 +25,7 @@ alwaysApply: false
 
 ## 2. カラーパレット
 
-### メインカラー
+### ライトモード（デフォルト）
 ```css
 /* LP専用カラートークン */
 --color-lp-navy: #0a2540     /* メインテキスト、見出し */
@@ -41,15 +41,67 @@ alwaysApply: false
 --color-surface-alt: #f7fafc /* ページ背景 */
 ```
 
+### ダークモード
+```css
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* LP専用ダークカラー */
+    --color-lp-navy: #f8fafc        /* ダークモード時は明るいテキスト */
+    --color-lp-mint: #00ffc4        /* より明るいミント（アクセシビリティ考慮） */
+    --color-lp-blue: #60a5fa        /* より明るいブルー */
+    --color-lp-off-white: #1e293b   /* ダークなセクション背景 */
+    
+    /* 共通ダークカラー */
+    --color-primary: #00ffc4        /* ダークモード用プライマリ */
+    --color-success: #10b981        /* ダークモード成功色 */
+    --color-danger: #ef4444         /* ダークモード危険色 */
+    --color-surface: #0f172a        /* ダークカード背景 */
+    --color-surface-alt: #1e293b    /* ダークページ背景 */
+    
+    /* テキストカラー調整 */
+    --color-text-primary: #f8fafc   /* メインテキスト */
+    --color-text-secondary: #cbd5e1 /* セカンダリテキスト */
+    --color-text-muted: #94a3b8     /* ミュートテキスト */
+  }
+}
+```
+
 ### カラー使用ルール
 - **メインCTA**: `--color-lp-mint`（ミントグリーン）で統一
-- **見出し・重要テキスト**: `--color-lp-navy`（ネイビー）
+- **見出し・重要テキスト**: `--color-lp-navy`（ライトモード：ネイビー、ダークモード：明るいグレー）
 - **アクセント・補助色**: `--color-lp-blue`（ブルー）
 - **背景グラデーション**: `from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5`
 
 ---
 
-## 3. タイポグラフィ
+## 3. ダークモード専用設計原則
+
+### コントラスト基準
+- **AAA基準準拠**: テキストと背景のコントラスト比7:1以上を維持
+- **アクセント色強化**: ダークモードでは彩度を上げて視認性を確保
+- **グラデーション透明度調整**: ライトモード5%→ダークモード8%に増加
+
+### 階層表現
+```css
+/* ダークモード階層 */
+--z-surface-1: #0f172a    /* 最下層（ページ背景） */
+--z-surface-2: #1e293b    /* カード背景 */
+--z-surface-3: #334155    /* 浮上要素背景 */
+--z-surface-4: #475569    /* 最上層要素背景 */
+```
+
+### 影・エフェクト調整
+```css
+/* ダークモード専用シャドウ */
+.dark-shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3); }
+.dark-shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4); }
+.dark-shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+.dark-shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6); }
+```
+
+---
+
+## 4. タイポグラフィ
 
 ### フォントファミリー
 ```css
@@ -69,7 +121,7 @@ alwaysApply: false
 
 ---
 
-## 4. レイアウト & グリッド
+## 5. レイアウト & グリッド
 
 ### コンテナ設計
 ```css
@@ -100,83 +152,133 @@ lg:flex-row-reverse  /* 奇数インデックスで反転 */
 
 ---
 
-## 5. コンポーネントスタイル
+## 6. コンポーネントスタイル（ダークモード対応）
 
 ### ボタン
 
 #### Primary Button (CTA)
 ```css
+/* ライトモード */
 bg-[var(--color-lp-mint)] text-white 
 px-8 py-4 rounded-full text-lg font-semibold 
 hover:bg-[var(--color-lp-mint)]/90 
 transition-all hover:scale-105 
 shadow-xl
+
+/* ダークモード追加スタイル */
+dark:bg-[var(--color-lp-mint)] dark:text-slate-900
+dark:hover:bg-[var(--color-lp-mint)]/90
+dark:shadow-[0_20px_25px_-5px_rgba(0,255,196,0.3)]
 ```
 
 #### Secondary Button (ナビゲーション)
 ```css
+/* ライトモード */
 bg-[var(--color-lp-mint)] text-white 
 px-6 py-2 rounded-full 
 hover:bg-[var(--color-lp-mint)]/90 
 transition-all hover:scale-105
+
+/* ダークモード */
+dark:bg-[var(--color-surface-3)] dark:text-[var(--color-text-primary)]
+dark:hover:bg-[var(--color-lp-mint)] dark:hover:text-slate-900
 ```
 
 #### Chip Button (インタラクティブタグ)
 ```css
+/* ライトモード */
 bg-white border-2 border-[var(--color-lp-mint)]/20 
 hover:border-[var(--color-lp-mint)] 
 hover:bg-[var(--color-lp-mint)]/5 
 px-4 py-2 rounded-full 
 transition-all duration-200 
 hover:scale-105 hover:shadow-lg
+
+/* ダークモード */
+dark:bg-[var(--color-surface-2)] dark:border-[var(--color-lp-mint)]/30
+dark:hover:border-[var(--color-lp-mint)] 
+dark:hover:bg-[var(--color-lp-mint)]/10
 ```
 
 ### カード
 
 #### 標準情報カード
 ```css
+/* ライトモード */
 bg-white rounded-2xl p-8 shadow-lg 
 hover:shadow-xl transition-all duration-300 
 hover:scale-105
+
+/* ダークモード */
+dark:bg-[var(--color-surface-2)] 
+dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)]
+dark:hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)]
+dark:border dark:border-[var(--color-surface-3)]
 ```
 
 #### 大型コンテンツカード
 ```css
+/* ライトモード */
 bg-white rounded-3xl p-8 shadow-xl 
 border border-slate-200
+
+/* ダークモード */
+dark:bg-[var(--color-surface-2)] 
+dark:border-[var(--color-surface-3)]
+dark:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)]
 ```
 
 #### アクセントカード（選択状態）
 ```css
+/* ライトモード */
 border-[var(--color-lp-mint)] 
 bg-[var(--color-lp-mint)]/5 
 scale-105
+
+/* ダークモード */
+dark:border-[var(--color-lp-mint)] 
+dark:bg-[var(--color-lp-mint)]/10
+dark:shadow-[0_0_20px_rgba(0,255,196,0.2)]
 ```
 
 ### 入力フィールド
 
 #### 検索ボックス
 ```css
+/* ライトモード */
 w-full px-6 py-4 text-lg border-2 rounded-full 
 transition-all duration-300
 border-[var(--color-lp-mint)] 
 bg-[var(--color-lp-mint)]/5 
 outline-none shadow-lg
+
+/* ダークモード */
+dark:bg-[var(--color-surface-2)] 
+dark:border-[var(--color-lp-mint)]/50
+dark:text-[var(--color-text-primary)]
+dark:placeholder:text-[var(--color-text-muted)]
+dark:focus:bg-[var(--color-lp-mint)]/10
 ```
 
 ### ナビゲーション
 
 #### 固定ナビゲーション
 ```css
+/* ライトモード */
 fixed top-0 left-0 right-0 z-50 
 bg-white/90 backdrop-blur-md 
 border-b border-slate-200
 h-16
+
+/* ダークモード */
+dark:bg-[var(--color-surface-1)]/90 
+dark:border-b-[var(--color-surface-3)]
+dark:backdrop-blur-md
 ```
 
 ---
 
-## 6. アイコン & イラスト
+## 7. アイコン & イラスト
 
 ### アイコン仕様
 - **ライブラリ**: `lucide-react`
@@ -184,21 +286,21 @@ h-16
 - **大きいアイコン**: `w-8 h-8` (32px)
 - **装飾アイコン**: `w-16 h-16` (64px)
 
-### アイコン使用例
+### アイコン使用例（ダークモード対応）
 ```jsx
 // CTA内アイコン
 <Play className="w-5 h-5" />
 
-// 機能説明アイコン
-<feature.icon className="w-8 h-8 text-[var(--color-lp-mint)]" />
+// 機能説明アイコン（ダークモード対応）
+<feature.icon className="w-8 h-8 text-[var(--color-lp-mint)] dark:text-[var(--color-lp-mint)]" />
 
-// 装飾背景アイコン
-<TrendingDown className="w-16 h-16 text-red-500" />
+// 装飾背景アイコン（ダークモード対応）
+<TrendingDown className="w-16 h-16 text-red-500 dark:text-red-400" />
 ```
 
 ---
 
-## 7. アニメーション & インタラクション
+## 8. アニメーション & インタラクション
 
 ### アニメーション期間
 ```css
@@ -215,13 +317,13 @@ transition-all duration-1000
 duration-3000  /* スケールアニメーション */
 ```
 
-### インタラクションパターン
+### インタラクションパターン（ダークモード対応）
 ```css
 /* ホバー時拡大 */
 hover:scale-105
 
-/* ホバー時シャドウ */
-hover:shadow-xl
+/* ホバー時シャドウ（ダークモード対応） */
+hover:shadow-xl dark:hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)]
 
 /* アクティブ時透明度変更 */
 hover:bg-[var(--color-lp-mint)]/90
@@ -229,6 +331,9 @@ hover:bg-[var(--color-lp-mint)]/90
 /* フェードイン */
 opacity-100 translate-y-0
 opacity-0 translate-y-10
+
+/* ダークモード専用グロー効果 */
+dark:hover:shadow-[0_0_20px_rgba(0,255,196,0.3)]
 ```
 
 ### カスタムキーフレーム
@@ -242,21 +347,26 @@ opacity-0 translate-y-10
   from { transform: scaleY(0); }
   to { transform: scaleY(1); }
 }
+
+@keyframes dark-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 196, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(0, 255, 196, 0.6); }
+}
 ```
 
 ---
 
-## 8. セクション構造パターン
+## 9. セクション構造パターン（ダークモード対応）
 
 ### セクション共通構造
 ```jsx
-<section className="py-20 [背景クラス]">
+<section className="py-20 [背景クラス] dark:[ダークモード背景クラス]">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="text-center mb-16">
-      <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] mb-6 font-[var(--font-poppins)]">
+      <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-6 font-[var(--font-poppins)]">
         セクションタイトル
       </h2>
-      <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+      <p className="text-xl text-slate-600 dark:text-[var(--color-text-secondary)] max-w-2xl mx-auto">
         セクション説明文
       </p>
     </div>
@@ -265,52 +375,57 @@ opacity-0 translate-y-10
 </section>
 ```
 
-### 背景バリエーション
+### 背景バリエーション（ダークモード対応）
 ```css
 /* 標準背景 */
-[なし - 白背景]
+bg-white dark:bg-[var(--color-surface-1)]
 
 /* 軽いアクセント */
-bg-[var(--color-lp-off-white)]
+bg-[var(--color-lp-off-white)] dark:bg-[var(--color-surface-2)]
 
 /* グラデーション（アクセント） */
-bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5
+bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5 
+dark:from-[var(--color-lp-mint)]/8 dark:to-[var(--color-lp-blue)]/8
 
 /* グラデーション（強調） */
 bg-gradient-to-br from-[var(--color-lp-navy)] to-[var(--color-lp-blue)] text-white
+dark:from-slate-800 dark:to-slate-900 dark:text-[var(--color-text-primary)]
 
 /* グラデーション（CTA） */
 bg-gradient-to-br from-[var(--color-lp-mint)] to-[var(--color-lp-blue)] text-white
+dark:text-slate-900
 ```
 
 ---
 
-## 9. 装飾要素
+## 10. 装飾要素（ダークモード対応）
 
 ### 背景装飾
 ```css
 /* ソフトブラー円 */
-w-32 h-32 bg-[var(--color-lp-mint)]/5 rounded-full blur-xl
+w-32 h-32 bg-[var(--color-lp-mint)]/5 dark:bg-[var(--color-lp-mint)]/8 rounded-full blur-xl
 
 /* 波紋効果 */
-border-2 border-red-300 rounded-full animate-ping opacity-30
+border-2 border-red-300 dark:border-red-400 rounded-full animate-ping opacity-30
 ```
 
-### グラデーション使用パターン
+### グラデーション使用パターン（ダークモード対応）
 ```css
 /* ハイライト用 */
 bg-gradient-to-br from-[var(--color-lp-mint)]/10 to-[var(--color-lp-blue)]/10
+dark:from-[var(--color-lp-mint)]/15 dark:to-[var(--color-lp-blue)]/15
 
 /* ボーダー強調 */
-border border-[var(--color-lp-mint)]/20
+border border-[var(--color-lp-mint)]/20 dark:border-[var(--color-lp-mint)]/30
 
 /* インライン強調 */
 bg-gradient-to-r from-[var(--color-lp-mint)] to-[var(--color-lp-blue)]
+dark:from-[var(--color-lp-mint)] dark:to-[var(--color-lp-blue)]
 ```
 
 ---
 
-## 10. レスポンシブ対応
+## 11. レスポンシブ対応
 
 ### ブレークポイント
 ```css
@@ -341,20 +456,41 @@ flex-col sm:flex-row
 
 ---
 
-## 11. 実装時のベストプラクティス
+## 12. ダークモード実装ベストプラクティス
 
 ### CSS変数の使用
 ```jsx
-// ✅ 推奨: CSS変数を使用
+// ✅ 推奨: CSS変数を使用（ダークモード自動対応）
 className="text-[var(--color-lp-navy)]"
 className="bg-[var(--color-lp-mint)]"
+
+// ✅ 推奨: Tailwind dark: モディファイア使用
+className="bg-white dark:bg-[var(--color-surface-2)]"
+className="text-slate-600 dark:text-[var(--color-text-secondary)]"
 
 // ❌ 非推奨: ハードコーディング
 className="text-blue-900"
 className="bg-green-400"
 ```
 
-### アニメーション実装
+### ダークモード検出とトグル
+```jsx
+// システム設定に基づく自動検出
+const [isDark, setIsDark] = useState(() => {
+  if (typeof window !== 'undefined') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  return false;
+});
+
+// ダークモードトグル機能
+const toggleDarkMode = () => {
+  setIsDark(!isDark);
+  document.documentElement.classList.toggle('dark');
+};
+```
+
+### アニメーション実装（ダークモード考慮）
 ```jsx
 // Intersection Observer を使用したスクロールトリガー
 const [isVisible, setIsVisible] = useState(false);
@@ -376,17 +512,69 @@ useEffect(() => {
   
   return () => observer.disconnect();
 }, []);
+
+// ダークモード対応のアニメーションクラス
+const animationClass = `
+  transition-all duration-300 
+  ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}
+  dark:shadow-[0_0_20px_rgba(0,255,196,0.2)]
+`;
 ```
 
-### コンポーネント分割
+### コンポーネント分割（ダークモード対応）
 ```jsx
-// ✅ 推奨: 再利用可能なコンポーネント
-const AnimatedNumber = ({ end, duration, prefix, suffix }) => {
-  // アニメーションロジック
+// ✅ 推奨: ダークモード対応の再利用可能なコンポーネント
+const DarkModeCard = ({ children, variant = 'default' }) => {
+  const baseClasses = "rounded-2xl p-8 transition-all duration-300";
+  const variantClasses = {
+    default: "bg-white dark:bg-[var(--color-surface-2)] shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)]",
+    accent: "bg-[var(--color-lp-mint)]/5 dark:bg-[var(--color-lp-mint)]/10 border-[var(--color-lp-mint)] dark:border-[var(--color-lp-mint)]"
+  };
+  
+  return (
+    <div className={`${baseClasses} ${variantClasses[variant]}`}>
+      {children}
+    </div>
+  );
 };
 
-// ✅ 推奨: セクションごとのコンポーネント
-const OneClickExperienceSection = () => {
-  // セクション固有のロジック
-};
+// ✅ 推奨: ダークモード対応のテーマコンテキスト
+const ThemeContext = createContext({
+  isDark: false,
+  toggleDarkMode: () => {},
+});
 ```
+
+---
+
+## 13. アクセシビリティ（ダークモード）
+
+### コントラスト比チェック
+```css
+/* 最低限のコントラスト比を確保 */
+--color-text-primary: #f8fafc;    /* 背景 #0f172a とのコントラスト比: 15:1 */
+--color-text-secondary: #cbd5e1;  /* 背景 #1e293b とのコントラスト比: 12:1 */
+--color-text-muted: #94a3b8;      /* 背景 #334155 とのコントラスト比: 7:1 */
+```
+
+### フォーカス状態
+```css
+/* ダークモード専用フォーカススタイル */
+focus:ring-2 focus:ring-[var(--color-lp-mint)] focus:ring-offset-2 
+dark:focus:ring-offset-[var(--color-surface-1)]
+dark:focus:ring-[var(--color-lp-mint)]
+```
+
+### 動きに敏感なユーザー対応
+```css
+/* prefers-reduced-motion 対応 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float {
+    animation: none;
+  }
+  
+  .transition-all {
+    transition: none;
+  }
+}
+``` 

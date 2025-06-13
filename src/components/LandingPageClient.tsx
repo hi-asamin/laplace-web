@@ -94,19 +94,27 @@ export const InflationComparisonVisual = () => {
   return (
     <div ref={ref} className="max-w-6xl mx-auto">
       <div className="text-center mb-12">
-        <h3 className="text-2xl md:text-3xl font-bold text-[var(--color-lp-navy)] mb-4 font-[var(--font-poppins)]">
-          同じ<span className="text-[var(--color-lp-mint)]">100万円</span>でも、10年後は？
+        <h3 className="text-2xl md:text-3xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-4 font-[var(--font-poppins)]">
+          同じ
+          <span className="text-[var(--color-lp-mint)] dark:text-[var(--color-lp-mint)]">
+            100万円
+          </span>
+          でも、10年後は？
         </h3>
-        <p className="text-lg text-slate-600">インフレ率2.5%の環境下での購買力の変化</p>
+        <p className="text-lg text-slate-600 dark:text-[var(--color-text-secondary)]">
+          インフレ率2.5%の環境下での購買力の変化
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 左：銀行預金 */}
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-red-100 relative overflow-hidden">
+        <div className="bg-white dark:bg-[var(--color-surface-2)] rounded-3xl p-8 shadow-xl dark:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)] border border-red-100 dark:border-red-800 relative overflow-hidden">
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <Building2 className="w-8 h-8 text-red-500" />
-              <h4 className="text-xl font-bold text-[var(--color-lp-navy)]">銀行預金のまま</h4>
+              <Building2 className="w-8 h-8 text-red-500 dark:text-red-400" />
+              <h4 className="text-xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+                銀行預金のまま
+              </h4>
             </div>
 
             {/* 購買力の視覚化（商品が買えなくなる） */}
@@ -194,10 +202,10 @@ export const InflationComparisonVisual = () => {
         </div>
 
         {/* 右：NISA投資 */}
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-green-100 relative overflow-hidden">
+        <div className="bg-white dark:bg-[var(--color-surface-2)] rounded-3xl p-8 shadow-xl dark:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)] border border-green-100 dark:border-green-800 relative overflow-hidden">
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <Sprout className="w-8 h-8 text-green-500" />
+              <Sprout className="w-8 h-8 text-green-500 dark:text-green-400" />
               <h4 className="text-xl font-bold text-[var(--color-lp-navy)]">NISA つみたて投資</h4>
             </div>
 
@@ -448,16 +456,20 @@ export const OneClickExperienceSection = () => {
   return (
     <section
       ref={sectionRef}
-      className="py-20 bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5"
+      className="py-20 bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5 dark:from-[var(--color-lp-mint)]/8 dark:to-[var(--color-lp-blue)]/8"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] mb-6 font-[var(--font-poppins)]">
+          <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-6 font-[var(--font-poppins)]">
             知識は不要。
             <br />
-            気になる<span className="text-[var(--color-lp-mint)]">銘柄を選ぶだけ</span>。
+            気になる
+            <span className="text-[var(--color-lp-mint)] dark:text-[var(--color-lp-mint)]">
+              銘柄を選ぶだけ
+            </span>
+            。
           </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+          <p className="text-xl text-slate-600 dark:text-[var(--color-text-secondary)] max-w-3xl mx-auto">
             株価・配当・各種指標まで。必要なデータはLaplaceが自動で入力します。
           </p>
         </div>
@@ -466,8 +478,8 @@ export const OneClickExperienceSection = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* 左：体験型検索コンポーネント */}
             <div className="space-y-8">
-              <div className="bg-white rounded-3xl p-8 shadow-2xl border border-slate-200">
-                <h3 className="text-xl font-semibold text-[var(--color-lp-navy)] mb-6 text-center">
+              <div className="bg-white dark:bg-[var(--color-surface-2)] rounded-3xl p-8 shadow-2xl dark:shadow-[0_25px_30px_-5px_rgba(0,0,0,0.7)] border border-slate-200 dark:border-[var(--color-surface-3)]">
+                <h3 className="text-xl font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-6 text-center">
                   試してみましょう 👇
                 </h3>
 
@@ -477,10 +489,10 @@ export const OneClickExperienceSection = () => {
                     type="text"
                     placeholder={placeholderText}
                     onClick={handleInputClick}
-                    className={`w-full px-6 py-4 text-lg border-2 rounded-full transition-all duration-300 ${
+                    className={`w-full px-6 py-4 text-lg border-2 rounded-full transition-all duration-300 dark:text-[var(--color-text-primary)] dark:placeholder:text-[var(--color-text-muted)] ${
                       isActive
-                        ? 'border-[var(--color-lp-mint)] bg-[var(--color-lp-mint)]/5 outline-none shadow-lg'
-                        : 'border-slate-300 hover:border-[var(--color-lp-mint)] cursor-pointer'
+                        ? 'border-[var(--color-lp-mint)] bg-[var(--color-lp-mint)]/5 dark:bg-[var(--color-lp-mint)]/10 outline-none shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,255,196,0.2)]'
+                        : 'border-slate-300 dark:border-[var(--color-surface-3)] dark:bg-[var(--color-surface-1)] hover:border-[var(--color-lp-mint)] cursor-pointer'
                     }`}
                     readOnly
                   />
@@ -499,22 +511,24 @@ export const OneClickExperienceSection = () => {
                     showChips ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                   }`}
                 >
-                  <p className="text-sm text-slate-600 mb-4">人気の銘柄から選ぶ：</p>
+                  <p className="text-sm text-slate-600 dark:text-[var(--color-text-secondary)] mb-4">
+                    人気の銘柄から選ぶ：
+                  </p>
                   <div className="flex flex-wrap gap-3">
                     {popularStocks.map((stock, index) => (
                       <button
                         key={index}
                         onClick={() => handleStockClick(stock)}
-                        className="group bg-white border-2 border-[var(--color-lp-mint)]/20 hover:border-[var(--color-lp-mint)] 
-                                 hover:bg-[var(--color-lp-mint)]/5 px-4 py-2 rounded-full transition-all duration-200 
-                                 hover:scale-105 hover:shadow-lg"
+                        className="group bg-white dark:bg-[var(--color-surface-3)] border-2 border-[var(--color-lp-mint)]/20 dark:border-[var(--color-lp-mint)]/30 hover:border-[var(--color-lp-mint)] 
+                                 hover:bg-[var(--color-lp-mint)]/5 dark:hover:bg-[var(--color-lp-mint)]/10 px-4 py-2 rounded-full transition-all duration-200 
+                                 hover:scale-105 hover:shadow-lg dark:hover:shadow-[0_10px_15px_-3px_rgba(0,255,196,0.3)]"
                         style={{ animationDelay: `${index * 100}ms` }}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-[var(--color-lp-navy)] group-hover:text-[var(--color-lp-mint)]">
+                          <span className="font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] group-hover:text-[var(--color-lp-mint)]">
                             {stock.name}
                           </span>
-                          <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                          <span className="text-xs text-slate-500 dark:text-[var(--color-text-muted)] bg-slate-100 dark:bg-[var(--color-surface-4)] px-2 py-1 rounded-full">
                             {stock.type}
                           </span>
                         </div>
@@ -524,9 +538,11 @@ export const OneClickExperienceSection = () => {
                 </div>
 
                 <div className="mt-6 text-center">
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
                     ↑ クリックして
-                    <span className="text-[var(--color-lp-mint)] font-semibold">実際に体験</span>
+                    <span className="text-[var(--color-lp-mint)] dark:text-[var(--color-lp-mint)] font-semibold">
+                      実際に体験
+                    </span>
                     してみてください
                   </p>
                 </div>
@@ -541,50 +557,62 @@ export const OneClickExperienceSection = () => {
             >
               <div className="space-y-8">
                 {/* Before */}
-                <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
-                  <h4 className="text-sm font-semibold text-slate-600 mb-4 flex items-center gap-2">
-                    <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center text-xs text-red-600">
+                <div className="bg-white dark:bg-[var(--color-surface-2)] rounded-2xl p-6 border border-slate-200 dark:border-[var(--color-surface-3)] shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)]">
+                  <h4 className="text-sm font-semibold text-slate-600 dark:text-[var(--color-text-secondary)] mb-4 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center text-xs text-red-600 dark:text-red-400">
                       1
                     </div>
                     従来の投資ツール
                   </h4>
                   <div className="space-y-3">
-                    <div className="bg-slate-100 h-4 rounded animate-pulse"></div>
-                    <div className="bg-slate-100 h-4 rounded animate-pulse"></div>
-                    <div className="bg-slate-100 h-4 rounded animate-pulse"></div>
-                    <p className="text-xs text-slate-500 text-center">手動でデータ入力が必要...</p>
+                    <div className="bg-slate-100 dark:bg-[var(--color-surface-3)] h-4 rounded animate-pulse"></div>
+                    <div className="bg-slate-100 dark:bg-[var(--color-surface-3)] h-4 rounded animate-pulse"></div>
+                    <div className="bg-slate-100 dark:bg-[var(--color-surface-3)] h-4 rounded animate-pulse"></div>
+                    <p className="text-xs text-slate-500 dark:text-[var(--color-text-muted)] text-center">
+                      手動でデータ入力が必要...
+                    </p>
                   </div>
                 </div>
 
                 {/* Arrow */}
                 <div className="flex justify-center">
-                  <ArrowRight className="w-8 h-8 text-[var(--color-lp-mint)] animate-bounce" />
+                  <ArrowRight className="w-8 h-8 text-[var(--color-lp-mint)] dark:text-[var(--color-lp-mint)] animate-bounce" />
                 </div>
 
                 {/* After */}
-                <div className="bg-gradient-to-br from-[var(--color-lp-mint)]/10 to-[var(--color-lp-blue)]/10 rounded-2xl p-6 border border-[var(--color-lp-mint)]/20 shadow-xl">
-                  <h4 className="text-sm font-semibold text-[var(--color-lp-navy)] mb-4 flex items-center gap-2">
-                    <div className="w-6 h-6 bg-[var(--color-lp-mint)] rounded-full flex items-center justify-center text-xs text-white">
+                <div className="bg-gradient-to-br from-[var(--color-lp-mint)]/10 to-[var(--color-lp-blue)]/10 dark:from-[var(--color-lp-mint)]/15 dark:to-[var(--color-lp-blue)]/15 rounded-2xl p-6 border border-[var(--color-lp-mint)]/20 dark:border-[var(--color-lp-mint)]/30 shadow-xl dark:shadow-[0_20px_25px_-5px_rgba(0,255,196,0.2)]">
+                  <h4 className="text-sm font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-[var(--color-lp-mint)] dark:bg-[var(--color-lp-mint)] rounded-full flex items-center justify-center text-xs text-white dark:text-slate-900">
                       2
                     </div>
                     Laplace
                   </h4>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-600">株価</span>
-                      <span className="text-sm font-bold text-[var(--color-lp-navy)]">
+                      <span className="text-sm text-slate-600 dark:text-[var(--color-text-secondary)]">
+                        株価
+                      </span>
+                      <span className="text-sm font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
                         $150.23 ✓
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-600">配当利回り</span>
-                      <span className="text-sm font-bold text-[var(--color-lp-navy)]">2.5% ✓</span>
+                      <span className="text-sm text-slate-600 dark:text-[var(--color-text-secondary)]">
+                        配当利回り
+                      </span>
+                      <span className="text-sm font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+                        2.5% ✓
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-600">PER</span>
-                      <span className="text-sm font-bold text-[var(--color-lp-navy)]">28.4 ✓</span>
+                      <span className="text-sm text-slate-600 dark:text-[var(--color-text-secondary)]">
+                        PER
+                      </span>
+                      <span className="text-sm font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+                        28.4 ✓
+                      </span>
                     </div>
-                    <p className="text-xs text-[var(--color-lp-mint)] text-center font-semibold">
+                    <p className="text-xs text-[var(--color-lp-mint)] dark:text-[var(--color-lp-mint)] text-center font-semibold">
                       自動で入力完了！
                     </p>
                   </div>
@@ -598,13 +626,13 @@ export const OneClickExperienceSection = () => {
             <Link
               href="/search"
               onClick={() => trackCTAClick('experience', 'いますぐ銘柄を検索してみる', '/search')}
-              className="inline-flex items-center gap-3 bg-[var(--color-lp-mint)] text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105 shadow-xl"
+              className="inline-flex items-center gap-3 bg-[var(--color-lp-mint)] text-white dark:text-slate-900 px-8 py-4 rounded-full text-lg font-semibold hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105 shadow-xl dark:shadow-[0_20px_25px_-5px_rgba(0,255,196,0.3)]"
             >
               <Zap className="w-5 h-5" />
               いますぐ銘柄を検索してみる
               <ArrowRight className="w-5 h-5" />
             </Link>
-            <p className="text-sm text-slate-500 mt-3">
+            <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)] mt-3">
               未来のシミュレーションは、検索からはじまる。
             </p>
           </div>
@@ -676,7 +704,7 @@ export const HeroImage = () => {
       {floatingTags.map((tag, index) => (
         <div
           key={index}
-          className={`absolute text-sm bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg text-[var(--color-lp-navy)] border border-slate-200 transition-all duration-1000 ${
+          className={`absolute text-sm bg-white/80 dark:bg-[var(--color-surface-2)]/80 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] border border-slate-200 dark:border-[var(--color-surface-3)] transition-all duration-1000 ${
             isAnimated ? 'opacity-100' : 'opacity-0'
           }`}
           style={{

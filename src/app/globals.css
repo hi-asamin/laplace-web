@@ -40,14 +40,36 @@
     --background: #0a0a0a;
     --foreground: #ededed;
 
-    /* Dark mode color tokens */
-    --color-surface: #0f172a;
-    --color-surface-alt: #1e293b;
+    /* LP専用ダークカラー */
+    --color-lp-navy: #f8fafc; /* ダークモード時は明るいテキスト */
+    --color-lp-mint: #00ffc4; /* より明るいミント（アクセシビリティ考慮） */
+    --color-lp-blue: #60a5fa; /* より明るいブルー */
+    --color-lp-off-white: #1e293b; /* ダークなセクション背景 */
+    --color-lp-white: #0f172a; /* ダークな背景色 */
+
+    /* 共通ダークカラー */
+    --color-primary: #00ffc4; /* ダークモード用プライマリ */
+    --color-success: #10b981; /* ダークモード成功色 */
+    --color-danger: #ef4444; /* ダークモード危険色 */
+    --color-surface: #0f172a; /* ダークカード背景 */
+    --color-surface-alt: #1e293b; /* ダークページ背景 */
+
+    /* 階層表現用カラー */
+    --color-surface-1: #0f172a; /* 最下層（ページ背景） */
+    --color-surface-2: #1e293b; /* カード背景 */
+    --color-surface-3: #334155; /* 浮上要素背景 */
+    --color-surface-4: #475569; /* 最上層要素背景 */
+
+    /* テキストカラー */
+    --color-text-primary: #f8fafc; /* メインテキスト */
+    --color-text-secondary: #cbd5e1; /* セカンダリテキスト */
+    --color-text-muted: #94a3b8; /* ミュートテキスト */
+
+    /* Dark mode color tokens (既存) */
     --color-list-bg: #15362b;
     --color-icon-bg: #1e4335;
     --color-gray-900: #f8fafc;
     --color-gray-700: #cbd5e1;
-    --color-primary: #525eff;
   }
 }
 
@@ -81,6 +103,32 @@ body {
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* ダークモード専用シャドウ */
+  .dark-shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .dark-shadow-md {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  }
+
+  .dark-shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  }
+
+  .dark-shadow-xl {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+  }
+
+  /* ダークモード専用グロー効果 */
+  .dark-glow-mint {
+    box-shadow: 0 0 20px rgba(0, 255, 196, 0.3);
+  }
+
+  .dark-glow-blue {
+    box-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
   }
 }
 
@@ -138,6 +186,29 @@ body {
   }
 }
 
+/* ダークモード専用アニメーション */
+@keyframes dark-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(0, 255, 196, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(0, 255, 196, 0.6),
+      0 0 30px rgba(0, 255, 196, 0.4);
+  }
+}
+
+@keyframes dark-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 1s ease-out forwards;
 }
@@ -149,6 +220,15 @@ body {
 
 .animate-bar-grow {
   animation: bar-grow 1s ease-out forwards;
+}
+
+/* ダークモード専用アニメーションクラス */
+.animate-dark-glow {
+  animation: dark-glow 2s ease-in-out infinite;
+}
+
+.animate-dark-pulse {
+  animation: dark-pulse 2s ease-in-out infinite;
 }
 
 /* 遅延アニメーション */
@@ -172,4 +252,24 @@ body {
 }
 .delay-2000 {
   animation-delay: 2000ms;
+}
+
+/* アクセシビリティ - 動きに敏感なユーザー対応 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-bar-grow,
+  .animate-fade-in,
+  .animate-dark-glow,
+  .animate-dark-pulse {
+    animation: none;
+  }
+
+  .transition-all {
+    transition: none;
+  }
+
+  /* ホバー効果のスケール変更も無効化 */
+  .hover\\:scale-105:hover {
+    transform: none;
+  }
 }

@@ -95,9 +95,9 @@ const InflationComparisonVisual = () => {
     <div ref={ref} className="max-w-6xl mx-auto">
       <div className="text-center mb-12">
         <h3 className="text-2xl md:text-3xl font-bold text-[var(--color-lp-navy)] mb-4 font-[var(--font-poppins)]">
-          時の流れが変える、<span className="text-[var(--color-lp-mint)]">100万円</span>の未来
+          同じ<span className="text-[var(--color-lp-mint)]">100万円</span>でも、10年後は？
         </h3>
-        <p className="text-lg text-slate-600">もし、100万円を10年間そのままにしたら…？</p>
+        <p className="text-lg text-slate-600">インフレ率2.5%の環境下での購買力の変化</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -106,64 +106,83 @@ const InflationComparisonVisual = () => {
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 mb-6">
               <Building2 className="w-8 h-8 text-red-500" />
-              <h4 className="text-xl font-bold text-[var(--color-lp-navy)]">銀行に預け続けたら…</h4>
+              <h4 className="text-xl font-bold text-[var(--color-lp-navy)]">銀行預金のまま</h4>
             </div>
 
-            {/* コインの山ビジュアル（縮小アニメーション） */}
-            <div className="relative h-40 flex items-center justify-center mb-8">
-              <div
-                className={`transition-all duration-3000 ${
-                  isVisible ? 'scale-75 opacity-60' : 'scale-100 opacity-100'
-                }`}
-              >
-                <div className="flex flex-wrap justify-center items-end gap-1">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <Coins
-                      key={i}
-                      className={`text-yellow-400 transition-all duration-3000 ${
-                        isVisible ? 'text-yellow-300' : 'text-yellow-400'
-                      }`}
-                      style={{
-                        fontSize: `${20 + (i % 3) * 8}px`,
-                        animationDelay: `${i * 100}ms`,
-                        filter: isVisible ? 'brightness(0.7)' : 'brightness(1)',
-                      }}
-                    />
-                  ))}
+            {/* 購買力の視覚化（商品が買えなくなる） */}
+            <div className="relative h-40 flex flex-col items-center justify-center mb-8">
+              {/* 紙幣のビジュアル */}
+              <div className="relative mb-4">
+                <div
+                  className={`transition-all duration-3000 ease-out ${
+                    isVisible ? 'scale-75 opacity-70' : 'scale-100 opacity-100'
+                  }`}
+                >
+                  <div className="w-32 h-20 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg border-2 border-blue-300 flex items-center justify-center shadow-lg">
+                    <span className="text-lg font-bold text-blue-700">¥100万</span>
+                  </div>
                 </div>
+
+                {/* インフレの影響を示す矢印 */}
+                {isVisible && (
+                  <div className="absolute -top-2 -right-2 animate-bounce">
+                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      ↓
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* インフレの波紋効果 */}
-              <div
-                className={`absolute inset-0 transition-opacity duration-2000 ${
-                  isVisible ? 'opacity-100' : 'opacity-0'
-                }`}
-              >
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-32 h-32 border-2 border-red-300 rounded-full animate-ping opacity-30"></div>
-                  <div className="w-24 h-24 border-2 border-red-400 rounded-full animate-ping opacity-40 absolute top-4 left-4"></div>
-                </div>
+              {/* 購買力の変化を商品で表現 */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm text-slate-600">買えるもの:</span>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-2">
+                {/* 商品アイコン（購買力低下を表現） */}
+                {[
+                  { icon: '🍎', label: 'りんご', crossed: isVisible },
+                  { icon: '☕', label: 'コーヒー', crossed: isVisible },
+                  { icon: '🚗', label: '車', crossed: isVisible },
+                  { icon: '🏠', label: '家', crossed: isVisible },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className={`relative flex flex-col items-center p-2 rounded-lg transition-all duration-1000 ${
+                      item.crossed ? 'opacity-40 scale-90' : 'opacity-100 scale-100'
+                    }`}
+                    style={{ animationDelay: `${i * 200 + 1000}ms` }}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-xs text-slate-500">{item.label}</span>
+                    {item.crossed && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-8 h-0.5 bg-red-500 transform rotate-45"></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-slate-600 mb-2">10年後の実質価値</p>
+                <p className="text-sm text-slate-600 mb-2">10年後の実質的な価値</p>
                 <div className="text-4xl font-bold text-red-500 mb-2">
                   {isVisible ? (
                     <AnimatedNumber end={78} prefix="約" suffix="万円" duration={2500} />
                   ) : (
-                    '約100万円'
+                    '100万円'
                   )}
                 </div>
                 <div className="text-red-500 font-semibold">
                   {isVisible ? (
-                    <AnimatedNumber end={-22} prefix="" suffix="万円" duration={2500} />
+                    <AnimatedNumber end={-22} prefix="-" suffix="万円相当" duration={2500} />
                   ) : (
-                    '0円'
+                    '±0円'
                   )}
                 </div>
-                <p className="text-sm text-red-600">インフレに価値が負けている状態</p>
+                <p className="text-sm text-red-600">同じものが買えなくなった状態</p>
               </div>
             </div>
           </div>
@@ -179,43 +198,90 @@ const InflationComparisonVisual = () => {
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 mb-6">
               <Sprout className="w-8 h-8 text-green-500" />
-              <h4 className="text-xl font-bold text-[var(--color-lp-navy)]">NISAで運用したら…</h4>
+              <h4 className="text-xl font-bold text-[var(--color-lp-navy)]">NISA つみたて投資</h4>
             </div>
 
-            {/* コインの山ビジュアル（成長アニメーション） */}
-            <div className="relative h-40 flex items-center justify-center mb-8">
-              <div
-                className={`transition-all duration-3000 ${isVisible ? 'scale-125' : 'scale-100'}`}
-              >
-                <div className="flex flex-wrap justify-center items-end gap-1">
-                  {Array.from({ length: 16 }).map((_, i) => (
-                    <Coins
-                      key={i}
-                      className={`text-yellow-400 transition-all duration-3000 ${
-                        isVisible ? 'text-yellow-500' : 'text-yellow-400'
-                      }`}
-                      style={{
-                        fontSize: `${20 + (i % 4) * 6}px`,
-                        animationDelay: `${i * 80}ms`,
-                        filter: isVisible
-                          ? 'brightness(1.2) drop-shadow(0 0 8px rgba(251, 191, 36, 0.5))'
-                          : 'brightness(1)',
-                      }}
-                    />
-                  ))}
+            {/* 資産成長の視覚化 */}
+            <div className="relative h-40 flex flex-col items-center justify-center mb-8">
+              {/* 資産の成長を表現 */}
+              <div className="relative mb-4">
+                <div
+                  className={`transition-all duration-3000 ease-out ${
+                    isVisible ? 'scale-110' : 'scale-100'
+                  }`}
+                >
+                  <div className="w-32 h-20 bg-gradient-to-r from-green-100 to-green-200 rounded-lg border-2 border-green-300 flex items-center justify-center shadow-lg relative overflow-hidden">
+                    <span className="text-lg font-bold text-green-700">¥100万</span>
+                    {/* 成長を表すキラキラエフェクト */}
+                    {isVisible && (
+                      <>
+                        <div className="absolute top-1 left-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping"></div>
+                        <div
+                          className="absolute bottom-1 right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping"
+                          style={{ animationDelay: '0.5s' }}
+                        ></div>
+                        <div
+                          className="absolute top-1 right-1 w-1 h-1 bg-yellow-300 rounded-full animate-ping"
+                          style={{ animationDelay: '1s' }}
+                        ></div>
+                      </>
+                    )}
+                  </div>
                 </div>
+
+                {/* 追加された資産を表現 */}
+                {isVisible && (
+                  <div className="absolute -top-8 -right-8 transition-all duration-2000 animate-fade-in">
+                    <div className="w-20 h-12 bg-gradient-to-r from-green-200 to-green-300 rounded-lg border border-green-400 flex items-center justify-center shadow-md">
+                      <span className="text-sm font-bold text-green-800">+¥63万</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 成長を示す矢印 */}
+                {isVisible && (
+                  <div className="absolute -top-2 -right-2 animate-bounce">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                      ↗
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* 成長の輝きエフェクト */}
-              <div
-                className={`absolute inset-0 transition-opacity duration-2000 ${
-                  isVisible ? 'opacity-100' : 'opacity-0'
-                }`}
-              >
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-20 h-20 bg-green-400 rounded-full opacity-20 animate-pulse"></div>
-                  <div className="w-32 h-32 border-2 border-green-300 rounded-full animate-ping opacity-30 absolute -top-6 -left-6"></div>
-                </div>
+              {/* より多くのものが買える */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm text-slate-600">買えるもの:</span>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-2">
+                {[
+                  { icon: '🍎', label: 'りんご', enhanced: true },
+                  { icon: '☕', label: 'コーヒー', enhanced: true },
+                  { icon: '🚗', label: '車', enhanced: true },
+                  { icon: '🏠', label: '家', enhanced: true },
+                  { icon: '✈️', label: '旅行', enhanced: true },
+                  { icon: '🎓', label: '教育', enhanced: true },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className={`relative flex flex-col items-center p-2 rounded-lg transition-all duration-1000 ${
+                      isVisible && item.enhanced
+                        ? 'opacity-100 scale-110 bg-green-50'
+                        : 'opacity-80 scale-100'
+                    }`}
+                    style={{ animationDelay: `${i * 150 + 1500}ms` }}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-xs text-slate-500">{item.label}</span>
+                    {isVisible && item.enhanced && (
+                      <div className="absolute -top-1 -right-1">
+                        <div className="w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">+</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -226,17 +292,17 @@ const InflationComparisonVisual = () => {
                   {isVisible ? (
                     <AnimatedNumber end={163} prefix="約" suffix="万円" duration={2500} />
                   ) : (
-                    '約100万円'
+                    '100万円'
                   )}
                 </div>
                 <div className="text-green-500 font-semibold">
                   {isVisible ? (
                     <AnimatedNumber end={63} prefix="+" suffix="万円" duration={2500} />
                   ) : (
-                    '0円'
+                    '±0円'
                   )}
                 </div>
-                <p className="text-sm text-green-600">インフレを上回り資産が育っている状態</p>
+                <p className="text-sm text-green-600">インフレに負けず資産が成長</p>
               </div>
             </div>
           </div>
@@ -248,10 +314,41 @@ const InflationComparisonVisual = () => {
         </div>
       </div>
 
+      {/* 比較サマリー */}
+      <div className="mt-12 bg-gradient-to-r from-red-50 via-yellow-50 to-green-50 rounded-3xl p-8 border border-slate-200">
+        <div className="text-center mb-6">
+          <h4 className="text-xl font-bold text-[var(--color-lp-navy)] mb-2">10年後の違い</h4>
+          <p className="text-slate-600">同じ100万円が生み出す価値の差</p>
+        </div>
+
+        <div className="flex items-center justify-center gap-8">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-500 mb-1">78万円相当</div>
+            <div className="text-sm text-slate-600">銀行預金</div>
+            <div className="text-xs text-red-500">-22万円相当の価値減</div>
+          </div>
+
+          <div className="text-4xl text-slate-400">VS</div>
+
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-500 mb-1">163万円</div>
+            <div className="text-sm text-slate-600">NISA投資</div>
+            <div className="text-xs text-green-500">+63万円の資産増</div>
+          </div>
+        </div>
+
+        <div className="text-center mt-6">
+          <div className="inline-flex items-center gap-2 bg-[var(--color-lp-mint)] text-white px-6 py-3 rounded-full">
+            <span className="font-bold text-lg">差額: 85万円</span>
+          </div>
+          <p className="text-sm text-slate-500 mt-2">※インフレによる実質価値の減少分も含む</p>
+        </div>
+      </div>
+
       {/* 注釈 */}
       <div className="mt-8 text-center">
         <p className="text-xs text-slate-500 max-w-4xl mx-auto leading-relaxed">
-          ※上記は、元本100万円を、インフレ率 年2.5%、NISAでの期待リターン 年5%（複利）と仮定し、
+          ※上記は、元本100万円を、インフレ率 年2.5%、NISA運用での期待リターン 年5%（複利）と仮定し、
           10年間運用した場合のシミュレーションイメージです。運用成果を保証するものではありません。
         </p>
       </div>
@@ -907,6 +1004,19 @@ export default function LandingPage() {
           to {
             transform: scaleY(1);
           }
+        }
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 1s ease-out forwards;
         }
       `}</style>
 

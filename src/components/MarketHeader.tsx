@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, Plus, Bookmark, Search } from 'lucide-react';
+import { ChevronLeft, Plus, Bookmark, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface MarketHeaderProps {
@@ -114,22 +114,22 @@ export default function MarketHeader({
           </button>
 
           {/* 中央: 銘柄名と価格情報 */}
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center px-2 min-w-0">
             {isLoadingMarketData ? (
-              <div className="animate-pulse flex items-center space-x-4">
-                <div className="h-6 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-24"></div>
+              <div className="animate-pulse flex items-center space-x-2">
+                <div className="h-5 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-20"></div>
                 {showPriceInfo && (
-                  <div className="h-5 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-16"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-12"></div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 min-w-0">
                 {/* 銘柄名 */}
-                <div>
+                <div className="min-w-0">
                   {marketName ? (
                     <button
                       onClick={handleNavigateToMarketDetail}
-                      className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] hover:text-[var(--color-lp-mint)] transition-colors"
+                      className="text-lg sm:text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] hover:text-[var(--color-lp-mint)] transition-colors truncate"
                       aria-label={`${marketName}の詳細ページへ`}
                     >
                       {marketName}
@@ -137,17 +137,17 @@ export default function MarketHeader({
                   ) : symbol && symbol !== 'self' ? (
                     <button
                       onClick={handleNavigateToMarketDetail}
-                      className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] hover:text-[var(--color-lp-mint)] transition-colors"
+                      className="text-lg sm:text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] hover:text-[var(--color-lp-mint)] transition-colors truncate"
                       aria-label={`${symbol}の詳細ページへ`}
                     >
                       {symbol.toUpperCase()}
                     </button>
                   ) : customTitle ? (
-                    <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+                    <h1 className="text-lg sm:text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] truncate">
                       {customTitle}
                     </h1>
                   ) : (
-                    <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+                    <h1 className="text-lg sm:text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
                       銘柄詳細
                     </h1>
                   )}
@@ -155,8 +155,8 @@ export default function MarketHeader({
 
                 {/* 価格情報 */}
                 {showPriceInfo && price && (
-                  <div className="flex flex-col items-end">
-                    <div className="text-lg font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    <div className="text-base sm:text-lg font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
                       {price}
                     </div>
                     {change && changePercent && (
@@ -165,8 +165,12 @@ export default function MarketHeader({
                           isPositive ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'
                         }`}
                       >
-                        <span className="mr-1">{isPositive ? '↗' : '↘'}</span>
-                        <span>
+                        {isPositive ? (
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                        ) : (
+                          <TrendingDown className="w-3 h-3 mr-1" />
+                        )}
+                        <span className="whitespace-nowrap">
                           {change} ({changePercent})
                         </span>
                       </div>
@@ -178,15 +182,15 @@ export default function MarketHeader({
           </div>
 
           {/* 右側: アクションボタン */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {/* 追加ボタン */}
             {showAddButton && (
               <button
                 onClick={handleAdd}
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors"
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors"
                 aria-label="追加"
               >
-                <Plus className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
+                <Plus className="w-5 h-5 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
               </button>
             )}
 
@@ -194,14 +198,14 @@ export default function MarketHeader({
             {showBookmarkButton && (
               <button
                 onClick={handleToggleBookmark}
-                className={`flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors ${
+                className={`flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors ${
                   isBookmarked
                     ? 'text-[var(--color-lp-mint)]'
                     : 'text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]'
                 }`}
                 aria-label={isBookmarked ? 'ブックマークを解除' : 'ブックマークに追加'}
               >
-                <Bookmark className="w-6 h-6" fill={isBookmarked ? 'currentColor' : 'none'} />
+                <Bookmark className="w-5 h-5" fill={isBookmarked ? 'currentColor' : 'none'} />
               </button>
             )}
 
@@ -209,10 +213,10 @@ export default function MarketHeader({
             {showSearchButton && (
               <button
                 onClick={handleSearch}
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors"
+                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors"
                 aria-label="検索"
               >
-                <Search className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
+                <Search className="w-5 h-5 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
               </button>
             )}
           </div>

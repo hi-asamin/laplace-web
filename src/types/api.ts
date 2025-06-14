@@ -3,6 +3,29 @@
  */
 
 /**
+ * 企業プロフィール情報のインターフェース
+ */
+export interface CompanyProfile {
+  name?: string;
+  logoUrl?: string;
+  website?: string;
+  description?: string;
+  industry?: string;
+  sector?: string;
+  employees?: number;
+  founded?: string;
+  headquarters?: string;
+  marketCap?: string;
+  ceo?: string;
+  fullTimeEmployees?: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  phone?: string;
+}
+
+/**
  * 銘柄詳細情報のインターフェース
  */
 export interface MarketDetails {
@@ -21,6 +44,7 @@ export interface MarketDetails {
   description?: string;
   website?: string;
   dividendYield?: number;
+  company_profile?: CompanyProfile;
   tradingInfo?: {
     previousClose?: string;
     open?: string;

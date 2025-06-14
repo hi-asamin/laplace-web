@@ -14,6 +14,9 @@ interface CompanyProfileData {
   founded?: string;
   headquarters?: string;
   marketCap?: string;
+  ceo?: string;
+  address?: string;
+  phone?: string;
 }
 
 interface CompanyProfileCardProps {
@@ -128,11 +131,35 @@ export default function CompanyProfileCard({
             </div>
           </div>
         )}
+        {companyData.ceo && (
+          <div className="col-span-2">
+            <div className="text-[var(--color-gray-400)] mb-1">CEO</div>
+            <div className="font-medium text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+              {companyData.ceo}
+            </div>
+          </div>
+        )}
         {companyData.headquarters && (
           <div className="col-span-2">
             <div className="text-[var(--color-gray-400)] mb-1">本社所在地</div>
             <div className="font-medium text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
               {companyData.headquarters}
+            </div>
+          </div>
+        )}
+        {companyData.address && !companyData.headquarters && (
+          <div className="col-span-2">
+            <div className="text-[var(--color-gray-400)] mb-1">住所</div>
+            <div className="font-medium text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+              {companyData.address}
+            </div>
+          </div>
+        )}
+        {companyData.phone && (
+          <div className="col-span-2">
+            <div className="text-[var(--color-gray-400)] mb-1">電話番号</div>
+            <div className="font-medium text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+              {companyData.phone}
             </div>
           </div>
         )}

@@ -460,22 +460,51 @@ export default function MarketDetailPage() {
     };
   }, [fundamentalData, marketData]);
 
-  const mockCompanyData = useMemo(
-    () => ({
+  // 実際のAPIデータを使用した企業プロフィール計算
+  const companyData = useMemo(() => {
+    // APIから取得したcompany_profileデータを優先的に使用
+    const profile = marketData?.company_profile;
+
+    // デフォルト値（APIデータがない場合のフォールバック）
+    const defaultData = {
       name: marketData?.name || 'トヨタ自動車',
       logoUrl: marketData?.logoUrl,
-      website: 'https://www.toyota.co.jp',
+      website: marketData?.website || 'https://www.toyota.co.jp',
       description:
+        marketData?.description ||
         '世界最大級の自動車メーカーとして、ハイブリッド技術のパイオニアであり、持続可能なモビリティソリューションを提供しています。レクサスブランドも展開し、グローバルに事業を展開しています。',
-      industry: '自動車',
-      sector: '輸送用機器',
+      industry: marketData?.industry || '自動車',
+      sector: marketData?.sector || '輸送用機器',
       employees: 375235,
       founded: '1937',
       headquarters: '愛知県豊田市',
-      marketCap: '35.2兆円',
-    }),
-    [marketData]
-  );
+      marketCap: marketData?.tradingInfo?.marketCap || '35.2兆円',
+    };
+
+    // APIデータがある場合は、それを使用してデフォルト値を上書き
+    if (profile) {
+      return {
+        name: profile.name || defaultData.name,
+        logoUrl: profile.logoUrl || defaultData.logoUrl,
+        website: profile.website || defaultData.website,
+        description: profile.description || defaultData.description,
+        industry: profile.industry || defaultData.industry,
+        sector: profile.sector || defaultData.sector,
+        employees: profile.employees || profile.fullTimeEmployees || defaultData.employees,
+        founded: profile.founded || defaultData.founded,
+        headquarters:
+          profile.headquarters ||
+          [profile.city, profile.state, profile.country].filter(Boolean).join(', ') ||
+          defaultData.headquarters,
+        marketCap: profile.marketCap || defaultData.marketCap,
+        ceo: profile.ceo,
+        address: profile.address,
+        phone: profile.phone,
+      };
+    }
+
+    return defaultData;
+  }, [marketData]);
 
   const mockNewsData = useMemo(
     () => [
@@ -746,16 +775,19 @@ export default function MarketDetailPage() {
             ) : (
               <CompanyProfileCard
                 companyData={{
-                  name: mockCompanyData.name,
-                  logoUrl: mockCompanyData.logoUrl,
-                  website: mockCompanyData.website,
-                  description: mockCompanyData.description,
-                  industry: mockCompanyData.industry,
-                  sector: mockCompanyData.sector,
-                  employees: mockCompanyData.employees,
-                  founded: mockCompanyData.founded,
-                  headquarters: mockCompanyData.headquarters,
-                  marketCap: mockCompanyData.marketCap,
+                  name: companyData.name,
+                  logoUrl: companyData.logoUrl,
+                  website: companyData.website,
+                  description: companyData.description,
+                  industry: companyData.industry,
+                  sector: companyData.sector,
+                  employees: companyData.employees,
+                  founded: companyData.founded,
+                  headquarters: companyData.headquarters,
+                  marketCap: companyData.marketCap,
+                  ceo: companyData.ceo,
+                  address: companyData.address,
+                  phone: companyData.phone,
                 }}
               />
             )}

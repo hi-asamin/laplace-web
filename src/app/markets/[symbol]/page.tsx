@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { getMarketDetails, getChartData, getFundamentalData, getRelatedMarkets } from '@/lib/api';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/types/api';
 
 import { getFlagIcon } from '@/utils';
+import { useMarketDetailAnalytics } from '@/hooks/useMarketDetailAnalytics';
 
 // 新しいダッシュボードコンポーネントのインポート
 import EnhancedStockChart from '@/components/EnhancedStockChart';
@@ -42,27 +43,44 @@ export default function MarketDetailPage() {
   // シンボルをデコードする（例：URLでエンコードされた9432.Tなど）
   const decodedSymbol = typeof symbol === 'string' ? decodeURIComponent(symbol) : '';
 
+  // アナリティクス
+  const analytics = useMarketDetailAnalytics();
+
   // ブックマークの切り替え
   const toggleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
+    const newBookmarkState = !isBookmarked;
+    setIsBookmarked(newBookmarkState);
+
+    // アナリティクス追跡
+    analytics.trackBookmarkToggle(decodedSymbol, newBookmarkState ? 'add' : 'remove');
+
     // 実際の実装ではここでブックマークの保存処理を行う
     // 例: localStorage や API 呼び出しなど
   };
 
   // 各APIのデータを個別に取得する関数
   const loadMarketDetails = useCallback(async () => {
+    const startTime = Date.now();
     try {
       const data = await getMarketDetails(decodedSymbol);
       setMarketData(data);
       setErrors((prev) => ({ ...prev, marketDetails: '' }));
+
+      // データ読み込み完了を追跡
+      const loadTime = Date.now() - startTime;
+      analytics.trackDataLoadComplete(decodedSymbol, 'market_details', loadTime);
     } catch (error) {
       console.error('市場詳細データの読み込みエラー:', error);
       setErrors((prev) => ({ ...prev, marketDetails: '市場詳細データを取得できませんでした' }));
+
+      // エラーを追跡
+      analytics.trackError(decodedSymbol, error as Error, 'market_details_load');
     }
-  }, [decodedSymbol]);
+  }, [decodedSymbol, analytics]);
 
   const loadChartData = useCallback(
     async (symbolValue: string, period: string, isInitialLoad = false) => {
+      const startTime = Date.now();
       try {
         if (!isInitialLoad) {
           setIsChartLoading(true);
@@ -70,16 +88,23 @@ export default function MarketDetailPage() {
         const data = await getChartData(symbolValue, period);
         setChartData(data);
         setErrors((prev) => ({ ...prev, chartData: '' }));
+
+        // データ読み込み完了を追跡
+        const loadTime = Date.now() - startTime;
+        analytics.trackDataLoadComplete(symbolValue, `chart_data_${period}`, loadTime);
       } catch (error) {
         console.error('チャートデータの読み込みエラー:', error);
         setErrors((prev) => ({ ...prev, chartData: 'チャートデータを取得できませんでした' }));
+
+        // エラーを追跡
+        analytics.trackError(symbolValue, error as Error, 'chart_data_load');
       } finally {
         if (!isInitialLoad) {
           setIsChartLoading(false);
         }
       }
     },
-    []
+    [analytics]
   );
 
   const loadFundamentalData = useCallback(async () => {
@@ -109,7 +134,12 @@ export default function MarketDetailPage() {
 
   // 期間変更ハンドラー
   const handlePeriodChange = (period: string) => {
+    const previousPeriod = selectedPeriod;
     setSelectedPeriod(period);
+
+    // アナリティクス追跡
+    analytics.trackChartPeriodChange(decodedSymbol, previousPeriod, period);
+
     loadChartData(decodedSymbol, period, false); // 期間変更時はチャート専用ローディング
   };
 
@@ -122,6 +152,9 @@ export default function MarketDetailPage() {
 
     setIsLoading(true);
     setErrors({});
+
+    // ページビューを追跡
+    analytics.trackPageView(decodedSymbol, marketData?.name);
 
     // 各APIを並列で呼び出し（初期読み込み）
     Promise.all([
@@ -138,6 +171,7 @@ export default function MarketDetailPage() {
     loadChartData,
     loadFundamentalData,
     loadRelatedMarkets,
+    analytics,
   ]);
 
   // エラー表示コンポーネント
@@ -267,6 +301,76 @@ export default function MarketDetailPage() {
     }));
   }, [chartData]);
 
+  // セクション表示追跡用のrefs
+  const chartSectionRef = useRef<HTMLDivElement>(null);
+  const performanceSectionRef = useRef<HTMLDivElement>(null);
+  const valuationSectionRef = useRef<HTMLDivElement>(null);
+  const newsSectionRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer でセクション表示を追跡
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.3,
+      rootMargin: '0px 0px -10% 0px',
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const sectionName = entry.target.getAttribute('data-section');
+          if (sectionName) {
+            analytics.trackSectionView(decodedSymbol, sectionName);
+          }
+        }
+      });
+    }, observerOptions);
+
+    // 各セクションを監視対象に追加
+    const sections = [
+      { ref: chartSectionRef, name: 'chart' },
+      { ref: performanceSectionRef, name: 'performance_dividend' },
+      { ref: valuationSectionRef, name: 'valuation_company' },
+      { ref: newsSectionRef, name: 'news_peers' },
+    ];
+
+    sections.forEach(({ ref }) => {
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+    });
+
+    return () => {
+      sections.forEach(({ ref }) => {
+        if (ref.current) {
+          observer.unobserve(ref.current);
+        }
+      });
+    };
+  }, [decodedSymbol, analytics]);
+
+  // ページ離脱時の滞在時間追跡
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      analytics.trackPageTimeSpent(decodedSymbol);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        analytics.trackPageTimeSpent(decodedSymbol);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      // コンポーネントアンマウント時にも滞在時間を記録
+      analytics.trackPageTimeSpent(decodedSymbol);
+    };
+  }, [decodedSymbol, analytics]);
+
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] pt-20">
       {/* 共通ヘッダー */}
@@ -299,7 +403,7 @@ export default function MarketDetailPage() {
               <div className="h-[300px] bg-gray-200 rounded-lg"></div>
             </div>
           ) : (
-            <div className="relative">
+            <div ref={chartSectionRef} data-section="chart" className="relative">
               <EnhancedStockChart
                 data={enhancedChartData}
                 selectedPeriod={selectedPeriod}
@@ -320,7 +424,11 @@ export default function MarketDetailPage() {
           )}
 
           {/* パフォーマンスと配当情報 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div
+            ref={performanceSectionRef}
+            data-section="performance_dividend"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          >
             {isLoading ? (
               <>
                 <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
@@ -347,7 +455,11 @@ export default function MarketDetailPage() {
           </div>
 
           {/* バリュエーションと企業情報 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div
+            ref={valuationSectionRef}
+            data-section="valuation_company"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          >
             {isLoading ? (
               <>
                 <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
@@ -387,7 +499,11 @@ export default function MarketDetailPage() {
           </div>
 
           {/* ニュースと競合他社 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div
+            ref={newsSectionRef}
+            data-section="news_peers"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          >
             {isLoading ? (
               <>
                 <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
@@ -409,7 +525,11 @@ export default function MarketDetailPage() {
         {/* シミュレーションページ遷移ボタン */}
         <button
           className="w-full h-12 mt-2 mb-6 rounded-full bg-[var(--color-primary)] text-white font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition"
-          onClick={() => router.push(`/markets/${symbol}/simulation`)}
+          onClick={() => {
+            // アナリティクス追跡
+            analytics.trackSimulationButtonClick(decodedSymbol, marketData?.name);
+            router.push(`/markets/${symbol}/simulation`);
+          }}
           aria-label={`${marketData?.name || ''}の資産シミュレーションページへ遷移`}
         >
           <TrendingUp className="w-5 h-5" />

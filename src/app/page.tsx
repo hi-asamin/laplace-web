@@ -31,6 +31,7 @@ import {
   ScenarioComparisonDemo,
   RiskVisualizationDemo,
 } from '@/components/FeatureDemoCharts';
+import ThemeColorManager from '@/components/ThemeColorManager';
 
 // SEO メタデータ
 export const metadata: Metadata = {
@@ -118,7 +119,6 @@ export const metadata: Metadata = {
     'apple-mobile-web-app-title': 'Laplace',
     'application-name': 'Laplace',
     'msapplication-TileColor': '#00d4a1',
-    'theme-color': '#00d4a1',
   },
 };
 
@@ -340,6 +340,9 @@ export default function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
       />
 
+      {/* テーマカラー管理 */}
+      <ThemeColorManager />
+
       {/* クライアント機能 */}
       <LandingPageClientFeatures />
 
@@ -488,7 +491,7 @@ export default function LandingPage() {
         {/* Benefit Section */}
         <section
           id="benefits"
-          className="py-20 bg-gradient-to-br from-[var(--color-lp-navy)] to-[var(--color-lp-blue)] text-white"
+          className="py-20 bg-gradient-to-br from-[var(--color-lp-navy)] to-[var(--color-lp-blue)] dark:from-slate-800 dark:to-slate-900 text-white dark:text-[var(--color-text-primary)]"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">

@@ -323,39 +323,51 @@ export const InflationComparisonVisual = () => {
       </div>
 
       {/* 比較サマリー */}
-      <div className="mt-12 bg-gradient-to-r from-red-50 via-yellow-50 to-green-50 rounded-3xl p-8 border border-slate-200">
+      <div className="mt-12 bg-gradient-to-r from-red-50 via-yellow-50 to-green-50 dark:from-red-900/20 dark:via-yellow-900/20 dark:to-green-900/20 rounded-3xl p-8 border border-slate-200 dark:border-[var(--color-surface-3)]">
         <div className="text-center mb-6">
-          <h4 className="text-xl font-bold text-[var(--color-lp-navy)] mb-2">10年後の違い</h4>
-          <p className="text-slate-600">同じ100万円が生み出す価値の差</p>
+          <h4 className="text-xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-2">
+            10年後の違い
+          </h4>
+          <p className="text-slate-600 dark:text-[var(--color-text-secondary)]">
+            同じ100万円が生み出す価値の差
+          </p>
         </div>
 
         <div className="flex items-center justify-center gap-8">
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-500 mb-1">78万円相当</div>
-            <div className="text-sm text-slate-600">銀行預金</div>
-            <div className="text-xs text-red-500">-22万円相当の価値減</div>
+            <div className="text-2xl font-bold text-red-500 dark:text-red-400 mb-1">78万円相当</div>
+            <div className="text-sm text-slate-600 dark:text-[var(--color-text-secondary)]">
+              銀行預金
+            </div>
+            <div className="text-xs text-red-500 dark:text-red-400">-22万円相当の価値減</div>
           </div>
 
-          <div className="text-4xl text-slate-400">VS</div>
+          <div className="text-4xl text-slate-400 dark:text-[var(--color-text-muted)]">VS</div>
 
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-500 mb-1">163万円</div>
-            <div className="text-sm text-slate-600">NISA投資</div>
-            <div className="text-xs text-green-500">+63万円の資産増</div>
+            <div className="text-2xl font-bold text-green-500 dark:text-green-400 mb-1">
+              163万円
+            </div>
+            <div className="text-sm text-slate-600 dark:text-[var(--color-text-secondary)]">
+              NISA投資
+            </div>
+            <div className="text-xs text-green-500 dark:text-green-400">+63万円の資産増</div>
           </div>
         </div>
 
         <div className="text-center mt-6">
-          <div className="inline-flex items-center gap-2 bg-[var(--color-lp-mint)] text-white px-6 py-3 rounded-full">
+          <div className="inline-flex items-center gap-2 bg-[var(--color-lp-mint)] text-white dark:text-slate-900 px-6 py-3 rounded-full">
             <span className="font-bold text-lg">差額: 85万円</span>
           </div>
-          <p className="text-sm text-slate-500 mt-2">※インフレによる実質価値の減少分も含む</p>
+          <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)] mt-2">
+            ※インフレによる実質価値の減少分も含む
+          </p>
         </div>
       </div>
 
       {/* 注釈 */}
       <div className="mt-8 text-center">
-        <p className="text-xs text-slate-500 max-w-4xl mx-auto leading-relaxed">
+        <p className="text-xs text-slate-500 dark:text-[var(--color-text-muted)] max-w-4xl mx-auto leading-relaxed">
           ※上記は、元本100万円を、インフレ率 年2.5%、NISA運用での期待リターン 年5%（複利）と仮定し、
           10年間運用した場合のシミュレーションイメージです。運用成果を保証するものではありません。
         </p>

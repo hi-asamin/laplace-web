@@ -43,16 +43,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${baseUrl}/markets/self/simulation`,
+      url: `${baseUrl}/start`,
       lastModified: currentDate,
       changeFrequency: 'weekly' as const,
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/search`,
+      url: `${baseUrl}/markets/self/simulation`,
       lastModified: currentDate,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/search`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
     },
   ];
 
@@ -61,7 +67,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}/markets/${symbol}/simulation`,
     lastModified: currentDate,
     changeFrequency: 'daily' as const,
-    priority: 0.7,
+    priority: 0.6,
   }));
 
   // 人気銘柄の個別詳細ページ
@@ -69,7 +75,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}/markets/${symbol}`,
     lastModified: currentDate,
     changeFrequency: 'daily' as const,
-    priority: 0.6,
+    priority: 0.5,
   }));
 
   return [...staticPages, ...stockPages, ...stockDetailPages];

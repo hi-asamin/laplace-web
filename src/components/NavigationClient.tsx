@@ -38,8 +38,8 @@ export default function NavigationClient() {
               FAQ
             </a>
             <Link
-              href="/markets/self/simulation"
-              onClick={() => trackCTAClick('nav', '無料で始める', '/markets/self/simulation')}
+              href="/start"
+              onClick={() => trackCTAClick('nav', '無料で始める', '/start')}
               className="bg-[var(--color-lp-mint)] text-white px-6 py-2 rounded-full hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105"
             >
               無料で始める

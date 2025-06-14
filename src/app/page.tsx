@@ -368,7 +368,7 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                   <Link
-                    href="/markets/self/simulation"
+                    href="/start"
                     className="bg-[var(--color-lp-mint)] text-white dark:text-slate-900 px-8 py-4 rounded-full text-lg font-semibold hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105 flex items-center gap-2 shadow-xl dark:shadow-[0_20px_25px_-5px_rgba(0,255,196,0.3)]"
                   >
                     <Play className="w-5 h-5" />
@@ -611,7 +611,7 @@ export default function LandingPage() {
             </h2>
             <p className="text-xl mb-8 opacity-90">ワンクリックで始める、新しい資産形成体験</p>
             <Link
-              href="/markets/self/simulation"
+              href="/start"
               className="inline-flex items-center gap-3 bg-white dark:bg-[var(--color-surface-1)] text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] px-10 py-5 rounded-full text-xl font-bold hover:bg-slate-100 dark:hover:bg-[var(--color-surface-2)] transition-all hover:scale-105 shadow-2xl dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
             >
               <Play className="w-6 h-6" />

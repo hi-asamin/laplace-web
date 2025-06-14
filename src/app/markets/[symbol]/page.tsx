@@ -259,10 +259,10 @@ export default function MarketDetailPage() {
         { year: '2023', dividend: 135 },
         { year: '2024', dividend: 140, isEstimate: true },
       ],
-      nextExDate: '2024-06-15',
+      nextExDate: fundamentalData?.dividendData?.exDividendDate || undefined,
       annualDividend: 140,
     }),
-    []
+    [fundamentalData]
   );
 
   const mockValuationData = useMemo(

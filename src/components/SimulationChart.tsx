@@ -199,7 +199,7 @@ export default function SimulationChart({
               y1={y}
               x2={width - rightPadding}
               y2={y}
-              stroke="#e2e8f0"
+              stroke="var(--color-surface-3)"
               strokeWidth="0.5"
               opacity="0.4"
             />
@@ -208,7 +208,7 @@ export default function SimulationChart({
               y={y + 4}
               textAnchor="end"
               fontSize="12"
-              fill="#94A3B8"
+              fill="var(--color-text-tertiary)"
               fontFamily="Inter, sans-serif"
             >
               {value >= 100000000
@@ -235,7 +235,7 @@ export default function SimulationChart({
           y={height - 8}
           textAnchor="middle"
           fontSize="12"
-          fill="#94A3B8"
+          fill="var(--color-text-tertiary)"
           fontFamily="Inter, sans-serif"
         >
           {d.year}年
@@ -338,7 +338,7 @@ export default function SimulationChart({
                   opacity: 0.1,
                 }}
               ></span>
-              <span className="text-[var(--color-gray-700)]">積立元本</span>
+              <span className="text-[var(--color-text-secondary)]">積立元本</span>
             </span>
             <span className="flex items-center gap-2">
               <span
@@ -348,7 +348,7 @@ export default function SimulationChart({
                   opacity: 0.25,
                 }}
               ></span>
-              <span className="text-[var(--color-gray-700)]">複利利益</span>
+              <span className="text-[var(--color-text-secondary)]">複利利益</span>
             </span>
             <span className="flex items-center gap-2">
               <span
@@ -357,7 +357,7 @@ export default function SimulationChart({
                   background: 'var(--color-primary)',
                 }}
               ></span>
-              <span className="text-[var(--color-gray-700)]">資産総額</span>
+              <span className="text-[var(--color-text-secondary)]">資産総額</span>
             </span>
           </>
         ) : (
@@ -369,7 +369,7 @@ export default function SimulationChart({
                 opacity: 0.3,
               }}
             ></span>
-            <span className="text-[var(--color-gray-700)]">資産残高</span>
+            <span className="text-[var(--color-text-secondary)]">資産残高</span>
           </span>
         )}
       </div>
@@ -472,7 +472,7 @@ export default function SimulationChart({
                   cx={hoveredPoint.x}
                   cy={hoveredPoint.y}
                   r="6"
-                  fill="white"
+                  fill="var(--color-surface)"
                   stroke="var(--color-primary)"
                   strokeWidth="3"
                   style={{
@@ -485,7 +485,7 @@ export default function SimulationChart({
                     cx={hoveredPoint.x}
                     cy={hoveredPoint.principalY}
                     r="4"
-                    fill="white"
+                    fill="var(--color-surface)"
                     stroke="var(--color-primary)"
                     strokeWidth="2"
                     strokeOpacity="0.7"
@@ -500,7 +500,7 @@ export default function SimulationChart({
       {/* インタラクティブツールチップ */}
       {hoveredPoint && (
         <div
-          className="absolute bg-white rounded-lg p-4 shadow-lg pointer-events-none z-10 border border-gray-100"
+          className="absolute bg-white dark:bg-[var(--color-surface-2)] rounded-lg p-4 shadow-lg pointer-events-none z-10 border border-gray-100 dark:border-[var(--color-surface-3)]"
           style={{
             left: `${(hoveredPoint.x / width) * 100}%`,
             top: '10px',
@@ -520,9 +520,9 @@ export default function SimulationChart({
                       className="w-3 h-3 rounded-sm"
                       style={{ background: 'var(--color-primary)', opacity: 0.1 }}
                     ></span>
-                    積立元本
+                    <span className="text-[var(--color-text-secondary)]">積立元本</span>
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium text-[var(--color-text-primary)]">
                     {hoveredPoint.principal >= 100000000
                       ? `${(hoveredPoint.principal / 100000000).toFixed(1)}億円`
                       : `${Math.round(hoveredPoint.principal / 10000)}万円`}
@@ -534,21 +534,21 @@ export default function SimulationChart({
                       className="w-3 h-3 rounded-sm"
                       style={{ background: 'var(--color-primary)', opacity: 0.25 }}
                     ></span>
-                    複利利益
+                    <span className="text-[var(--color-text-secondary)]">複利利益</span>
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium text-[var(--color-text-primary)]">
                     {hoveredPoint.dividendProfit >= 100000000
                       ? `${(hoveredPoint.dividendProfit / 100000000).toFixed(1)}億円`
                       : `${Math.round(hoveredPoint.dividendProfit / 10000)}万円`}
                   </span>
                 </div>
-                <div className="flex justify-between items-center border-t border-gray-200 pt-2">
+                <div className="flex justify-between items-center border-t border-gray-200 dark:border-[var(--color-surface-3)] pt-2">
                   <span className="flex items-center gap-2 font-medium">
                     <span
                       className="w-3 h-1 rounded-sm"
                       style={{ background: 'var(--color-primary)' }}
                     ></span>
-                    資産総額
+                    <span className="text-[var(--color-text-primary)]">資産総額</span>
                   </span>
                   <span className="font-bold text-[var(--color-primary)]">
                     {hoveredPoint.totalAssets >= 100000000
@@ -565,9 +565,9 @@ export default function SimulationChart({
                       className="w-3 h-3 rounded-sm"
                       style={{ background: 'var(--color-primary)', opacity: 0.3 }}
                     ></span>
-                    残高
+                    <span className="text-[var(--color-text-secondary)]">残高</span>
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium text-[var(--color-text-primary)]">
                     {hoveredPoint.totalAssets >= 100000000
                       ? `${(hoveredPoint.totalAssets / 100000000).toFixed(1)}億円`
                       : `${Math.round(hoveredPoint.totalAssets / 10000)}万円`}
@@ -575,8 +575,8 @@ export default function SimulationChart({
                 </div>
                 {hoveredPoint.withdrawalAmount && (
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">取り崩し額</span>
-                    <span className="font-medium">
+                    <span className="text-[var(--color-text-secondary)]">取り崩し額</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">
                       {hoveredPoint.withdrawalAmount >= 100000000
                         ? `${(hoveredPoint.withdrawalAmount / 100000000).toFixed(1)}億円`
                         : `${Math.round(hoveredPoint.withdrawalAmount / 10000)}万円`}

@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { ChevronLeft, Plus, Bookmark, Search } from 'lucide-react';
+
 // 開発環境でのアナリティクステスト用
 import '@/utils/analyticsTestUtils';
+import MarketHeader from '@/components/MarketHeader';
 import AssetAccumulationSimulator, {
   AssetAccumulationSettingsPanel,
 } from '@/components/AssetAccumulationSimulator';
@@ -37,6 +38,7 @@ export default function SimulationPage() {
   // 銘柄データの状態
   const [marketData, setMarketData] = useState<MarketDetails | null>(null);
   const [isLoadingMarketData, setIsLoadingMarketData] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   // URL パラメータから初期設定を取得
   const initialQuestionType = searchParams.get('q') || 'total-assets';
@@ -92,6 +94,13 @@ export default function SimulationPage() {
     if (symbol && symbol !== 'self') {
       router.push(`/markets/${symbol}`);
     }
+  };
+
+  // ブックマークの切り替え
+  const toggleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
+    // 実際の実装ではここでブックマークの保存処理を行う
+    // 例: localStorage や API 呼び出しなど
   };
 
   // URLパラメータから初期設定を構築
@@ -254,7 +263,7 @@ export default function SimulationPage() {
     let rafId: number;
 
     const checkTabPosition = () => {
-      // ナビゲーションの高さを取得（sticky headerの分を考慮）
+      // ナビゲーションの高さを取得（fixed headerの分を考慮）
       const navHeight = 120; // ページヘッダー + ナビゲーションの高さ
       const scrollPosition = window.scrollY + navHeight;
 
@@ -327,72 +336,30 @@ export default function SimulationPage() {
   }, [activeTab, accumulationSimulation.settings, distributionSimulation.settings]);
 
   return (
-    <main className="min-h-screen bg-[var(--color-surface)] dark:bg-[var(--color-surface-1)]">
-      {/* 新しいヘッダー */}
-      <div className="bg-white dark:bg-[var(--color-surface-1)] border-b border-[var(--color-gray-200)] dark:border-[var(--color-surface-3)] py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            {/* 左側: 戻るボタン */}
-            <button
-              onClick={handleGoBack}
-              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors"
-            >
-              <ChevronLeft className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
-            </button>
-
-            {/* 中央: 銘柄名 */}
-            <div className="flex-1 text-center">
-              {isLoadingMarketData ? (
-                <div className="animate-pulse">
-                  <div className="h-6 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-24 mx-auto"></div>
-                </div>
-              ) : marketData ? (
-                <button
-                  onClick={handleNavigateToMarketDetail}
-                  className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] hover:text-[var(--color-lp-mint)] transition-colors"
-                >
-                  {marketData.name}
-                </button>
-              ) : symbol && symbol !== 'self' ? (
-                <button
-                  onClick={handleNavigateToMarketDetail}
-                  className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] hover:text-[var(--color-lp-mint)] transition-colors"
-                >
-                  {symbol.toUpperCase()}
-                </button>
-              ) : (
-                <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
-                  資産シミュレーション
-                </h1>
-              )}
-            </div>
-
-            {/* 右側: アクションボタン */}
-            <div className="flex items-center gap-2">
-              {/* 追加ボタン */}
-              <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors">
-                <Plus className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
-              </button>
-
-              {/* ブックマークボタン */}
-              <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors">
-                <Bookmark className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
-              </button>
-
-              {/* 検索ボタン */}
-              <button
-                onClick={handleSearch}
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors"
-              >
-                <Search className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <main className="min-h-screen bg-[var(--color-surface)] dark:bg-[var(--color-surface-1)] pt-[120px]">
+      {/* 共通ヘッダー */}
+      <MarketHeader
+        symbol={symbol}
+        marketName={marketData?.name}
+        isLoadingMarketData={isLoadingMarketData}
+        price={marketData?.price}
+        change={marketData?.change}
+        changePercent={marketData?.changePercent}
+        isPositive={marketData?.isPositive}
+        showPriceInfo={!!marketData && symbol !== 'self'}
+        customTitle={symbol === 'self' ? '資産シミュレーション' : undefined}
+        isBookmarked={isBookmarked}
+        onToggleBookmark={toggleBookmark}
+        onGoBack={handleGoBack}
+        onNavigateToMarketDetail={handleNavigateToMarketDetail}
+        onSearch={handleSearch}
+        showAddButton={true}
+        showBookmarkButton={true}
+        showSearchButton={true}
+      />
 
       {/* ナビゲーション */}
-      <div className="bg-[var(--color-surface-alt)] border-b border-[var(--color-gray-200)] sticky top-0 z-30">
+      <div className="bg-[var(--color-surface-alt)] dark:bg-[var(--color-surface-2)] border-b border-[var(--color-gray-200)] dark:border-[var(--color-surface-3)] fixed top-[72px] left-0 right-0 z-30 backdrop-blur-md bg-opacity-95 dark:bg-opacity-95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8 overflow-x-auto scrollbar-none">
             <button
@@ -416,7 +383,7 @@ export default function SimulationPage() {
               className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === '#accumulation'
                   ? 'border-[var(--color-lp-mint)] text-[var(--color-lp-mint)]'
-                  : 'border-transparent text-[var(--color-gray-500)] hover:text-[var(--color-gray-700)] hover:border-[var(--color-gray-300)]'
+                  : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-surface-3)]'
               }`}
             >
               資産形成
@@ -442,7 +409,7 @@ export default function SimulationPage() {
               className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
                 activeTab === '#distribution'
                   ? 'border-[var(--color-lp-mint)] text-[var(--color-lp-mint)]'
-                  : 'border-transparent text-[var(--color-gray-500)] hover:text-[var(--color-gray-700)] hover:border-[var(--color-gray-300)]'
+                  : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-surface-3)]'
               }`}
             >
               資産活用
@@ -551,10 +518,10 @@ export default function SimulationPage() {
 
       {/* 連携インジケーター */}
       {inheritedAssets && (
-        <div className="py-4 bg-[var(--color-surface-alt)] border-b border-[var(--color-gray-200)]">
+        <div className="py-4 bg-[var(--color-surface-alt)] dark:bg-[var(--color-surface-2)] border-b border-[var(--color-gray-200)] dark:border-[var(--color-surface-3)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-center space-x-4">
-              <span className="text-sm text-[var(--color-gray-600)]">
+              <span className="text-sm text-[var(--color-text-secondary)]">
                 資産総額 ¥{inheritedAssets.toLocaleString()} を活用シミュレーションに連携
               </span>
               <div className="w-2 h-2 bg-[var(--color-lp-mint)] rounded-full animate-pulse"></div>

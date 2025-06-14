@@ -17,6 +17,16 @@
   --color-surface: #ffffff;
   --color-surface-alt: #f5f7fa;
 
+  /* 階層表現用カラー（ライトモード） */
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f8fafc;
+  --color-surface-3: #e2e8f0;
+
+  /* テキストカラー（ライトモード） */
+  --color-text-primary: #0a2540;
+  --color-text-secondary: #334155;
+  --color-text-tertiary: #94a3b8;
+
   /* LP Color Palette */
   --color-lp-navy: #0a2540;
   --color-lp-mint: #00d4a1;
@@ -63,6 +73,7 @@
     /* テキストカラー */
     --color-text-primary: #f8fafc; /* メインテキスト */
     --color-text-secondary: #cbd5e1; /* セカンダリテキスト */
+    --color-text-tertiary: #94a3b8; /* 第三テキスト（ラベル等） */
     --color-text-muted: #94a3b8; /* ミュートテキスト */
 
     /* Dark mode color tokens (既存) */

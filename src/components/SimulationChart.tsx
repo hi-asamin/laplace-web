@@ -157,18 +157,31 @@ export default function SimulationChart({
     const range = effectiveMax - effectiveMin;
     let step: number;
 
-    // 適切な目盛り間隔を決定
+    // 適切な目盛り間隔を決定（最大8-10個のメモリになるように調整）
     if (range <= 5000000) {
       // 500万以下
       step = 1000000; // 100万刻み
     } else if (range <= 10000000) {
       // 1000万以下
       step = 2000000; // 200万刻み
+    } else if (range <= 25000000) {
+      // 2500万以下
+      step = 5000000; // 500万刻み
     } else if (range <= 50000000) {
       // 5000万以下
-      step = 5000000; // 500万刻み
-    } else {
       step = 10000000; // 1000万刻み
+    } else if (range <= 100000000) {
+      // 1億以下
+      step = 20000000; // 2000万刻み
+    } else if (range <= 250000000) {
+      // 2.5億以下
+      step = 50000000; // 5000万刻み
+    } else if (range <= 500000000) {
+      // 5億以下
+      step = 100000000; // 1億刻み
+    } else {
+      // 5億超
+      step = 200000000; // 2億刻み
     }
 
     // 開始値を最も近い step の倍数に調整
@@ -198,7 +211,9 @@ export default function SimulationChart({
               fill="#94A3B8"
               fontFamily="Inter, sans-serif"
             >
-              {Math.round(value / 10000)}万
+              {value >= 100000000
+                ? `${(value / 100000000).toFixed(value % 100000000 === 0 ? 0 : 1)}億`
+                : `${Math.round(value / 10000)}万`}
             </text>
           </g>
         );
@@ -508,7 +523,9 @@ export default function SimulationChart({
                     積立元本
                   </span>
                   <span className="font-medium">
-                    {Math.round(hoveredPoint.principal / 10000)}万円
+                    {hoveredPoint.principal >= 100000000
+                      ? `${(hoveredPoint.principal / 100000000).toFixed(1)}億円`
+                      : `${Math.round(hoveredPoint.principal / 10000)}万円`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -520,7 +537,9 @@ export default function SimulationChart({
                     複利利益
                   </span>
                   <span className="font-medium">
-                    {Math.round(hoveredPoint.dividendProfit / 10000)}万円
+                    {hoveredPoint.dividendProfit >= 100000000
+                      ? `${(hoveredPoint.dividendProfit / 100000000).toFixed(1)}億円`
+                      : `${Math.round(hoveredPoint.dividendProfit / 10000)}万円`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center border-t border-gray-200 pt-2">
@@ -532,7 +551,9 @@ export default function SimulationChart({
                     資産総額
                   </span>
                   <span className="font-bold text-[var(--color-primary)]">
-                    {Math.round(hoveredPoint.totalAssets / 10000)}万円
+                    {hoveredPoint.totalAssets >= 100000000
+                      ? `${(hoveredPoint.totalAssets / 100000000).toFixed(1)}億円`
+                      : `${Math.round(hoveredPoint.totalAssets / 10000)}万円`}
                   </span>
                 </div>
               </>
@@ -547,14 +568,18 @@ export default function SimulationChart({
                     残高
                   </span>
                   <span className="font-medium">
-                    {Math.round(hoveredPoint.totalAssets / 10000)}万円
+                    {hoveredPoint.totalAssets >= 100000000
+                      ? `${(hoveredPoint.totalAssets / 100000000).toFixed(1)}億円`
+                      : `${Math.round(hoveredPoint.totalAssets / 10000)}万円`}
                   </span>
                 </div>
                 {hoveredPoint.withdrawalAmount && (
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">取り崩し額</span>
                     <span className="font-medium">
-                      {Math.round(hoveredPoint.withdrawalAmount / 10000)}万円
+                      {hoveredPoint.withdrawalAmount >= 100000000
+                        ? `${(hoveredPoint.withdrawalAmount / 100000000).toFixed(1)}億円`
+                        : `${Math.round(hoveredPoint.withdrawalAmount / 10000)}万円`}
                     </span>
                   </div>
                 )}

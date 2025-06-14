@@ -33,6 +33,14 @@ export default function MarketDetailPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('1Y');
   const [isBookmarked, setIsBookmarked] = useState(false);
 
+  // 個別ローディング状態
+  const [loadingStates, setLoadingStates] = useState({
+    marketData: true,
+    chartData: true,
+    fundamentalData: true,
+    relatedMarkets: true,
+  });
+
   // データ状態
   const [marketData, setMarketData] = useState<MarketDetails | null>(null);
   const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -63,46 +71,63 @@ export default function MarketDetailPage() {
   // 各APIのデータを個別に取得する関数
   const loadMarketDetails = useCallback(async () => {
     const startTime = Date.now();
+
     try {
       const data = await getMarketDetails(decodedSymbol);
+      const loadTime = Date.now() - startTime;
+
       setMarketData(data);
       setErrors((prev) => ({ ...prev, marketDetails: '' }));
+      setLoadingStates((prev) => ({ ...prev, marketData: false }));
 
       // データ読み込み完了を追跡
-      const loadTime = Date.now() - startTime;
       if (analytics) {
         analytics.trackDataLoadComplete(decodedSymbol, 'market_details', loadTime);
       }
     } catch (error) {
-      console.error('市場詳細データの読み込みエラー:', error);
+      const loadTime = Date.now() - startTime;
+
       setErrors((prev) => ({ ...prev, marketDetails: '市場詳細データを取得できませんでした' }));
+      setLoadingStates((prev) => ({ ...prev, marketData: false }));
 
       // エラーを追跡
       if (analytics) {
         analytics.trackError(decodedSymbol, error as Error, 'market_details_load');
       }
     }
-  }, [decodedSymbol]); // analyticsを依存配列から削除
+  }, [decodedSymbol]);
 
   const loadChartData = useCallback(
     async (symbolValue: string, period: string, isInitialLoad = false) => {
       const startTime = Date.now();
+
       try {
         if (!isInitialLoad) {
           setIsChartLoading(true);
         }
+
         const data = await getChartData(symbolValue, period);
+        const loadTime = Date.now() - startTime;
+
         setChartData(data);
         setErrors((prev) => ({ ...prev, chartData: '' }));
 
+        if (isInitialLoad) {
+          setLoadingStates((prev) => ({ ...prev, chartData: false }));
+        }
+
         // データ読み込み完了を追跡
-        const loadTime = Date.now() - startTime;
         if (analytics) {
           analytics.trackDataLoadComplete(symbolValue, `chart_data_${period}`, loadTime);
         }
       } catch (error) {
-        console.error('チャートデータの読み込みエラー:', error);
+        const loadTime = Date.now() - startTime;
+
         setErrors((prev) => ({ ...prev, chartData: 'チャートデータを取得できませんでした' }));
+
+        if (isInitialLoad) {
+          setLoadingStates((prev) => ({ ...prev, chartData: false }));
+        }
 
         // エラーを追跡
         if (analytics) {
@@ -114,31 +139,35 @@ export default function MarketDetailPage() {
         }
       }
     },
-    [] // analyticsを依存配列から削除
+    []
   );
 
   const loadFundamentalData = useCallback(async () => {
     try {
       const data = await getFundamentalData(decodedSymbol);
+
       setFundamentalData(data);
       setErrors((prev) => ({ ...prev, fundamentalData: '' }));
+      setLoadingStates((prev) => ({ ...prev, fundamentalData: false }));
     } catch (error) {
-      console.error('ファンダメンタルデータの読み込みエラー:', error);
       setErrors((prev) => ({
         ...prev,
         fundamentalData: 'ファンダメンタルデータを取得できませんでした',
       }));
+      setLoadingStates((prev) => ({ ...prev, fundamentalData: false }));
     }
   }, [decodedSymbol]);
 
   const loadRelatedMarkets = useCallback(async () => {
     try {
       const data = await getRelatedMarkets(decodedSymbol);
+
       setRelatedMarkets(data.items || []);
       setErrors((prev) => ({ ...prev, relatedMarkets: '' }));
+      setLoadingStates((prev) => ({ ...prev, relatedMarkets: false }));
     } catch (error) {
-      console.error('関連銘柄データの読み込みエラー:', error);
       setErrors((prev) => ({ ...prev, relatedMarkets: '関連銘柄データを取得できませんでした' }));
+      setLoadingStates((prev) => ({ ...prev, relatedMarkets: false }));
     }
   }, [decodedSymbol]);
 
@@ -162,19 +191,33 @@ export default function MarketDetailPage() {
       return;
     }
 
+    // 初期状態をリセット
     setIsLoading(true);
     setErrors({});
-
-    // 各APIを並列で呼び出し（初期読み込み）
-    Promise.all([
-      loadMarketDetails(),
-      loadChartData(decodedSymbol, selectedPeriod, true), // 初期読み込みフラグをtrue
-      loadFundamentalData(),
-      loadRelatedMarkets(),
-    ]).finally(() => {
-      setIsLoading(false);
+    setLoadingStates({
+      marketData: true,
+      chartData: true,
+      fundamentalData: true,
+      relatedMarkets: true,
     });
-  }, [decodedSymbol]); // 依存配列をdecodedSymbolのみに変更
+
+    // 優先度1: ヘッダー表示に必要な基本情報（最優先）
+    loadMarketDetails();
+
+    // 優先度2: チャートデータ（ユーザーが最初に見るコンテンツ）
+    loadChartData(decodedSymbol, selectedPeriod, true);
+
+    // 優先度3: その他のデータ（バックグラウンドで読み込み）
+    loadFundamentalData();
+    loadRelatedMarkets();
+
+    // 全体の読み込み完了をモニタリング（基本情報とチャートのみで十分）
+    Promise.all([loadMarketDetails(), loadChartData(decodedSymbol, selectedPeriod, true)]).finally(
+      () => {
+        setIsLoading(false); // 基本情報とチャートが揃えばローディング終了
+      }
+    );
+  }, [decodedSymbol]);
 
   // ページビュー追跡用の別useEffect
   useEffect(() => {
@@ -413,9 +456,14 @@ export default function MarketDetailPage() {
         {/* 新しいダッシュボード型レイアウト */}
         <div className="space-y-6 mb-6">
           {/* メインチャート */}
-          {isLoading ? (
+          {loadingStates.chartData ? (
             <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
-              <div className="h-[300px] bg-gray-200 rounded-lg"></div>
+              <div className="h-[300px] bg-gray-200 dark:bg-[var(--color-surface-3)] rounded-lg"></div>
+              <div className="mt-4 flex justify-center">
+                <div className="text-sm text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+                  📊 チャートデータを読み込み中...
+                </div>
+              </div>
             </div>
           ) : (
             <div ref={chartSectionRef} data-section="chart" className="relative">
@@ -444,28 +492,40 @@ export default function MarketDetailPage() {
             data-section="performance_dividend"
             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
-            {isLoading ? (
-              <>
-                <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
-                  <div className="h-[200px] bg-gray-200 rounded-lg"></div>
+            {/* パフォーマンスカード */}
+            {loadingStates.marketData ? (
+              <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
+                <div className="h-[200px] bg-gray-200 dark:bg-[var(--color-surface-3)] rounded-lg"></div>
+                <div className="mt-4 flex justify-center">
+                  <div className="text-sm text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+                    📈 パフォーマンスデータを読み込み中...
+                  </div>
                 </div>
-                <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
-                  <div className="h-[200px] bg-gray-200 rounded-lg"></div>
-                </div>
-              </>
+              </div>
             ) : (
-              <>
-                <PerformanceCard
-                  performanceData={mockPerformanceData}
-                  currentPrice={parseFloat(marketData?.price?.replace(/[¥,$]/g, '') || '0')}
-                />
-                <DividendCard
-                  currentYield={mockDividendData.currentYield}
-                  dividendHistory={mockDividendData.dividendHistory}
-                  nextExDate={mockDividendData.nextExDate}
-                  annualDividend={mockDividendData.annualDividend}
-                />
-              </>
+              <PerformanceCard
+                performanceData={mockPerformanceData}
+                currentPrice={parseFloat(marketData?.price?.replace(/[¥,$]/g, '') || '0')}
+              />
+            )}
+
+            {/* 配当カード */}
+            {loadingStates.fundamentalData ? (
+              <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
+                <div className="h-[200px] bg-gray-200 dark:bg-[var(--color-surface-3)] rounded-lg"></div>
+                <div className="mt-4 flex justify-center">
+                  <div className="text-sm text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+                    💰 配当データを読み込み中...
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <DividendCard
+                currentYield={mockDividendData.currentYield}
+                dividendHistory={mockDividendData.dividendHistory}
+                nextExDate={mockDividendData.nextExDate}
+                annualDividend={mockDividendData.annualDividend}
+              />
             )}
           </div>
 
@@ -475,41 +535,53 @@ export default function MarketDetailPage() {
             data-section="valuation_company"
             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
-            {isLoading ? (
-              <>
-                <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
-                  <div className="h-[200px] bg-gray-200 rounded-lg"></div>
+            {/* バリュエーションカード */}
+            {loadingStates.fundamentalData ? (
+              <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
+                <div className="h-[200px] bg-gray-200 dark:bg-[var(--color-surface-3)] rounded-lg"></div>
+                <div className="mt-4 flex justify-center">
+                  <div className="text-sm text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+                    📊 バリュエーションデータを読み込み中...
+                  </div>
                 </div>
-                <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
-                  <div className="h-[200px] bg-gray-200 rounded-lg"></div>
-                </div>
-              </>
+              </div>
             ) : (
-              <>
-                <ValuationScoreCard
-                  valuationData={{
-                    pbr: mockValuationData.pbr,
-                    per: mockValuationData.per,
-                    industryAvgPbr: mockValuationData.industryAvgPbr,
-                    industryAvgPer: mockValuationData.industryAvgPer,
-                    industryName: mockValuationData.industryName,
-                  }}
-                />
-                <CompanyProfileCard
-                  companyData={{
-                    name: mockCompanyData.name,
-                    logoUrl: mockCompanyData.logoUrl,
-                    website: mockCompanyData.website,
-                    description: mockCompanyData.description,
-                    industry: mockCompanyData.industry,
-                    sector: mockCompanyData.sector,
-                    employees: mockCompanyData.employees,
-                    founded: mockCompanyData.founded,
-                    headquarters: mockCompanyData.headquarters,
-                    marketCap: mockCompanyData.marketCap,
-                  }}
-                />
-              </>
+              <ValuationScoreCard
+                valuationData={{
+                  pbr: mockValuationData.pbr,
+                  per: mockValuationData.per,
+                  industryAvgPbr: mockValuationData.industryAvgPbr,
+                  industryAvgPer: mockValuationData.industryAvgPer,
+                  industryName: mockValuationData.industryName,
+                }}
+              />
+            )}
+
+            {/* 企業情報カード */}
+            {loadingStates.marketData ? (
+              <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
+                <div className="h-[200px] bg-gray-200 dark:bg-[var(--color-surface-3)] rounded-lg"></div>
+                <div className="mt-4 flex justify-center">
+                  <div className="text-sm text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+                    🏢 企業情報を読み込み中...
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <CompanyProfileCard
+                companyData={{
+                  name: mockCompanyData.name,
+                  logoUrl: mockCompanyData.logoUrl,
+                  website: mockCompanyData.website,
+                  description: mockCompanyData.description,
+                  industry: mockCompanyData.industry,
+                  sector: mockCompanyData.sector,
+                  employees: mockCompanyData.employees,
+                  founded: mockCompanyData.founded,
+                  headquarters: mockCompanyData.headquarters,
+                  marketCap: mockCompanyData.marketCap,
+                }}
+              />
             )}
           </div>
 
@@ -519,20 +591,25 @@ export default function MarketDetailPage() {
             data-section="news_peers"
             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
-            {isLoading ? (
-              <>
-                <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
-                  <div className="h-[200px] bg-gray-200 rounded-lg"></div>
+            {/* ニュースカード */}
+            <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg">
+              <NewsCard newsItems={mockNewsData} />
+            </div>
+
+            {/* 競合他社カード */}
+            {loadingStates.relatedMarkets ? (
+              <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
+                <div className="h-[200px] bg-gray-200 dark:bg-[var(--color-surface-3)] rounded-lg"></div>
+                <div className="mt-4 flex justify-center">
+                  <div className="text-sm text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+                    🔗 関連銘柄を読み込み中...
+                  </div>
                 </div>
-                <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
-                  <div className="h-[200px] bg-gray-200 rounded-lg"></div>
-                </div>
-              </>
+              </div>
             ) : (
-              <>
-                <NewsCard newsItems={mockNewsData} />
+              <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg">
                 <PeersCard peers={mockPeersData} industryName="自動車" />
-              </>
+              </div>
             )}
           </div>
         </div>

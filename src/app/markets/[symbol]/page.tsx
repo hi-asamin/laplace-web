@@ -320,16 +320,82 @@ export default function MarketDetailPage() {
     [fundamentalData]
   );
 
-  const mockValuationData = useMemo(
-    () => ({
-      pbr: 1.2,
-      per: 15.8,
+  // 実際のAPIデータを使用したバリュエーション計算
+  const valuationData = useMemo(() => {
+    // デフォルト値（データがない場合）
+    const defaultData = {
+      pbr: 0,
+      per: 0,
       industryAvgPbr: 1.5,
-      industryAvgPer: 18.2,
-      industryName: '自動車',
-    }),
-    []
-  );
+      industryAvgPer: 15.0,
+      industryName: marketData?.industry || marketData?.sector || '一般',
+    };
+
+    if (!fundamentalData?.keyMetrics) {
+      return defaultData;
+    }
+
+    const keyMetrics = fundamentalData.keyMetrics;
+
+    // PBR（株価純資産倍率）を取得
+    const pbr = keyMetrics.priceToBook ? parseFloat(keyMetrics.priceToBook) : 0;
+
+    // PER（株価収益率）を取得
+    const per = keyMetrics.peRatio ? parseFloat(keyMetrics.peRatio) : 0;
+
+    // 業界平均の推定（業界・セクターに基づく）
+    const getIndustryAverages = (industry?: string, sector?: string) => {
+      const industryName = industry || sector || '一般';
+
+      // 業界別の平均的なPBR/PER（実際の統計データに基づく概算値）
+      const industryAverages: { [key: string]: { pbr: number; per: number } } = {
+        自動車: { pbr: 1.2, per: 12.0 },
+        輸送用機器: { pbr: 1.2, per: 12.0 },
+        テクノロジー: { pbr: 3.5, per: 25.0 },
+        '情報・通信業': { pbr: 3.5, per: 25.0 },
+        金融: { pbr: 0.8, per: 10.0 },
+        銀行業: { pbr: 0.8, per: 10.0 },
+        医薬品: { pbr: 2.8, per: 20.0 },
+        '医療・ヘルスケア': { pbr: 2.8, per: 20.0 },
+        小売: { pbr: 2.0, per: 15.0 },
+        小売業: { pbr: 2.0, per: 15.0 },
+        不動産: { pbr: 1.0, per: 12.0 },
+        不動産業: { pbr: 1.0, per: 12.0 },
+        エネルギー: { pbr: 1.5, per: 10.0 },
+        '石油・ガス': { pbr: 1.5, per: 10.0 },
+        素材: { pbr: 1.3, per: 12.0 },
+        化学: { pbr: 1.3, per: 12.0 },
+        食品: { pbr: 1.8, per: 16.0 },
+        '食品・飲料': { pbr: 1.8, per: 16.0 },
+        一般: { pbr: 1.5, per: 15.0 },
+      };
+
+      // 完全一致を探す
+      if (industryAverages[industryName]) {
+        return industryAverages[industryName];
+      }
+
+      // 部分一致を探す
+      for (const [key, value] of Object.entries(industryAverages)) {
+        if (industryName.includes(key) || key.includes(industryName)) {
+          return value;
+        }
+      }
+
+      // デフォルト値を返す
+      return industryAverages['一般'];
+    };
+
+    const industryAvg = getIndustryAverages(marketData?.industry, marketData?.sector);
+
+    return {
+      pbr: pbr,
+      per: per,
+      industryAvgPbr: industryAvg.pbr,
+      industryAvgPer: industryAvg.per,
+      industryName: marketData?.industry || marketData?.sector || '一般',
+    };
+  }, [fundamentalData, marketData]);
 
   const mockCompanyData = useMemo(
     () => ({
@@ -601,15 +667,7 @@ export default function MarketDetailPage() {
                 </div>
               </div>
             ) : (
-              <ValuationScoreCard
-                valuationData={{
-                  pbr: mockValuationData.pbr,
-                  per: mockValuationData.per,
-                  industryAvgPbr: mockValuationData.industryAvgPbr,
-                  industryAvgPer: mockValuationData.industryAvgPer,
-                  industryName: mockValuationData.industryName,
-                }}
-              />
+              <ValuationScoreCard valuationData={valuationData} />
             )}
 
             {/* 企業情報カード */}

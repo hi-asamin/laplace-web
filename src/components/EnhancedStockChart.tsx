@@ -143,11 +143,11 @@ export default function EnhancedStockChart({
       </div>
 
       {/* 期間選択タブ */}
-      <div className="flex justify-between w-full mb-6 overflow-x-auto no-scrollbar gap-1">
+      <div className="flex justify-between w-full mb-6 overflow-x-auto overflow-y-hidden no-scrollbar gap-1 touch-pan-x">
         {PERIOD_OPTIONS.map((option) => (
           <button
             key={option.value}
-            className={`px-3 py-2 rounded-lg text-sm transition-all duration-200 min-w-[50px] relative ${
+            className={`px-3 py-2 rounded-lg text-sm transition-all duration-200 min-w-[50px] relative flex-shrink-0 ${
               selectedPeriod === option.value
                 ? 'bg-[var(--color-lp-mint)]/10 text-[var(--color-lp-mint)] font-semibold border-2 border-[var(--color-lp-mint)] shadow-sm'
                 : 'text-[var(--color-gray-400)] hover:text-[var(--color-lp-mint)] hover:bg-[var(--color-lp-mint)]/5 border-2 border-transparent'

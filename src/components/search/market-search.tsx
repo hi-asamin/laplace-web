@@ -155,7 +155,6 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
     // シミュレーションページに遷移（想定利回りを自動入力）
     const params = new URLSearchParams({
       q: 'total-assets',
-      rate: '10', // デフォルト想定利回り（実際のAPIから取得する場合は調整）
     });
     router.push(`/markets/${encodeURIComponent(result.symbol)}/simulation?${params.toString()}`);
   };

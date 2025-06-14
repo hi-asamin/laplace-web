@@ -87,7 +87,7 @@ export function useSimulation({
     setIsCalculating(true);
     const timer = setTimeout(() => setIsCalculating(false), 100);
     return () => clearTimeout(timer);
-  }, [settings, purpose]);
+  }, [result]); // resultが変更されたときのみ計算状態を更新
 
   // 設定更新関数
   const updateSetting = useCallback((key: keyof SimulationSettings, value: any) => {
@@ -171,19 +171,39 @@ export function useSimulation({
   }, [purpose]);
 
   // purpose が変更された場合の対応
+  const purposeRef = useRef(purpose);
   useEffect(() => {
-    if (settings.purpose !== purpose) {
+    if (purposeRef.current !== purpose) {
+      purposeRef.current = purpose;
       const defaultSettings = purpose === 'save' ? DEFAULT_SAVE_SETTINGS : DEFAULT_USE_SETTINGS;
-      setSettings({
-        ...defaultSettings,
-        purpose,
+      setSettings((prev) => {
+        // purposeが実際に変更された場合のみ更新
+        if (prev.purpose === purpose) {
+          return prev; // 変更がない場合は現在の設定をそのまま返す
+        }
+
+        return {
+          ...defaultSettings,
+          purpose,
+          // 既存の設定で有効なものは保持
+          ...(prev.averageYield && { averageYield: prev.averageYield }),
+          ...(prev.years && { years: prev.years }),
+          ...(prev.monthlyAmount && { monthlyAmount: prev.monthlyAmount }),
+          ...(prev.targetAmount && { targetAmount: prev.targetAmount }),
+          ...(prev.initialPrincipal && { initialPrincipal: prev.initialPrincipal }),
+          ...(prev.initialAssets && { initialAssets: prev.initialAssets }),
+          ...(prev.withdrawalAmount && { withdrawalAmount: prev.withdrawalAmount }),
+        };
       });
     }
-  }, [purpose, settings.purpose]);
+  }, [purpose]);
 
   // 再計算を強制トリガーする関数
   const executeSimulation = useCallback(() => {
-    setSettings((prev) => ({ ...prev })); // 新しい参照で再計算をトリガー
+    // 計算状態を一時的にtrueにして再計算をトリガー
+    setIsCalculating(true);
+    const timer = setTimeout(() => setIsCalculating(false), 100);
+    return () => clearTimeout(timer);
   }, []);
 
   return {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { SimulationYearData, SimulationPurpose } from '@/types/simulationTypes';
 
 interface SimulationChartProps {
@@ -36,34 +36,8 @@ export default function SimulationChart({
   const topPadding = 40;
   const bottomPadding = 40;
 
-  // チャート外部クリックでホバー解除
-  useEffect(() => {
-    const handleMouseLeave = () => {
-      setHoveredPoint(null);
-    };
-
-    if (chartRef.current) {
-      chartRef.current.addEventListener('mouseleave', handleMouseLeave);
-      return () => {
-        chartRef.current?.removeEventListener('mouseleave', handleMouseLeave);
-      };
-    }
-  }, []);
-
-  // チャートアニメーション制御
-  useEffect(() => {
-    const rect = document.getElementById(`${chartAreaClipId}-rect`);
-    if (rect) {
-      rect.setAttribute('width', '0');
-      requestAnimationFrame(() => {
-        rect.style.transition = 'width 1.2s cubic-bezier(0.4,0,0.2,1)';
-        rect.setAttribute('width', width.toString());
-      });
-    }
-  }, [data, width]);
-
   // チャートパスとエリアの生成
-  const generateChartElements = () => {
+  const generateChartElements = useCallback(() => {
     if (!data || data.length === 0) return null;
 
     const leftPadding = 60; // Y軸ラベル用に左側のパディングを増加
@@ -269,9 +243,71 @@ export default function SimulationChart({
       chartWidth,
       chartHeight,
     };
-  };
+  }, [data, purpose, width, height]);
 
-  const chartElements = generateChartElements();
+  // チャート要素をメモ化
+  const chartElements = useMemo(() => generateChartElements(), [generateChartElements]);
+
+  // メモ化されたイベントハンドラー
+  const handleMouseLeave = useCallback(() => {
+    setHoveredPoint(null);
+  }, []);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      if (!chartElements?.points || chartElements.points.length === 0) return;
+
+      const svg = e.currentTarget;
+      const rect = svg.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * width;
+
+      // 最も近いポイントを探す
+      const pointWidth = chartElements.chartWidth / (chartElements.points.length - 1);
+      const dataIndex = Math.round((x - 60) / pointWidth);
+      const validIndex = Math.max(0, Math.min(dataIndex, chartElements.points.length - 1));
+      const point = chartElements.points[validIndex];
+      const principalPoint = chartElements.principalPoints[validIndex];
+
+      if (point && principalPoint) {
+        const newHoveredPoint = {
+          year: point.data.year,
+          totalAssets: point.data.totalAssets,
+          principal: point.data.principal,
+          dividendProfit: point.data.dividendProfit,
+          withdrawalAmount: point.data.withdrawalAmount,
+          x: point.x,
+          y: point.y,
+          principalY: principalPoint.y,
+        };
+
+        // setHoveredPointを呼ぶ前に現在の値と比較
+        setHoveredPoint((currentHoveredPoint) => {
+          // 現在のポイントと新しいポイントが同じ場合は更新しない
+          if (
+            currentHoveredPoint &&
+            currentHoveredPoint.year === newHoveredPoint.year &&
+            currentHoveredPoint.x === newHoveredPoint.x
+          ) {
+            return currentHoveredPoint;
+          }
+          return newHoveredPoint;
+        });
+      }
+    },
+    [chartElements, width]
+  );
+
+  // チャートアニメーション制御
+  useEffect(() => {
+    const rect = document.getElementById(`${chartAreaClipId}-rect`);
+    if (rect) {
+      rect.setAttribute('width', '0');
+      requestAnimationFrame(() => {
+        rect.style.transition = 'width 1.2s cubic-bezier(0.4,0,0.2,1)';
+        rect.setAttribute('width', width.toString());
+      });
+    }
+  }, [data, width, chartAreaClipId]);
 
   return (
     <div className="relative w-full">
@@ -329,34 +365,8 @@ export default function SimulationChart({
         className="w-full cursor-crosshair"
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
-        onMouseMove={(e) => {
-          if (!chartElements?.points || chartElements.points.length === 0) return;
-
-          const svg = e.currentTarget;
-          const rect = svg.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width) * width;
-
-          // 最も近いポイントを探す
-          const pointWidth = chartElements.chartWidth / (chartElements.points.length - 1);
-          const dataIndex = Math.round((x - 60) / pointWidth);
-          const validIndex = Math.max(0, Math.min(dataIndex, chartElements.points.length - 1));
-          const point = chartElements.points[validIndex];
-          const principalPoint = chartElements.principalPoints[validIndex];
-
-          if (point && principalPoint) {
-            setHoveredPoint({
-              year: point.data.year,
-              totalAssets: point.data.totalAssets,
-              principal: point.data.principal,
-              dividendProfit: point.data.dividendProfit,
-              withdrawalAmount: point.data.withdrawalAmount,
-              x: point.x,
-              y: point.y,
-              principalY: principalPoint.y,
-            });
-          }
-        }}
-        onMouseLeave={() => setHoveredPoint(null)}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       >
         {/* アニメーション用clipPath */}
         <defs>

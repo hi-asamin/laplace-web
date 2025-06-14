@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { SimulationSettings, SimulationResult } from '@/types/simulationTypes';
 import {
@@ -20,6 +20,24 @@ interface SimulationSettingsBottomSheetProps {
   }) => React.ReactNode;
 }
 
+// 浅い比較関数
+const shallowEqual = (obj1: any, obj2: any): boolean => {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  for (let key of keys1) {
+    if (obj1[key] !== obj2[key]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const SimulationSettingsBottomSheet: React.FC<SimulationSettingsBottomSheetProps> = ({
   open,
   onClose,
@@ -30,10 +48,17 @@ const SimulationSettingsBottomSheet: React.FC<SimulationSettingsBottomSheetProps
   children,
 }) => {
   const [localSettings, setLocalSettings] = useState<SimulationSettings>(initialSettings);
+  const prevInitialSettingsRef = useRef<SimulationSettings>(initialSettings);
 
-  // initialSettingsが変更されたときにlocalSettingsを更新
+  // initialSettingsが実際に変更されたときのみlocalSettingsを更新
   useEffect(() => {
-    setLocalSettings(initialSettings);
+    // 浅い比較で変更を検出
+    const hasChanged = !shallowEqual(prevInitialSettingsRef.current, initialSettings);
+
+    if (hasChanged) {
+      setLocalSettings(initialSettings);
+      prevInitialSettingsRef.current = initialSettings;
+    }
   }, [initialSettings]);
 
   // localSettingsが変更されるたびにリアルタイムで計算結果を更新

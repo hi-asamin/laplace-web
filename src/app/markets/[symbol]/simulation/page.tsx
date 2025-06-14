@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ChevronLeft, Plus, Bookmark, Search } from 'lucide-react';
 // 開発環境でのアナリティクステスト用
@@ -42,6 +42,12 @@ export default function SimulationPage() {
   const initialQuestionType = searchParams.get('q') || 'total-assets';
   const showDistribution = searchParams.get('mode') === 'distribution';
 
+  // rateクエリがあるかどうかを判定
+  const hasRateQuery = searchParams.get('rate') || searchParams.get('averageYield');
+
+  // シミュレーション初期化の準備完了状態
+  const [isSimulationReady, setIsSimulationReady] = useState(!!hasRateQuery);
+
   // 銘柄データを取得
   useEffect(() => {
     if (symbol && symbol !== 'self') {
@@ -49,16 +55,27 @@ export default function SimulationPage() {
       getMarketDetails(symbol)
         .then((data) => {
           setMarketData(data);
+          // rateクエリがない場合は、marketData取得完了でシミュレーション準備完了
+          if (!hasRateQuery) {
+            setIsSimulationReady(true);
+          }
         })
         .catch((error) => {
           console.error('銘柄データ取得エラー:', error);
           setMarketData(null);
+          // エラーの場合もシミュレーション準備完了（デフォルト値で実行）
+          if (!hasRateQuery) {
+            setIsSimulationReady(true);
+          }
         })
         .finally(() => {
           setIsLoadingMarketData(false);
         });
+    } else {
+      // symbolが'self'の場合は即座に準備完了
+      setIsSimulationReady(true);
     }
-  }, [symbol]);
+  }, [symbol, hasRateQuery]);
 
   // 戻るボタンのハンドラー
   const handleGoBack = () => {
@@ -68,6 +85,13 @@ export default function SimulationPage() {
   // 検索ボタンのハンドラー
   const handleSearch = () => {
     router.push('/search');
+  };
+
+  // 銘柄詳細ページへの遷移ハンドラー
+  const handleNavigateToMarketDetail = () => {
+    if (symbol && symbol !== 'self') {
+      router.push(`/markets/${symbol}`);
+    }
   };
 
   // URLパラメータから初期設定を構築
@@ -83,8 +107,25 @@ export default function SimulationPage() {
     const monthlyAmount = searchParams.get('monthlyAmount');
     if (monthlyAmount) settings.monthlyAmount = parseInt(monthlyAmount);
 
+    // 利回りの優先順位: rate > averageYield > dividendYield > default
+    const rate = searchParams.get('rate');
     const averageYield = searchParams.get('averageYield');
-    if (averageYield) settings.averageYield = parseFloat(averageYield);
+
+    if (rate) {
+      settings.averageYield = parseFloat(rate);
+    } else if (averageYield) {
+      settings.averageYield = parseFloat(averageYield);
+    } else if (marketData?.dividendYield) {
+      // URLパラメータがない場合はdividendYieldを使用（安全な数値変換）
+      const dividendYieldNum =
+        typeof marketData.dividendYield === 'number'
+          ? marketData.dividendYield
+          : parseFloat(String(marketData.dividendYield));
+
+      if (!isNaN(dividendYieldNum) && dividendYieldNum > 0) {
+        settings.averageYield = dividendYieldNum;
+      }
+    }
 
     const targetAmount = searchParams.get('targetAmount');
     if (targetAmount) settings.targetAmount = parseInt(targetAmount);
@@ -95,10 +136,24 @@ export default function SimulationPage() {
     return settings;
   };
 
-  // 資産形成シミュレーションの状態を追跡（初期設定を渡す）
-  const accumulationSimulation = useAssetAccumulationSimulation(getInitialSettings());
+  // 資産形成シミュレーションの状態を追跡
+  const accumulationSimulation = useAssetAccumulationSimulation();
   const [inheritedAssets, setInheritedAssets] = useState<number | undefined>(undefined);
   const distributionSimulation = useAssetDistributionWithInheritance(undefined, inheritedAssets);
+
+  // シミュレーション準備完了後に初期設定を適用
+  const hasInitializedRef = useRef(false);
+  useEffect(() => {
+    if (isSimulationReady && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      const initialSettings = getInitialSettings();
+
+      // 初期設定を適用
+      if (Object.keys(initialSettings).length > 0) {
+        accumulationSimulation.updateMultipleSettings(initialSettings);
+      }
+    }
+  }, [isSimulationReady]);
 
   // アナリティクストラッキング
   const analytics = useSimulationAnalytics();
@@ -173,14 +228,20 @@ export default function SimulationPage() {
   ]);
 
   // タブ切り替え時にpurposeを強制
+  const prevActiveTabRef = useRef(activeTab);
   useEffect(() => {
-    if (activeTab === '#accumulation' && accumulationSimulation.settings.purpose !== 'save') {
-      accumulationSimulation.resetToDefaults();
+    // activeTabが実際に変更された場合のみ処理
+    if (prevActiveTabRef.current !== activeTab) {
+      prevActiveTabRef.current = activeTab;
+
+      if (activeTab === '#accumulation' && accumulationSimulation.settings.purpose !== 'save') {
+        accumulationSimulation.resetToDefaults();
+      }
+      if (activeTab === '#distribution' && distributionSimulation.settings.purpose !== 'use') {
+        distributionSimulation.resetToDefaults();
+      }
     }
-    if (activeTab === '#distribution' && distributionSimulation.settings.purpose !== 'use') {
-      distributionSimulation.resetToDefaults();
-    }
-  }, [activeTab]);
+  }, [activeTab]); // 依存配列からシミュレーションオブジェクトを削除
 
   // スクロール位置に応じてタブを自動切り替え
   useEffect(() => {
@@ -258,6 +319,13 @@ export default function SimulationPage() {
     };
   }, [activeTab, analytics]);
 
+  // ボトムシート用の安定化されたinitialSettings
+  const stableInitialSettings = useMemo(() => {
+    return activeTab === '#accumulation'
+      ? accumulationSimulation.settings
+      : distributionSimulation.settings;
+  }, [activeTab, accumulationSimulation.settings, distributionSimulation.settings]);
+
   return (
     <main className="min-h-screen bg-[var(--color-surface)] dark:bg-[var(--color-surface-1)]">
       {/* 新しいヘッダー */}
@@ -279,13 +347,19 @@ export default function SimulationPage() {
                   <div className="h-6 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-24 mx-auto"></div>
                 </div>
               ) : marketData ? (
-                <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+                <button
+                  onClick={handleNavigateToMarketDetail}
+                  className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] hover:text-[var(--color-lp-mint)] transition-colors"
+                >
                   {marketData.name}
-                </h1>
+                </button>
               ) : symbol && symbol !== 'self' ? (
-                <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+                <button
+                  onClick={handleNavigateToMarketDetail}
+                  className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)] hover:text-[var(--color-lp-mint)] transition-colors"
+                >
                   {symbol.toUpperCase()}
-                </h1>
+                </button>
               ) : (
                 <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
                   資産シミュレーション
@@ -400,11 +474,7 @@ export default function SimulationPage() {
             analytics.trackBottomSheetInteraction('close', 'simulation_settings');
           }}
           title="条件を変更する"
-          initialSettings={
-            activeTab === '#accumulation'
-              ? accumulationSimulation.settings
-              : distributionSimulation.settings
-          }
+          initialSettings={stableInitialSettings}
           onAnalyze={(newSettings: SimulationSettings) => {
             if (activeTab === '#accumulation') {
               accumulationSimulation.updateMultipleSettings(newSettings);
@@ -457,14 +527,26 @@ export default function SimulationPage() {
 
       {/* 資産形成シミュレーター */}
       <div id="accumulation">
-        <AssetAccumulationSimulator
-          defaultQuestionType={initialQuestionType as any}
-          externalSettings={accumulationSimulation.settings}
-          externalResult={accumulationSimulation.result}
-          externalIsCalculating={accumulationSimulation.isCalculating}
-          externalUpdateSetting={accumulationSimulation.updateSetting}
-          externalSetQuestionType={accumulationSimulation.setQuestionType}
-        />
+        {!isSimulationReady && !hasRateQuery ? (
+          <div className="py-20 text-center">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-48 mx-auto mb-4"></div>
+              <div className="h-4 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-32 mx-auto"></div>
+            </div>
+            <p className="text-sm text-[var(--color-gray-600)] dark:text-[var(--color-text-secondary)] mt-4">
+              銘柄データを取得中...
+            </p>
+          </div>
+        ) : (
+          <AssetAccumulationSimulator
+            defaultQuestionType={initialQuestionType as any}
+            externalSettings={accumulationSimulation.settings}
+            externalResult={accumulationSimulation.result}
+            externalIsCalculating={accumulationSimulation.isCalculating || !isSimulationReady}
+            externalUpdateSetting={accumulationSimulation.updateSetting}
+            externalSetQuestionType={accumulationSimulation.setQuestionType}
+          />
+        )}
       </div>
 
       {/* 連携インジケーター */}

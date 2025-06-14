@@ -243,9 +243,10 @@ export default function MarketDetailPage() {
     if (!chartData?.data || chartData.data.length === 0) {
       // データがない場合はダミーデータを返す
       return [
+        { period: '1D', return: 0, label: '1日' },
+        { period: '1W', return: 0, label: '1週間' },
         { period: '1M', return: 0, label: '1ヶ月' },
         { period: '6M', return: 0, label: '6ヶ月' },
-        { period: 'YTD', return: 0, label: '年初来' },
         { period: '1Y', return: 0, label: '1年' },
       ];
     }
@@ -256,10 +257,13 @@ export default function MarketDetailPage() {
     const currentPrice = data[data.length - 1]?.close || 0;
     const currentDate = new Date();
 
-    // 各期間の開始日を計算
+    // 1日のリターンは前営業日の終値と最新価格の差で計算
+    const previousDayPrice = data.length >= 2 ? data[data.length - 2]?.close || 0 : currentPrice;
+
+    // 各期間の開始日を計算（1日以外）
+    const oneWeekAgo = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
     const oneMonthAgo = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sixMonthsAgo = new Date(currentDate.getTime() - 180 * 24 * 60 * 60 * 1000);
-    const yearStart = new Date(currentDate.getFullYear(), 0, 1);
     const oneYearAgo = new Date(currentDate.getTime() - 365 * 24 * 60 * 60 * 1000);
 
     // 各期間の開始価格を見つける関数
@@ -291,15 +295,18 @@ export default function MarketDetailPage() {
       return ((currentPrice - startPrice) / startPrice) * 100;
     };
 
+    // 1日のリターンは前営業日の終値を使用
+    const oneDayReturn = calculateReturn(previousDayPrice);
+    const oneWeekStartPrice = findPriceByDate(oneWeekAgo);
     const oneMonthStartPrice = findPriceByDate(oneMonthAgo);
     const sixMonthsStartPrice = findPriceByDate(sixMonthsAgo);
-    const yearStartPrice = findPriceByDate(yearStart);
     const oneYearStartPrice = findPriceByDate(oneYearAgo);
 
     return [
+      { period: '1D', return: oneDayReturn, label: '1日' },
+      { period: '1W', return: calculateReturn(oneWeekStartPrice), label: '1週間' },
       { period: '1M', return: calculateReturn(oneMonthStartPrice), label: '1ヶ月' },
       { period: '6M', return: calculateReturn(sixMonthsStartPrice), label: '6ヶ月' },
-      { period: 'YTD', return: calculateReturn(yearStartPrice), label: '年初来' },
       { period: '1Y', return: calculateReturn(oneYearStartPrice), label: '1年' },
     ];
   }, [chartData]);

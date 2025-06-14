@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { ChevronLeft, Plus, Bookmark, Search } from 'lucide-react';
 // 開発環境でのアナリティクステスト用
 import '@/utils/analyticsTestUtils';
 import AssetAccumulationSimulator, {
@@ -19,6 +20,8 @@ import { useSimulationAnalytics } from '@/hooks/useSimulationAnalytics';
 import { SlidersHorizontal, X } from 'lucide-react';
 import SimulationSettingsBottomSheet from '@/components/SimulationSettingsBottomSheet';
 import { SimulationSettings, SimulationResult } from '@/types/simulationTypes';
+import { MarketDetails } from '@/types/api';
+import { getMarketDetails } from '@/lib/api';
 
 interface PageParams {
   symbol: string;
@@ -28,11 +31,44 @@ interface PageParams {
 export default function SimulationPage() {
   const params = useParams<PageParams>();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { symbol } = params;
+
+  // 銘柄データの状態
+  const [marketData, setMarketData] = useState<MarketDetails | null>(null);
+  const [isLoadingMarketData, setIsLoadingMarketData] = useState(false);
 
   // URL パラメータから初期設定を取得
   const initialQuestionType = searchParams.get('q') || 'total-assets';
   const showDistribution = searchParams.get('mode') === 'distribution';
+
+  // 銘柄データを取得
+  useEffect(() => {
+    if (symbol && symbol !== 'self') {
+      setIsLoadingMarketData(true);
+      getMarketDetails(symbol)
+        .then((data) => {
+          setMarketData(data);
+        })
+        .catch((error) => {
+          console.error('銘柄データ取得エラー:', error);
+          setMarketData(null);
+        })
+        .finally(() => {
+          setIsLoadingMarketData(false);
+        });
+    }
+  }, [symbol]);
+
+  // 戻るボタンのハンドラー
+  const handleGoBack = () => {
+    router.back();
+  };
+
+  // 検索ボタンのハンドラー
+  const handleSearch = () => {
+    router.push('/search');
+  };
 
   // URLパラメータから初期設定を構築
   const getInitialSettings = () => {
@@ -223,17 +259,60 @@ export default function SimulationPage() {
   }, [activeTab, analytics]);
 
   return (
-    <main className="min-h-screen bg-[var(--color-surface)]">
-      {/* ページヘッダー */}
-      <div className="bg-white border-b border-[var(--color-gray-200)] py-4">
+    <main className="min-h-screen bg-[var(--color-surface)] dark:bg-[var(--color-surface-1)]">
+      {/* 新しいヘッダー */}
+      <div className="bg-white dark:bg-[var(--color-surface-1)] border-b border-[var(--color-gray-200)] dark:border-[var(--color-surface-3)] py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-[var(--color-gray-900)]">資産シミュレーション</h1>
-            {symbol && (
-              <span className="bg-[var(--color-lp-mint)]/10 px-3 py-1 rounded-full text-sm font-medium text-[var(--color-lp-navy)]">
-                {symbol.toUpperCase()}
-              </span>
-            )}
+            {/* 左側: 戻るボタン */}
+            <button
+              onClick={handleGoBack}
+              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors"
+            >
+              <ChevronLeft className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
+            </button>
+
+            {/* 中央: 銘柄名 */}
+            <div className="flex-1 text-center">
+              {isLoadingMarketData ? (
+                <div className="animate-pulse">
+                  <div className="h-6 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-24 mx-auto"></div>
+                </div>
+              ) : marketData ? (
+                <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+                  {marketData.name}
+                </h1>
+              ) : symbol && symbol !== 'self' ? (
+                <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+                  {symbol.toUpperCase()}
+                </h1>
+              ) : (
+                <h1 className="text-xl font-bold text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
+                  資産シミュレーション
+                </h1>
+              )}
+            </div>
+
+            {/* 右側: アクションボタン */}
+            <div className="flex items-center gap-2">
+              {/* 追加ボタン */}
+              <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors">
+                <Plus className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
+              </button>
+
+              {/* ブックマークボタン */}
+              <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors">
+                <Bookmark className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
+              </button>
+
+              {/* 検索ボタン */}
+              <button
+                onClick={handleSearch}
+                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--color-gray-100)] dark:hover:bg-[var(--color-surface-2)] transition-colors"
+              >
+                <Search className="w-6 h-6 text-[var(--color-gray-700)] dark:text-[var(--color-text-primary)]" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -91,20 +91,26 @@ const StockCard: React.FC<{ stock: Stock; onClick: () => void }> = ({ stock, onC
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 
-                 hover:scale-105 cursor-pointer border border-slate-200 hover:border-[var(--color-lp-mint)]/50"
+      className="bg-white dark:bg-[var(--color-surface-2)] rounded-2xl p-6 shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)] hover:shadow-xl dark:hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)] transition-all duration-300 
+                 hover:scale-105 cursor-pointer border border-slate-200 dark:border-[var(--color-surface-3)] hover:border-[var(--color-lp-mint)]/50"
     >
       {/* ヘッダー部分 */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg font-bold text-[var(--color-lp-navy)]">{stock.symbol}</span>
+            <span className="text-lg font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+              {stock.symbol}
+            </span>
             <ExternalLink className="w-4 h-4 text-[var(--color-lp-blue)] opacity-60" />
           </div>
-          <h3 className="font-semibold text-[var(--color-lp-navy)] text-base leading-snug">
+          <h3 className="font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] text-base leading-snug">
             {stock.name}
           </h3>
-          {stock.nameEn && <p className="text-sm text-slate-500 truncate">{stock.nameEn}</p>}
+          {stock.nameEn && (
+            <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)] truncate">
+              {stock.nameEn}
+            </p>
+          )}
         </div>
         <div className="flex flex-col items-end">
           <div className="flex items-center gap-1">
@@ -127,7 +133,7 @@ const StockCard: React.FC<{ stock: Stock; onClick: () => void }> = ({ stock, onC
 
       {/* 価格情報 */}
       <div className="mb-4">
-        <div className="text-2xl font-bold text-[var(--color-lp-navy)] mb-1">
+        <div className="text-2xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-1">
           ${stock.price.toFixed(2)}
         </div>
         <div
@@ -140,9 +146,9 @@ const StockCard: React.FC<{ stock: Stock; onClick: () => void }> = ({ stock, onC
       </div>
 
       {/* メタデータ */}
-      <div className="flex items-center justify-between text-sm text-slate-500">
+      <div className="flex items-center justify-between text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
         {stock.sector && (
-          <span className="bg-[var(--color-lp-blue)]/10 text-[var(--color-lp-blue)] px-2 py-1 rounded-full">
+          <span className="bg-[var(--color-lp-blue)]/10 dark:bg-[var(--color-lp-blue)]/20 text-[var(--color-lp-blue)] px-2 py-1 rounded-full">
             {stock.sector}
           </span>
         )}
@@ -172,17 +178,19 @@ const RelatedStocksSection: React.FC<RelatedStocksSectionProps> = ({
   );
 
   return (
-    <section className={`py-20 bg-[var(--color-lp-off-white)] ${className}`}>
+    <section
+      className={`py-20 bg-[var(--color-lp-off-white)] dark:bg-[var(--color-surface-2)] ${className}`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* セクションヘッダー */}
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-3 mb-6">
             <BarChart3 className="w-8 h-8 text-[var(--color-lp-mint)]" />
-            <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] font-[var(--font-poppins)]">
+            <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] font-[var(--font-poppins)]">
               関連銘柄
             </h2>
           </div>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-600 dark:text-[var(--color-text-secondary)] max-w-2xl mx-auto">
             他の人気銘柄もシミュレーションしてみませんか？同様の投資パターンで比較検討できます。
           </p>
         </div>
@@ -202,12 +210,13 @@ const RelatedStocksSection: React.FC<RelatedStocksSectionProps> = ({
         <div className="text-center">
           <div
             className="bg-gradient-to-br from-[var(--color-lp-mint)]/10 to-[var(--color-lp-blue)]/10 
+                          dark:from-[var(--color-lp-mint)]/15 dark:to-[var(--color-lp-blue)]/15
                           rounded-2xl p-6 max-w-2xl mx-auto"
           >
-            <p className="text-slate-600 mb-4">
+            <p className="text-slate-600 dark:text-[var(--color-text-secondary)] mb-4">
               気になる銘柄をクリックすると、同じ条件でシミュレーションを開始できます
             </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
               <TrendingUp className="w-4 h-4 text-[var(--color-success)]" />
               <span>リアルタイム価格データを使用</span>
             </div>

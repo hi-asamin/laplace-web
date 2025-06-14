@@ -6,18 +6,24 @@
  * 企業プロフィール情報のインターフェース
  */
 export interface CompanyProfile {
-  name?: string;
+  companyName?: string;
   logoUrl?: string;
   website?: string;
+  businessSummary?: string;
+  industryTags?: string[];
+  fullTimeEmployees?: number;
+  foundationYear?: number;
+  headquarters?: string;
+  marketCapFormatted?: string;
+  // 旧フィールド（後方互換性のため）
+  name?: string;
   description?: string;
   industry?: string;
   sector?: string;
   employees?: number;
   founded?: string;
-  headquarters?: string;
   marketCap?: string;
   ceo?: string;
-  fullTimeEmployees?: number;
   address?: string;
   city?: string;
   state?: string;
@@ -44,7 +50,7 @@ export interface MarketDetails {
   description?: string;
   website?: string;
   dividendYield?: number;
-  company_profile?: CompanyProfile;
+  companyProfile?: CompanyProfile;
   tradingInfo?: {
     previousClose?: string;
     open?: string;

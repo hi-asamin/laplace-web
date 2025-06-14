@@ -462,8 +462,8 @@ export default function MarketDetailPage() {
 
   // 実際のAPIデータを使用した企業プロフィール計算
   const companyData = useMemo(() => {
-    // APIから取得したcompany_profileデータを優先的に使用
-    const profile = marketData?.company_profile;
+    // APIから取得したcompanyProfileデータを優先的に使用
+    const profile = marketData?.companyProfile;
 
     // デフォルト値（APIデータがない場合のフォールバック）
     const defaultData = {
@@ -484,22 +484,16 @@ export default function MarketDetailPage() {
     // APIデータがある場合は、それを使用してデフォルト値を上書き
     if (profile) {
       return {
-        name: profile.name || defaultData.name,
+        name: profile.companyName || profile.name || defaultData.name,
         logoUrl: profile.logoUrl || defaultData.logoUrl,
         website: profile.website || defaultData.website,
-        description: profile.description || defaultData.description,
-        industry: profile.industry || defaultData.industry,
-        sector: profile.sector || defaultData.sector,
-        employees: profile.employees || profile.fullTimeEmployees || defaultData.employees,
-        founded: profile.founded || defaultData.founded,
-        headquarters:
-          profile.headquarters ||
-          [profile.city, profile.state, profile.country].filter(Boolean).join(', ') ||
-          defaultData.headquarters,
-        marketCap: profile.marketCap || defaultData.marketCap,
-        ceo: profile.ceo,
-        address: profile.address,
-        phone: profile.phone,
+        description: profile.businessSummary || profile.description || defaultData.description,
+        industry: profile.industryTags?.[0] || profile.industry || defaultData.industry,
+        sector: profile.industryTags?.[1] || profile.sector || defaultData.sector,
+        employees: profile.fullTimeEmployees || profile.employees || defaultData.employees,
+        founded: profile.foundationYear?.toString() || profile.founded || defaultData.founded,
+        headquarters: profile.headquarters || defaultData.headquarters,
+        marketCap: profile.marketCapFormatted || profile.marketCap || defaultData.marketCap,
       };
     }
 
@@ -785,9 +779,6 @@ export default function MarketDetailPage() {
                   founded: companyData.founded,
                   headquarters: companyData.headquarters,
                   marketCap: companyData.marketCap,
-                  ceo: companyData.ceo,
-                  address: companyData.address,
-                  phone: companyData.phone,
                 }}
               />
             )}

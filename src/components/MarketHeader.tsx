@@ -123,7 +123,7 @@ export default function MarketHeader({
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-2 min-w-0">
+              <div className="flex items-center space-x-4 min-w-0">
                 {/* 銘柄名 */}
                 <div className="min-w-0">
                   {marketName ? (
@@ -159,20 +159,32 @@ export default function MarketHeader({
                     <div className="text-base sm:text-lg font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
                       {price}
                     </div>
-                    {change && changePercent && (
+                    {changePercent && (
                       <div
                         className={`flex items-center text-xs font-medium ${
-                          isPositive ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'
+                          changePercent === '0%' ||
+                          changePercent === '0.0%' ||
+                          changePercent === '+0%' ||
+                          changePercent === '+0.0%'
+                            ? 'text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)]'
+                            : isPositive
+                              ? 'text-[var(--color-success)]'
+                              : 'text-[var(--color-danger)]'
                         }`}
                       >
-                        {isPositive ? (
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                        ) : (
-                          <TrendingDown className="w-3 h-3 mr-1" />
-                        )}
-                        <span className="whitespace-nowrap">
-                          {change} ({changePercent})
-                        </span>
+                        {changePercent !== '0%' &&
+                          changePercent !== '0.0%' &&
+                          changePercent !== '+0%' &&
+                          changePercent !== '+0.0%' && (
+                            <>
+                              {isPositive ? (
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                              ) : (
+                                <TrendingDown className="w-3 h-3 mr-1" />
+                              )}
+                            </>
+                          )}
+                        <span className="whitespace-nowrap">{changePercent}</span>
                       </div>
                     )}
                   </div>

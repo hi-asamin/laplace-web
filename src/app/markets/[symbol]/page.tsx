@@ -238,16 +238,71 @@ export default function MarketDetailPage() {
     );
   };
 
-  // 新しいダッシュボード用のモックデータ生成
-  const mockPerformanceData = useMemo(
-    () => [
-      { period: '1M', return: 5.2, label: '1ヶ月' },
-      { period: '6M', return: 12.8, label: '6ヶ月' },
-      { period: 'YTD', return: 18.5, label: '年初来' },
-      { period: '1Y', return: 24.3, label: '1年' },
-    ],
-    []
-  );
+  // 実際の株価データを使用したパフォーマンス計算
+  const performanceData = useMemo(() => {
+    if (!chartData?.data || chartData.data.length === 0) {
+      // データがない場合はダミーデータを返す
+      return [
+        { period: '1M', return: 0, label: '1ヶ月' },
+        { period: '6M', return: 0, label: '6ヶ月' },
+        { period: 'YTD', return: 0, label: '年初来' },
+        { period: '1Y', return: 0, label: '1年' },
+      ];
+    }
+
+    const data = chartData.data.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    const currentPrice = data[data.length - 1]?.close || 0;
+    const currentDate = new Date();
+
+    // 各期間の開始日を計算
+    const oneMonthAgo = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sixMonthsAgo = new Date(currentDate.getTime() - 180 * 24 * 60 * 60 * 1000);
+    const yearStart = new Date(currentDate.getFullYear(), 0, 1);
+    const oneYearAgo = new Date(currentDate.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+    // 各期間の開始価格を見つける関数
+    const findPriceByDate = (targetDate: Date) => {
+      const sortedData = data.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      // 指定日以降の最初のデータを探す
+      const targetPoint = sortedData.find((point) => new Date(point.date) >= targetDate);
+
+      if (targetPoint) {
+        return targetPoint.close;
+      }
+
+      // 指定日以降のデータがない場合、最も近い過去のデータを使用
+      const pastData = sortedData.filter((point) => new Date(point.date) < targetDate);
+      if (pastData.length > 0) {
+        return pastData[pastData.length - 1].close;
+      }
+
+      // データがない場合は現在価格を返す
+      return currentPrice;
+    };
+
+    // 各期間のリターンを計算（キャピタルゲインのみ）
+    const calculateReturn = (startPrice: number) => {
+      if (startPrice === 0) return 0;
+      return ((currentPrice - startPrice) / startPrice) * 100;
+    };
+
+    const oneMonthStartPrice = findPriceByDate(oneMonthAgo);
+    const sixMonthsStartPrice = findPriceByDate(sixMonthsAgo);
+    const yearStartPrice = findPriceByDate(yearStart);
+    const oneYearStartPrice = findPriceByDate(oneYearAgo);
+
+    return [
+      { period: '1M', return: calculateReturn(oneMonthStartPrice), label: '1ヶ月' },
+      { period: '6M', return: calculateReturn(sixMonthsStartPrice), label: '6ヶ月' },
+      { period: 'YTD', return: calculateReturn(yearStartPrice), label: '年初来' },
+      { period: '1Y', return: calculateReturn(oneYearStartPrice), label: '1年' },
+    ];
+  }, [chartData]);
 
   const mockDividendData = useMemo(
     () => ({
@@ -504,7 +559,7 @@ export default function MarketDetailPage() {
               </div>
             ) : (
               <PerformanceCard
-                performanceData={mockPerformanceData}
+                performanceData={performanceData}
                 currentPrice={parseFloat(marketData?.price?.replace(/[¥,$]/g, '') || '0')}
               />
             )}

@@ -49,13 +49,15 @@ export default function PerformanceCard({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <h3 className="text-lg font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
-            リターン実績 (Performance)
+            リターン実績 (Capital Gain)
           </h3>
           <Tooltip
-            content={`リターン実績は、過去の一定期間における株価の変動率を示します。
+            content={`リターン実績は、過去の一定期間における株価の変動率（キャピタルゲイン）を示します。
 
 【計算方法】
-リターン = (現在の株価 - 過去の株価) ÷ 過去の株価 × 100
+キャピタルゲイン リターン = (現在の株価 - 過去の株価) ÷ 過去の株価 × 100
+
+※ このリターンには配当収益は含まれておらず、純粋な株価の値動きのみを反映しています。
 
 【期間別リターンの見方】
 • 1ヶ月：短期的な値動きの傾向
@@ -63,14 +65,19 @@ export default function PerformanceCard({
 • 年初来（YTD）：その年の始めからの成績
 • 1年：長期的なパフォーマンス
 
+【キャピタルゲインとは】
+株式の売買による価格差から生じる利益（または損失）のことです。
+配当による収益（インカムゲイン）とは別に計算されます。
+
 【注意点】
 • 過去の実績は将来の成果を保証するものではありません
 • 市場全体の動向や業界の状況も考慮が必要です
 • リスクとリターンは表裏一体の関係にあります
+• 配当収益を含めた総合リターンを知るには、配当情報も併せて確認してください
 
 【投資シミュレーション】
 実際の投資額での具体例を示すことで、リターンの実感を得やすくしています。`}
-            title="リターン実績について"
+            title="リターン実績について（キャピタルゲイン）"
           >
             <span></span>
           </Tooltip>

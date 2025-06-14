@@ -52,7 +52,9 @@ export default function MarketDetailPage() {
     setIsBookmarked(newBookmarkState);
 
     // アナリティクス追跡
-    analytics.trackBookmarkToggle(decodedSymbol, newBookmarkState ? 'add' : 'remove');
+    if (analytics) {
+      analytics.trackBookmarkToggle(decodedSymbol, newBookmarkState ? 'add' : 'remove');
+    }
 
     // 実際の実装ではここでブックマークの保存処理を行う
     // 例: localStorage や API 呼び出しなど
@@ -68,15 +70,19 @@ export default function MarketDetailPage() {
 
       // データ読み込み完了を追跡
       const loadTime = Date.now() - startTime;
-      analytics.trackDataLoadComplete(decodedSymbol, 'market_details', loadTime);
+      if (analytics) {
+        analytics.trackDataLoadComplete(decodedSymbol, 'market_details', loadTime);
+      }
     } catch (error) {
       console.error('市場詳細データの読み込みエラー:', error);
       setErrors((prev) => ({ ...prev, marketDetails: '市場詳細データを取得できませんでした' }));
 
       // エラーを追跡
-      analytics.trackError(decodedSymbol, error as Error, 'market_details_load');
+      if (analytics) {
+        analytics.trackError(decodedSymbol, error as Error, 'market_details_load');
+      }
     }
-  }, [decodedSymbol, analytics]);
+  }, [decodedSymbol]); // analyticsを依存配列から削除
 
   const loadChartData = useCallback(
     async (symbolValue: string, period: string, isInitialLoad = false) => {
@@ -91,20 +97,24 @@ export default function MarketDetailPage() {
 
         // データ読み込み完了を追跡
         const loadTime = Date.now() - startTime;
-        analytics.trackDataLoadComplete(symbolValue, `chart_data_${period}`, loadTime);
+        if (analytics) {
+          analytics.trackDataLoadComplete(symbolValue, `chart_data_${period}`, loadTime);
+        }
       } catch (error) {
         console.error('チャートデータの読み込みエラー:', error);
         setErrors((prev) => ({ ...prev, chartData: 'チャートデータを取得できませんでした' }));
 
         // エラーを追跡
-        analytics.trackError(symbolValue, error as Error, 'chart_data_load');
+        if (analytics) {
+          analytics.trackError(symbolValue, error as Error, 'chart_data_load');
+        }
       } finally {
         if (!isInitialLoad) {
           setIsChartLoading(false);
         }
       }
     },
-    [analytics]
+    [] // analyticsを依存配列から削除
   );
 
   const loadFundamentalData = useCallback(async () => {
@@ -138,7 +148,9 @@ export default function MarketDetailPage() {
     setSelectedPeriod(period);
 
     // アナリティクス追跡
-    analytics.trackChartPeriodChange(decodedSymbol, previousPeriod, period);
+    if (analytics) {
+      analytics.trackChartPeriodChange(decodedSymbol, previousPeriod, period);
+    }
 
     loadChartData(decodedSymbol, period, false); // 期間変更時はチャート専用ローディング
   };
@@ -153,9 +165,6 @@ export default function MarketDetailPage() {
     setIsLoading(true);
     setErrors({});
 
-    // ページビューを追跡
-    analytics.trackPageView(decodedSymbol, marketData?.name);
-
     // 各APIを並列で呼び出し（初期読み込み）
     Promise.all([
       loadMarketDetails(),
@@ -165,14 +174,14 @@ export default function MarketDetailPage() {
     ]).finally(() => {
       setIsLoading(false);
     });
-  }, [
-    decodedSymbol, // selectedPeriodを削除
-    loadMarketDetails,
-    loadChartData,
-    loadFundamentalData,
-    loadRelatedMarkets,
-    analytics,
-  ]);
+  }, [decodedSymbol]); // 依存配列をdecodedSymbolのみに変更
+
+  // ページビュー追跡用の別useEffect
+  useEffect(() => {
+    if (decodedSymbol && marketData?.name && analytics) {
+      analytics.trackPageView(decodedSymbol, marketData.name);
+    }
+  }, [decodedSymbol, marketData?.name]); // analyticsを依存配列から削除
 
   // エラー表示コンポーネント
   const ErrorMessage = ({ type }: { type: string }) => {
@@ -309,6 +318,9 @@ export default function MarketDetailPage() {
 
   // Intersection Observer でセクション表示を追跡
   useEffect(() => {
+    // analyticsオブジェクトが存在しない場合は何もしない
+    if (!analytics) return;
+
     const observerOptions = {
       threshold: 0.3,
       rootMargin: '0px 0px -10% 0px',
@@ -346,10 +358,13 @@ export default function MarketDetailPage() {
         }
       });
     };
-  }, [decodedSymbol, analytics]);
+  }, [decodedSymbol]); // analyticsを依存配列から削除
 
   // ページ離脱時の滞在時間追跡
   useEffect(() => {
+    // analyticsオブジェクトが存在しない場合は何もしない
+    if (!analytics) return;
+
     const handleBeforeUnload = () => {
       analytics.trackPageTimeSpent(decodedSymbol);
     };
@@ -369,7 +384,7 @@ export default function MarketDetailPage() {
       // コンポーネントアンマウント時にも滞在時間を記録
       analytics.trackPageTimeSpent(decodedSymbol);
     };
-  }, [decodedSymbol, analytics]);
+  }, [decodedSymbol]); // analyticsを依存配列から削除
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-alt)] pt-20">
@@ -527,7 +542,9 @@ export default function MarketDetailPage() {
           className="w-full h-12 mt-2 mb-6 rounded-full bg-[var(--color-primary)] text-white font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition"
           onClick={() => {
             // アナリティクス追跡
-            analytics.trackSimulationButtonClick(decodedSymbol, marketData?.name);
+            if (analytics) {
+              analytics.trackSimulationButtonClick(decodedSymbol, marketData?.name);
+            }
             router.push(`/markets/${symbol}/simulation`);
           }}
           aria-label={`${marketData?.name || ''}の資産シミュレーションページへ遷移`}

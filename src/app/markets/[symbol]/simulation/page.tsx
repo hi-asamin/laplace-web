@@ -30,17 +30,42 @@ export default function SimulationPage() {
   const searchParams = useSearchParams();
   const { symbol } = params;
 
-  // 資産形成シミュレーションの状態を追跡
-  const accumulationSimulation = useAssetAccumulationSimulation();
+  // URL パラメータから初期設定を取得
+  const initialQuestionType = searchParams.get('q') || 'total-assets';
+  const showDistribution = searchParams.get('mode') === 'distribution';
+
+  // URLパラメータから初期設定を構築
+  const getInitialSettings = () => {
+    const settings: Partial<SimulationSettings> = {
+      questionType: initialQuestionType as any,
+    };
+
+    // 各パラメータを取得して設定
+    const years = searchParams.get('years');
+    if (years) settings.years = parseInt(years);
+
+    const monthlyAmount = searchParams.get('monthlyAmount');
+    if (monthlyAmount) settings.monthlyAmount = parseInt(monthlyAmount);
+
+    const averageYield = searchParams.get('averageYield');
+    if (averageYield) settings.averageYield = parseFloat(averageYield);
+
+    const targetAmount = searchParams.get('targetAmount');
+    if (targetAmount) settings.targetAmount = parseInt(targetAmount);
+
+    const initialPrincipal = searchParams.get('initialPrincipal');
+    if (initialPrincipal) settings.initialPrincipal = parseInt(initialPrincipal);
+
+    return settings;
+  };
+
+  // 資産形成シミュレーションの状態を追跡（初期設定を渡す）
+  const accumulationSimulation = useAssetAccumulationSimulation(getInitialSettings());
   const [inheritedAssets, setInheritedAssets] = useState<number | undefined>(undefined);
   const distributionSimulation = useAssetDistributionWithInheritance(undefined, inheritedAssets);
 
   // アナリティクストラッキング
   const analytics = useSimulationAnalytics();
-
-  // URL パラメータから初期設定を取得
-  const initialQuestionType = searchParams.get('q') || 'total-assets';
-  const showDistribution = searchParams.get('mode') === 'distribution';
 
   // ハッシュ監視
   const [activeTab, setActiveTab] = useState<string>('#accumulation');
@@ -77,25 +102,37 @@ export default function SimulationPage() {
 
   // 資産形成の結果が変更されたときに、資産活用シミュレーターに連携
   useEffect(() => {
-    if (
-      accumulationSimulation.result.isSuccess &&
-      accumulationSimulation.result.calculatedValue &&
-      accumulationSimulation.settings.questionType === 'total-assets'
-    ) {
-      const newInheritedAssets = accumulationSimulation.result.calculatedValue;
-      setInheritedAssets(newInheritedAssets);
+    if (accumulationSimulation.result.isSuccess) {
+      let newInheritedAssets: number | undefined;
 
-      // 資産連携イベントをトラッキング
-      analytics.trackAssetInheritance(
-        newInheritedAssets,
-        'accumulation_simulator',
-        'distribution_simulator'
-      );
+      if (accumulationSimulation.settings.questionType === 'total-assets') {
+        // 資産総額計算の場合は計算結果を使用
+        newInheritedAssets = accumulationSimulation.result.calculatedValue;
+      } else if (
+        accumulationSimulation.settings.questionType === 'required-yield' ||
+        accumulationSimulation.settings.questionType === 'required-monthly' ||
+        accumulationSimulation.settings.questionType === 'required-years'
+      ) {
+        // その他の場合は目標金額を使用
+        newInheritedAssets = accumulationSimulation.settings.targetAmount;
+      }
+
+      if (newInheritedAssets && newInheritedAssets > 0) {
+        setInheritedAssets(newInheritedAssets);
+
+        // 資産連携イベントをトラッキング
+        analytics.trackAssetInheritance(
+          newInheritedAssets,
+          'accumulation_simulator',
+          'distribution_simulator'
+        );
+      }
     }
   }, [
     accumulationSimulation.result.calculatedValue,
     accumulationSimulation.result.isSuccess,
     accumulationSimulation.settings.questionType,
+    accumulationSimulation.settings.targetAmount,
     analytics,
   ]);
 

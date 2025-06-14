@@ -278,7 +278,7 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
                       <div
                         key={result.symbol}
                         onClick={() => handleSelect(result)}
-                        className="flex items-center justify-between p-4 bg-[var(--color-lp-off-white)] dark:bg-[var(--color-surface-3)] cursor-pointer hover:bg-[var(--color-lp-mint)]/10 dark:hover:bg-[var(--color-lp-mint)]/15 active:scale-[0.98] transition-all duration-200 rounded-xl"
+                        className="flex items-center justify-between p-4 bg-white dark:bg-[var(--color-surface-2)] cursor-pointer hover:bg-[var(--color-lp-mint)]/10 dark:hover:bg-[var(--color-lp-mint)]/15 active:scale-[0.98] transition-all duration-200 rounded-xl shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-[var(--color-surface-3)]"
                       >
                         <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <img
@@ -360,7 +360,7 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
                       <div
                         key={result.symbol}
                         onClick={() => handleSelect(result)}
-                        className="flex items-center justify-between p-4 bg-[var(--color-lp-off-white)] dark:bg-[var(--color-surface-3)] cursor-pointer hover:bg-[var(--color-lp-mint)]/10 dark:hover:bg-[var(--color-lp-mint)]/15 active:scale-[0.98] transition-all duration-200 rounded-xl"
+                        className="flex items-center justify-between p-4 bg-white dark:bg-[var(--color-surface-2)] cursor-pointer hover:bg-[var(--color-lp-mint)]/10 dark:hover:bg-[var(--color-lp-mint)]/15 active:scale-[0.98] transition-all duration-200 rounded-xl shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-[var(--color-surface-3)]"
                       >
                         <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <img

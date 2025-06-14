@@ -38,9 +38,9 @@ export default function StartPageCards() {
     // 積立シミュレーション（30年間、毎月3万円、想定利回り5%）
     const params = new URLSearchParams({
       q: 'total-assets',
-      period: '30',
-      monthly: '30000',
-      rate: '5',
+      years: '30',
+      monthlyAmount: '30000',
+      averageYield: '5',
     });
     router.push(`/markets/self/simulation?${params.toString()}`);
   };
@@ -48,10 +48,10 @@ export default function StartPageCards() {
   const handleTargetSimulation = () => {
     // 目標達成シミュレーション（30年後、2,000万円、想定利回り5%）
     const params = new URLSearchParams({
-      q: 'monthly-amount',
-      target: '20000000',
-      period: '30',
-      rate: '5',
+      q: 'required-monthly',
+      targetAmount: '20000000',
+      years: '30',
+      averageYield: '5',
     });
     router.push(`/markets/self/simulation?${params.toString()}`);
   };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, ChevronRight } from 'lucide-react';
+import { Search, X, ChevronRight, Loader2 } from 'lucide-react';
 import { SearchResult } from '@/types/api';
 import { searchMarkets } from '@/lib/api';
 import { useRouter } from 'next/navigation';
@@ -36,11 +36,11 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
     }
   }, []);
 
-  // 検索履歴の保存
+  // 検索履歴の保存（最大5件に制限）
   const saveToHistory = (result: SearchResult) => {
     const updatedHistory = [
       result,
-      ...searchHistory.filter((item) => item.symbol !== result.symbol).slice(0, 9),
+      ...searchHistory.filter((item) => item.symbol !== result.symbol).slice(0, 4), // 最大5件に制限
     ];
     setSearchHistory(updatedHistory);
     localStorage.setItem('market-search-history', JSON.stringify(updatedHistory));
@@ -152,8 +152,12 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
       onSelect(result);
     }
 
-    // 詳細ページに遷移
-    router.push(`/markets/${encodeURIComponent(result.symbol)}`);
+    // シミュレーションページに遷移（想定利回りを自動入力）
+    const params = new URLSearchParams({
+      q: 'total-assets',
+      rate: '10', // デフォルト想定利回り（実際のAPIから取得する場合は調整）
+    });
+    router.push(`/markets/${encodeURIComponent(result.symbol)}/simulation?${params.toString()}`);
   };
 
   // 検索窓クリア
@@ -169,7 +173,7 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
     } else if (changePercent.includes('-')) {
       return 'text-[var(--color-danger)]'; // 下落（赤）
     }
-    return 'text-[var(--color-gray-400)]'; // 変動なし
+    return 'text-slate-500 dark:text-[var(--color-text-muted)]'; // 変動なし
   };
 
   // 国旗アイコンを取得する関数
@@ -227,163 +231,202 @@ export const MarketSearch = ({ onSelect }: MarketSearchProps) => {
   };
 
   return (
-    <div ref={searchContainerRef} className="relative w-full">
-      {/* 検索入力フィールド - 添付画像に合わせたスタイル */}
-      <div className="relative flex items-center w-full rounded-full border border-[var(--color-gray-400)] bg-[var(--color-surface)] transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--color-primary)] focus-within:border-transparent">
-        <Search
-          className="absolute left-4 h-5 w-5 text-[var(--color-gray-700)]"
-          strokeWidth={1.8}
-        />
+    <div ref={searchContainerRef} className="relative w-full max-w-2xl mx-auto">
+      {/* 検索入力フィールド - デザインガイドライン準拠 */}
+      <div className="relative flex items-center w-full rounded-full border-2 border-[var(--color-lp-mint)] bg-[var(--color-lp-mint)]/5 dark:bg-[var(--color-lp-mint)]/10 transition-all duration-300 focus-within:bg-[var(--color-lp-mint)]/10 dark:focus-within:bg-[var(--color-lp-mint)]/15 shadow-lg">
+        <Search className="absolute left-6 h-6 w-6 text-[var(--color-lp-mint)]" strokeWidth={2} />
         <input
           ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="銘柄を検索"
-          className="w-full h-[44px] py-3 pl-12 pr-10 outline-none rounded-full bg-transparent text-[var(--color-gray-900)]"
+          placeholder="銘柄名またはシンボルで検索（例: トヨタ, AAPL）"
+          className="w-full h-[56px] py-4 pl-16 pr-14 outline-none rounded-full bg-transparent text-lg text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] placeholder:text-slate-500 dark:placeholder:text-[var(--color-text-muted)]"
           aria-label="銘柄を検索"
         />
         {query && (
           <button
             onClick={clearSearch}
-            className="absolute right-3 p-1 bg-gray-100 rounded-full text-[var(--color-gray-400)] hover:text-[var(--color-gray-700)] hover:bg-gray-200 transition-colors"
+            className="absolute right-4 p-2 bg-slate-100 dark:bg-[var(--color-surface-3)] rounded-full text-slate-500 dark:text-[var(--color-text-muted)] hover:text-[var(--color-lp-navy)] dark:hover:text-[var(--color-text-primary)] hover:bg-slate-200 dark:hover:bg-[var(--color-surface-4)] transition-colors"
             style={{ touchAction: 'manipulation' }}
             aria-label="検索をクリア"
           >
-            <X className="h-3.5 w-3.5" strokeWidth={2} />
+            <X className="h-5 w-5" strokeWidth={2} />
           </button>
         )}
       </div>
 
       {/* 検索結果表示 */}
-      <div ref={resultsRef} className="absolute z-10 w-full mt-2">
+      <div ref={resultsRef} className="mt-4">
         {isLoading ? (
-          <div className="p-4 text-center text-[var(--color-gray-400)]">検索中...</div>
+          // ローディング表示
+          <div className="bg-white dark:bg-[var(--color-surface-2)] rounded-2xl shadow-xl dark:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)] p-8 text-center border border-slate-200 dark:border-[var(--color-surface-3)]">
+            <Loader2 className="w-8 h-8 text-[var(--color-lp-mint)] animate-spin mx-auto mb-4" />
+            <p className="text-slate-600 dark:text-[var(--color-text-secondary)]">検索中...</p>
+          </div>
         ) : (
           <>
             {query ? (
               // 検索結果表示
-              <div>
-                <h3 className="px-4 py-2 text-xs text-[var(--color-gray-700)]">候補</h3>
+              <div className="p-2">
+                <h3 className="text-lg font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-4">
+                  検索結果
+                </h3>
                 {results.length > 0 ? (
-                  <ul>
+                  <div className="space-y-3">
                     {results.map((result) => (
-                      <li
+                      <div
                         key={result.symbol}
                         onClick={() => handleSelect(result)}
-                        className="flex items-center justify-between px-4 py-3 bg-[var(--color-list-bg)] cursor-pointer hover:brightness-[0.97] active:scale-[0.98] transition-all duration-120 mb-1 rounded-xl"
+                        className="flex items-center justify-between p-4 bg-[var(--color-lp-off-white)] dark:bg-[var(--color-surface-3)] cursor-pointer hover:bg-[var(--color-lp-mint)]/10 dark:hover:bg-[var(--color-lp-mint)]/15 active:scale-[0.98] transition-all duration-200 rounded-xl"
                       >
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <img
                             src={getCompanyLogo(result)}
                             alt={result.name}
-                            className="w-6 h-6 rounded-full"
+                            className="w-10 h-10 rounded-full flex-shrink-0"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = result.market
                                 ? getFlagIcon(result.market)
                                 : '/placeholder-logo.svg';
                             }}
                           />
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <p className="font-medium text-[var(--color-gray-900)]">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 mb-1">
+                              <h4
+                                className="font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] text-base truncate whitespace-nowrap overflow-hidden"
+                                style={{
+                                  writingMode: 'horizontal-tb',
+                                  textOrientation: 'mixed',
+                                  direction: 'ltr',
+                                }}
+                              >
                                 {result.name}
-                              </p>
-                              <span className="text-xs text-[var(--color-gray-400)]">
-                                ({result.symbol})
+                              </h4>
+                              <span className="text-sm text-slate-500 dark:text-[var(--color-text-muted)] bg-slate-100 dark:bg-[var(--color-surface-4)] px-3 py-1 rounded-full font-medium flex-shrink-0 w-fit mt-1 sm:mt-0">
+                                {result.symbol}
                               </span>
                             </div>
+                            {result.market && (
+                              <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
+                                {result.market}
+                              </p>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center space-x-4 flex-shrink-0">
                           {result.price && (
-                            <div className="text-right mr-3">
-                              <p className="font-medium text-[var(--color-gray-900)]">
+                            <div className="text-right">
+                              <p className="font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] text-base">
                                 {result.price}
                               </p>
                               {result.change_percent && (
-                                <p className={`text-xs ${getChangeColor(result.change_percent)}`}>
+                                <p className={`text-sm ${getChangeColor(result.change_percent)}`}>
                                   {result.change_percent}
                                 </p>
                               )}
                             </div>
                           )}
-                          <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
+                          <div className="flex-shrink-0 h-10 w-10 bg-[var(--color-lp-mint)]/10 dark:bg-[var(--color-lp-mint)]/20 rounded-full flex items-center justify-center">
                             <ChevronRight
-                              className="h-4 w-4 text-[var(--color-gray-700)]"
-                              strokeWidth={1.8}
+                              className="h-5 w-5 text-[var(--color-lp-mint)]"
+                              strokeWidth={2}
                             />
                           </div>
                         </div>
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 ) : (
-                  <div className="p-4 text-center text-[var(--color-gray-400)] rounded-xl">
-                    結果がありません
+                  <div className="text-center py-8">
+                    <p className="text-slate-500 dark:text-[var(--color-text-muted)]">
+                      該当する銘柄が見つかりませんでした
+                    </p>
+                    <p className="text-sm text-slate-400 dark:text-[var(--color-text-muted)] mt-2">
+                      別のキーワードで検索してみてください
+                    </p>
                   </div>
                 )}
               </div>
             ) : (
-              // 検索履歴表示
-              <div>
-                <h3 className="px-4 py-2 text-xs text-[var(--color-gray-700)]">検索履歴</h3>
+              // 検索履歴表示（初期表示）
+              <div className="p-2">
+                <h3 className="text-lg font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-4">
+                  最近検索した銘柄
+                </h3>
                 {searchHistory.length > 0 ? (
-                  <ul>
-                    {searchHistory.map((result) => (
-                      <li
+                  <div className="space-y-3">
+                    {searchHistory.slice(0, 5).map((result) => (
+                      <div
                         key={result.symbol}
                         onClick={() => handleSelect(result)}
-                        className="flex items-center justify-between px-4 py-3 bg-[var(--color-list-bg)] cursor-pointer hover:brightness-[0.97] active:scale-[0.98] transition-all duration-120 mb-1 rounded-xl"
+                        className="flex items-center justify-between p-4 bg-[var(--color-lp-off-white)] dark:bg-[var(--color-surface-3)] cursor-pointer hover:bg-[var(--color-lp-mint)]/10 dark:hover:bg-[var(--color-lp-mint)]/15 active:scale-[0.98] transition-all duration-200 rounded-xl"
                       >
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <img
                             src={getCompanyLogo(result)}
                             alt={result.name}
-                            className="w-6 h-6 rounded-full"
+                            className="w-10 h-10 rounded-full flex-shrink-0"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = result.market
                                 ? getFlagIcon(result.market)
                                 : '/placeholder-logo.svg';
                             }}
                           />
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <p className="font-medium text-[var(--color-gray-900)]">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 mb-1">
+                              <h4
+                                className="font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] text-base truncate whitespace-nowrap overflow-hidden"
+                                style={{
+                                  writingMode: 'horizontal-tb',
+                                  textOrientation: 'mixed',
+                                  direction: 'ltr',
+                                }}
+                              >
                                 {result.name}
-                              </p>
-                              <span className="text-xs text-[var(--color-gray-400)]">
-                                ({result.symbol})
+                              </h4>
+                              <span className="text-sm text-slate-500 dark:text-[var(--color-text-muted)] bg-slate-100 dark:bg-[var(--color-surface-4)] px-3 py-1 rounded-full font-medium flex-shrink-0 w-fit mt-1 sm:mt-0">
+                                {result.symbol}
                               </span>
                             </div>
+                            {result.market && (
+                              <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
+                                {result.market}
+                              </p>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center">
+                        <div className="flex items-center space-x-4 flex-shrink-0">
                           {result.price && (
-                            <div className="text-right mr-3">
-                              <p className="font-medium text-[var(--color-gray-900)]">
+                            <div className="text-right">
+                              <p className="font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] text-base">
                                 {result.price}
                               </p>
                               {result.change_percent && (
-                                <p className={`text-xs ${getChangeColor(result.change_percent)}`}>
+                                <p className={`text-sm ${getChangeColor(result.change_percent)}`}>
                                   {result.change_percent}
                                 </p>
                               )}
                             </div>
                           )}
-                          <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
+                          <div className="flex-shrink-0 h-10 w-10 bg-[var(--color-lp-mint)]/10 dark:bg-[var(--color-lp-mint)]/20 rounded-full flex items-center justify-center">
                             <ChevronRight
-                              className="h-4 w-4 text-[var(--color-gray-700)]"
-                              strokeWidth={1.8}
+                              className="h-5 w-5 text-[var(--color-lp-mint)]"
+                              strokeWidth={2}
                             />
                           </div>
                         </div>
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 ) : (
-                  <div className="p-4 text-center text-[var(--color-gray-400)] rounded-xl">
-                    検索履歴がありません
+                  <div className="text-center py-8">
+                    <p className="text-slate-500 dark:text-[var(--color-text-muted)]">
+                      検索履歴はありません
+                    </p>
+                    <p className="text-sm text-slate-400 dark:text-[var(--color-text-muted)] mt-2">
+                      銘柄を検索すると、ここに履歴が表示されます
+                    </p>
                   </div>
                 )}
               </div>

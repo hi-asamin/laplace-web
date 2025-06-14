@@ -50,16 +50,25 @@ export default function DividendCard({
     return Math.max(...dividendHistory.map((data) => data.dividend));
   }, [dividendHistory]);
 
-  // 次の権利確定日をフォーマット
-  const formattedNextExDate = useMemo(() => {
+  // 次の権利確定日をフォーマットし、過去かどうかを判定
+  const exDateInfo = useMemo(() => {
     if (!nextExDate) return null;
 
     try {
       const date = new Date(nextExDate);
-      return date.toLocaleDateString('ja-JP', {
+      const today = new Date();
+      const isPast = date < today;
+
+      const formattedDate = date.toLocaleDateString('ja-JP', {
         month: 'long',
         day: 'numeric',
       });
+
+      return {
+        formattedDate,
+        isPast,
+        rawDate: date,
+      };
     } catch {
       return null;
     }
@@ -187,20 +196,46 @@ export default function DividendCard({
       </div>
 
       {/* 次の権利確定日 */}
-      {formattedNextExDate && (
-        <div className="bg-[var(--color-lp-blue)]/5 dark:bg-[var(--color-lp-blue)]/10 rounded-xl p-4 border border-[var(--color-lp-blue)]/20 dark:border-[var(--color-lp-blue)]/30">
+      {exDateInfo && (
+        <div
+          className={`rounded-xl p-4 border ${
+            exDateInfo.isPast
+              ? 'bg-[var(--color-gray-100)] dark:bg-[var(--color-surface-3)] border-[var(--color-gray-300)] dark:border-[var(--color-surface-4)]'
+              : 'bg-[var(--color-lp-blue)]/5 dark:bg-[var(--color-lp-blue)]/10 border-[var(--color-lp-blue)]/20 dark:border-[var(--color-lp-blue)]/30'
+          }`}
+        >
           <div className="flex items-center">
-            <Calendar className="w-4 h-4 text-[var(--color-lp-blue)] mr-2" />
+            <Calendar
+              className={`w-4 h-4 mr-2 ${
+                exDateInfo.isPast ? 'text-[var(--color-gray-500)]' : 'text-[var(--color-lp-blue)]'
+              }`}
+            />
             <span className="text-sm font-medium text-[var(--color-gray-700)] dark:text-[var(--color-text-secondary)]">
-              次の権利確定日
+              {exDateInfo.isPast ? '前回の権利確定日' : '次の権利確定日'}
             </span>
+            {exDateInfo.isPast && (
+              <span className="ml-2 text-xs bg-[var(--color-gray-200)] dark:bg-[var(--color-surface-4)] text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)] px-2 py-1 rounded-full">
+                過去
+              </span>
+            )}
           </div>
-          <p className="text-lg font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mt-1">
-            {formattedNextExDate}
+          <p
+            className={`text-lg font-semibold mt-1 ${
+              exDateInfo.isPast
+                ? 'text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)]'
+                : 'text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]'
+            }`}
+          >
+            {exDateInfo.formattedDate}
           </p>
           {annualDividend && (
             <p className="text-sm text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)] mt-1">
               年間配当予想: ¥{annualDividend}
+            </p>
+          )}
+          {exDateInfo.isPast && (
+            <p className="text-xs text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)] mt-2">
+              ※ この日付は過去のものです。最新の配当情報については企業の発表をご確認ください。
             </p>
           )}
         </div>

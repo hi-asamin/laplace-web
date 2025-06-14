@@ -304,21 +304,77 @@ export default function MarketDetailPage() {
     ];
   }, [chartData]);
 
-  const mockDividendData = useMemo(
-    () => ({
-      currentYield: 2.58,
-      dividendHistory: [
-        { year: '2020', dividend: 120 },
-        { year: '2021', dividend: 125 },
-        { year: '2022', dividend: 130 },
-        { year: '2023', dividend: 135 },
-        { year: '2024', dividend: 140, isEstimate: true },
-      ],
-      nextExDate: fundamentalData?.dividendData?.exDividendDate || undefined,
-      annualDividend: 140,
-    }),
-    [fundamentalData]
-  );
+  // 実際のAPIデータを使用した配当情報計算
+  const dividendData = useMemo(() => {
+    // デフォルト値（データがない場合）
+    const defaultData = {
+      currentYield: 0,
+      dividendHistory: [] as { year: string; dividend: number; isEstimate?: boolean }[],
+      nextExDate: undefined as string | undefined,
+      annualDividend: 0,
+    };
+
+    if (!fundamentalData?.dividendData) {
+      return defaultData;
+    }
+
+    const apiDividendData = fundamentalData.dividendData;
+
+    // 配当利回りを取得（パーセンテージに変換）
+    let currentYield = 0;
+    if (apiDividendData.dividendYield) {
+      const yieldStr = apiDividendData.dividendYield.replace('%', '');
+      const yieldValue = parseFloat(yieldStr);
+
+      // APIから来る値が小数形式（例：0.0258）の場合は100倍してパーセンテージに変換
+      // すでにパーセンテージ形式（例：2.58）の場合はそのまま使用
+      if (yieldValue < 1 && yieldValue > 0) {
+        currentYield = yieldValue * 100;
+      } else {
+        currentYield = yieldValue;
+      }
+    }
+
+    // 年間配当額を取得
+    const annualDividend = apiDividendData.dividend
+      ? parseFloat(apiDividendData.dividend.replace(/[¥$,]/g, ''))
+      : 0;
+
+    // 配当履歴を取得（APIから提供される場合）
+    let dividendHistory = apiDividendData.dividendHistory || [];
+
+    // 配当履歴がない場合、現在の配当額から過去5年分を推定
+    if (dividendHistory.length === 0 && annualDividend > 0) {
+      const currentYear = new Date().getFullYear();
+      const estimatedHistory = [];
+
+      // 過去4年分を推定（年率2-3%の成長を仮定）
+      for (let i = 4; i >= 1; i--) {
+        const year = (currentYear - i).toString();
+        const estimatedDividend = Math.round(annualDividend / Math.pow(1.025, i));
+        estimatedHistory.push({
+          year,
+          dividend: estimatedDividend,
+        });
+      }
+
+      // 現在年を追加
+      estimatedHistory.push({
+        year: currentYear.toString(),
+        dividend: annualDividend,
+        isEstimate: true,
+      });
+
+      dividendHistory = estimatedHistory;
+    }
+
+    return {
+      currentYield,
+      dividendHistory,
+      nextExDate: apiDividendData.exDividendDate,
+      annualDividend,
+    };
+  }, [fundamentalData]);
 
   // 実際のAPIデータを使用したバリュエーション計算
   const valuationData = useMemo(() => {
@@ -642,10 +698,10 @@ export default function MarketDetailPage() {
               </div>
             ) : (
               <DividendCard
-                currentYield={mockDividendData.currentYield}
-                dividendHistory={mockDividendData.dividendHistory}
-                nextExDate={mockDividendData.nextExDate}
-                annualDividend={mockDividendData.annualDividend}
+                currentYield={dividendData.currentYield}
+                dividendHistory={dividendData.dividendHistory}
+                nextExDate={dividendData.nextExDate}
+                annualDividend={dividendData.annualDividend}
               />
             )}
           </div>

@@ -86,6 +86,15 @@ export interface KeyMetrics {
 }
 
 /**
+ * 配当履歴データのインターフェース
+ */
+export interface DividendHistoryItem {
+  year: string;
+  dividend: number;
+  isEstimate?: boolean;
+}
+
+/**
  * 配当データのインターフェース
  */
 export interface DividendData {
@@ -94,6 +103,7 @@ export interface DividendData {
   payoutRatio?: string;
   exDividendDate?: string;
   nextPaymentDate?: string;
+  dividendHistory?: DividendHistoryItem[];
 }
 
 /**

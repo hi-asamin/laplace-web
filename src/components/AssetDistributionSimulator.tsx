@@ -86,19 +86,39 @@ export default function AssetDistributionSimulator({
   };
 
   // 結果表示のフォーマット
-  const getResultDisplay = () => {
+  const getResultDisplay = (): {
+    main: string;
+    unit: string;
+    description?: string;
+    additionalInfo?: string;
+  } => {
     const value = result.calculatedValue;
     if (value === undefined) return { main: '計算中...', unit: '' };
 
     switch (settings.questionType) {
       case 'asset-lifespan':
-        const totalYears = Math.floor(value);
-        const months = Math.round((value - totalYears) * 12);
-        return {
-          main: `${totalYears}年${months > 0 ? `${months}ヶ月` : ''}`,
-          unit: '資産が持続',
-          description: `毎月${formatNumber(settings.withdrawalAmount || 0)}万円の取り崩しが可能です`,
-        };
+        if (value === Infinity) {
+          // 運用利回りが取り崩し額を上回る場合
+          const annualYield = (settings.averageYield || 4) / 100;
+          const annualWithdrawal = (settings.withdrawalAmount || 10) * 10000 * 12;
+          const annualYieldAmount = (settings.initialAssets || 0) * annualYield;
+          const surplus = annualYieldAmount - annualWithdrawal;
+
+          return {
+            main: '永続的',
+            unit: '資産が持続',
+            description: `運用利回り（年${formatCurrency(annualYieldAmount)}）が取り崩し額（年${formatCurrency(annualWithdrawal)}）を上回るため、資産は減りません`,
+            additionalInfo: `年間余剰: ${formatCurrency(surplus)}`,
+          };
+        } else {
+          const totalYears = Math.floor(value);
+          const months = Math.round((value - totalYears) * 12);
+          return {
+            main: `${totalYears}年${months > 0 ? `${months}ヶ月` : ''}`,
+            unit: '資産が持続',
+            description: `毎月${formatNumber(settings.withdrawalAmount || 0)}万円の取り崩しが可能です`,
+          };
+        }
       case 'required-assets':
         return {
           main: formatCurrency(value),
@@ -476,6 +496,12 @@ export default function AssetDistributionSimulator({
                 {resultDisplay.description && (
                   <p className="text-xs text-[var(--color-gray-600)] mt-3">
                     {resultDisplay.description}
+                  </p>
+                )}
+
+                {resultDisplay.additionalInfo && (
+                  <p className="text-xs text-[var(--color-lp-mint)] font-medium mt-2">
+                    {resultDisplay.additionalInfo}
                   </p>
                 )}
 

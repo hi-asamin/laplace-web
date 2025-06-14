@@ -296,62 +296,99 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
           withdrawalAmount: 0,
         });
 
-        // 月ごとに計算して正確な資産寿命を求める
-        for (let month = 0; month < maxYears * 12; month++) {
-          if (remainingAssets <= 0) break;
+        // 運用利回りと取り崩し額の関係をチェック
+        const annualYield = averageYield / 100;
+        const annualWithdrawal = monthlyWithdrawal * 12;
+        const annualYieldAmount = initialAssets * annualYield;
+        const isSustainable = annualYieldAmount >= annualWithdrawal;
 
-          // 運用益を加算
-          remainingAssets *= 1 + monthlyYield;
+        if (isSustainable) {
+          // 運用利回りが取り崩し額を上回る場合は「永続的」
+          yearCount = Infinity;
 
-          // 取り崩し
-          const withdrawal =
-            withdrawalType === 'fixed'
-              ? monthlyWithdrawal
-              : remainingAssets * (averageYield / 100 / 12);
+          // 50年分のデータを生成（表示用）
+          remainingAssets = initialAssets;
+          for (let year = 1; year <= 50; year++) {
+            let yearlyWithdrawal = 0;
 
-          remainingAssets -= withdrawal;
+            for (let month = 0; month < 12; month++) {
+              remainingAssets *= 1 + monthlyYield;
+              const withdrawal =
+                withdrawalType === 'fixed'
+                  ? monthlyWithdrawal
+                  : remainingAssets * (averageYield / 100 / 12);
 
-          if (remainingAssets <= 0) {
-            yearCount = (month + 1) / 12;
-            remainingAssets = 0;
-            break;
+              remainingAssets -= withdrawal;
+              yearlyWithdrawal += withdrawal;
+            }
+
+            data.push({
+              year,
+              principal: 0,
+              dividendProfit: 0,
+              totalAssets: Math.max(0, remainingAssets),
+              withdrawalAmount: yearlyWithdrawal,
+            });
           }
-        }
-
-        // 年次データを生成（表示用）
-        remainingAssets = initialAssets;
-        const maxDisplayYears = Math.min(Math.ceil(yearCount) + 5, 50); // 表示は最大50年
-
-        for (let year = 1; year <= maxDisplayYears; year++) {
-          let yearlyWithdrawal = 0;
-
-          for (let month = 0; month < 12; month++) {
+        } else {
+          // 運用利回りが取り崩し額を下回る場合は通常の計算
+          // 月ごとに計算して正確な資産寿命を求める
+          for (let month = 0; month < maxYears * 12; month++) {
             if (remainingAssets <= 0) break;
 
+            // 運用益を加算
             remainingAssets *= 1 + monthlyYield;
+
+            // 取り崩し
             const withdrawal =
               withdrawalType === 'fixed'
                 ? monthlyWithdrawal
                 : remainingAssets * (averageYield / 100 / 12);
 
             remainingAssets -= withdrawal;
-            yearlyWithdrawal += withdrawal;
 
             if (remainingAssets <= 0) {
+              yearCount = (month + 1) / 12;
               remainingAssets = 0;
               break;
             }
           }
 
-          data.push({
-            year,
-            principal: 0,
-            dividendProfit: 0,
-            totalAssets: Math.max(0, remainingAssets),
-            withdrawalAmount: yearlyWithdrawal,
-          });
+          // 年次データを生成（表示用）
+          remainingAssets = initialAssets;
+          const maxDisplayYears = Math.min(Math.ceil(yearCount) + 5, 50);
 
-          if (remainingAssets <= 0) break;
+          for (let year = 1; year <= maxDisplayYears; year++) {
+            let yearlyWithdrawal = 0;
+
+            for (let month = 0; month < 12; month++) {
+              if (remainingAssets <= 0) break;
+
+              remainingAssets *= 1 + monthlyYield;
+              const withdrawal =
+                withdrawalType === 'fixed'
+                  ? monthlyWithdrawal
+                  : remainingAssets * (averageYield / 100 / 12);
+
+              remainingAssets -= withdrawal;
+              yearlyWithdrawal += withdrawal;
+
+              if (remainingAssets <= 0) {
+                remainingAssets = 0;
+                break;
+              }
+            }
+
+            data.push({
+              year,
+              principal: 0,
+              dividendProfit: 0,
+              totalAssets: Math.max(0, remainingAssets),
+              withdrawalAmount: yearlyWithdrawal,
+            });
+
+            if (remainingAssets <= 0) break;
+          }
         }
 
         calculatedValue = yearCount;

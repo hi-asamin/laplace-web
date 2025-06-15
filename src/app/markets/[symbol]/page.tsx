@@ -626,34 +626,6 @@ export default function MarketDetailPage() {
     []
   );
 
-  const mockPeersData = useMemo(
-    () => [
-      {
-        symbol: '7201.T',
-        name: '日産自動車',
-        price: '¥420',
-        change: '+8',
-        changePercent: '+1.9%',
-        isPositive: true,
-        marketCap: '1.8兆円',
-        per: 12.5,
-        pbr: 0.8,
-      },
-      {
-        symbol: '7267.T',
-        name: 'ホンダ',
-        price: '¥1,580',
-        change: '-15',
-        changePercent: '-0.9%',
-        isPositive: false,
-        marketCap: '5.2兆円',
-        per: 14.2,
-        pbr: 1.1,
-      },
-    ],
-    []
-  );
-
   // 高機能チャート用のデータ変換
   const enhancedChartData = useMemo(() => {
     if (!chartData?.data) return [];
@@ -940,7 +912,10 @@ export default function MarketDetailPage() {
               </div>
             ) : (
               <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg">
-                <PeersCard peers={mockPeersData} industryName="自動車" />
+                <PeersCard
+                  peers={relatedMarkets}
+                  industryName={marketData?.industry || marketData?.sector}
+                />
               </div>
             )}
           </div>

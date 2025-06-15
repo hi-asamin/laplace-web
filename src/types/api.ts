@@ -196,13 +196,9 @@ export interface FundamentalData {
 export interface RelatedMarket {
   symbol: string;
   name: string;
-  price?: string;
-  change?: string;
-  changePercent?: string;
-  isPositive?: boolean;
-  logoUrl?: string;
-  relationType?: string;
-  sector?: string;
+  price: string;
+  changePercent: string;
+  logoUrl: string | null;
 }
 
 /**

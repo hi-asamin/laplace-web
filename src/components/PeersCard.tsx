@@ -3,22 +3,10 @@
 import { TrendingUp, TrendingDown, Users, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-
-interface PeerStock {
-  symbol: string;
-  name: string;
-  price: string;
-  change: string;
-  changePercent: string;
-  isPositive: boolean;
-  logoUrl?: string;
-  marketCap?: string;
-  per?: number;
-  pbr?: number;
-}
+import { RelatedMarket } from '@/types/api';
 
 interface PeersCardProps {
-  peers: PeerStock[];
+  peers: RelatedMarket[];
   industryName?: string;
   className?: string;
 }
@@ -95,23 +83,6 @@ export default function PeersCard({ peers, industryName, className = '' }: Peers
                         {peer.symbol}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-3 mt-1">
-                      {peer.marketCap && (
-                        <span className="text-xs text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
-                          時価総額: {peer.marketCap}
-                        </span>
-                      )}
-                      {peer.per && (
-                        <span className="text-xs text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
-                          PER: {peer.per.toFixed(1)}
-                        </span>
-                      )}
-                      {peer.pbr && (
-                        <span className="text-xs text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
-                          PBR: {peer.pbr.toFixed(1)}
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
 
@@ -123,12 +94,12 @@ export default function PeersCard({ peers, industryName, className = '' }: Peers
                     </div>
                     <div
                       className={`flex items-center text-xs ${
-                        peer.isPositive
+                        !peer.changePercent.startsWith('-')
                           ? 'text-[var(--color-success)]'
                           : 'text-[var(--color-danger)]'
                       }`}
                     >
-                      {peer.isPositive ? (
+                      {!peer.changePercent.startsWith('-') ? (
                         <TrendingUp className="w-3 h-3 mr-1" />
                       ) : (
                         <TrendingDown className="w-3 h-3 mr-1" />

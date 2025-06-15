@@ -99,6 +99,17 @@ export interface QuarterlyEarning {
 }
 
 /**
+ * 業界平均データのインターフェース
+ */
+export interface IndustryAverages {
+  industryName: string;
+  averagePer: string;
+  averagePbr: string;
+  sampleSize: number;
+  lastUpdated: string;
+}
+
+/**
  * 主要指標のインターフェース
  */
 export interface KeyMetrics {
@@ -113,6 +124,7 @@ export interface KeyMetrics {
   currentRatio?: string;
   operatingMargin?: string;
   profitMargin?: string;
+  industryAverages?: IndustryAverages;
 }
 
 /**

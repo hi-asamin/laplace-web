@@ -406,57 +406,79 @@ export default function MarketDetailPage() {
     // PER（株価収益率）を取得
     const per = keyMetrics.peRatio ? parseFloat(keyMetrics.peRatio) : 0;
 
-    // 業界平均の推定（業界・セクターに基づく）
-    const getIndustryAverages = (industry?: string, sector?: string) => {
-      const industryName = industry || sector || '一般';
+    // APIから業界平均を取得（優先）
+    const industryAverages = keyMetrics.industryAverages;
+    let industryAvgPbr = defaultData.industryAvgPbr;
+    let industryAvgPer = defaultData.industryAvgPer;
+    let industryName = defaultData.industryName;
 
-      // 業界別の平均的なPBR/PER（実際の統計データに基づく概算値）
-      const industryAverages: { [key: string]: { pbr: number; per: number } } = {
-        自動車: { pbr: 1.2, per: 12.0 },
-        輸送用機器: { pbr: 1.2, per: 12.0 },
-        テクノロジー: { pbr: 3.5, per: 25.0 },
-        '情報・通信業': { pbr: 3.5, per: 25.0 },
-        金融: { pbr: 0.8, per: 10.0 },
-        銀行業: { pbr: 0.8, per: 10.0 },
-        医薬品: { pbr: 2.8, per: 20.0 },
-        '医療・ヘルスケア': { pbr: 2.8, per: 20.0 },
-        小売: { pbr: 2.0, per: 15.0 },
-        小売業: { pbr: 2.0, per: 15.0 },
-        不動産: { pbr: 1.0, per: 12.0 },
-        不動産業: { pbr: 1.0, per: 12.0 },
-        エネルギー: { pbr: 1.5, per: 10.0 },
-        '石油・ガス': { pbr: 1.5, per: 10.0 },
-        素材: { pbr: 1.3, per: 12.0 },
-        化学: { pbr: 1.3, per: 12.0 },
-        食品: { pbr: 1.8, per: 16.0 },
-        '食品・飲料': { pbr: 1.8, per: 16.0 },
-        一般: { pbr: 1.5, per: 15.0 },
+    if (industryAverages) {
+      // APIから取得した業界平均を使用
+      industryAvgPbr = industryAverages.averagePbr
+        ? parseFloat(industryAverages.averagePbr)
+        : defaultData.industryAvgPbr;
+      industryAvgPer = industryAverages.averagePer
+        ? parseFloat(industryAverages.averagePer)
+        : defaultData.industryAvgPer;
+      industryName = industryAverages.industryName || defaultData.industryName;
+    } else {
+      // フォールバック：業界・セクターに基づく推定値
+      const getIndustryAverages = (industry?: string, sector?: string) => {
+        const name = industry || sector || '一般';
+
+        // 業界別の平均的なPBR/PER（実際の統計データに基づく概算値）
+        const averages: { [key: string]: { pbr: number; per: number } } = {
+          自動車: { pbr: 1.2, per: 12.0 },
+          輸送用機器: { pbr: 1.2, per: 12.0 },
+          テクノロジー: { pbr: 3.5, per: 25.0 },
+          '情報・通信業': { pbr: 3.5, per: 25.0 },
+          金融: { pbr: 0.8, per: 10.0 },
+          銀行業: { pbr: 0.8, per: 10.0 },
+          医薬品: { pbr: 2.8, per: 20.0 },
+          '医療・ヘルスケア': { pbr: 2.8, per: 20.0 },
+          小売: { pbr: 2.0, per: 15.0 },
+          小売業: { pbr: 2.0, per: 15.0 },
+          不動産: { pbr: 1.0, per: 12.0 },
+          不動産業: { pbr: 1.0, per: 12.0 },
+          エネルギー: { pbr: 1.5, per: 10.0 },
+          '石油・ガス': { pbr: 1.5, per: 10.0 },
+          素材: { pbr: 1.3, per: 12.0 },
+          化学: { pbr: 1.3, per: 12.0 },
+          食品: { pbr: 1.8, per: 16.0 },
+          '食品・飲料': { pbr: 1.8, per: 16.0 },
+          一般: { pbr: 1.5, per: 15.0 },
+        };
+
+        // 完全一致を探す
+        if (averages[name]) {
+          return averages[name];
+        }
+
+        // 部分一致を探す
+        for (const [key, value] of Object.entries(averages)) {
+          if (name.includes(key) || key.includes(name)) {
+            return value;
+          }
+        }
+
+        // デフォルト値を返す
+        return averages['一般'];
       };
 
-      // 完全一致を探す
-      if (industryAverages[industryName]) {
-        return industryAverages[industryName];
-      }
-
-      // 部分一致を探す
-      for (const [key, value] of Object.entries(industryAverages)) {
-        if (industryName.includes(key) || key.includes(industryName)) {
-          return value;
-        }
-      }
-
-      // デフォルト値を返す
-      return industryAverages['一般'];
-    };
-
-    const industryAvg = getIndustryAverages(marketData?.industry, marketData?.sector);
+      const fallbackAvg = getIndustryAverages(marketData?.industry, marketData?.sector);
+      industryAvgPbr = fallbackAvg.pbr;
+      industryAvgPer = fallbackAvg.per;
+      industryName = marketData?.industry || marketData?.sector || '一般';
+    }
 
     return {
-      pbr: pbr,
-      per: per,
-      industryAvgPbr: industryAvg.pbr,
-      industryAvgPer: industryAvg.per,
-      industryName: marketData?.industry || marketData?.sector || '一般',
+      pbr,
+      per,
+      industryAvgPbr,
+      industryAvgPer,
+      industryName,
+      sampleSize: industryAverages?.sampleSize,
+      lastUpdated: industryAverages?.lastUpdated,
     };
   }, [fundamentalData, marketData]);
 

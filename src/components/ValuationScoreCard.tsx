@@ -10,6 +10,8 @@ interface ValuationData {
   industryAvgPbr?: number;
   industryAvgPer?: number;
   industryName?: string;
+  sampleSize?: number;
+  lastUpdated?: string;
 }
 
 interface ValuationScoreCardProps {
@@ -73,9 +75,28 @@ export default function ValuationScoreCard({
       perEvaluation.level === 'undervalued' ? 2 : perEvaluation.level === 'fair' ? 1 : 0;
     const totalScore = pbrScore + perScore;
 
-    if (totalScore >= 3) return { level: 'undervalued', text: '割安水準' };
-    if (totalScore >= 2) return { level: 'fair', text: '適正水準' };
-    return { level: 'overvalued', text: '割高水準' };
+    if (totalScore >= 3) {
+      return {
+        level: 'undervalued',
+        text: '割安水準',
+        description:
+          'PBR・PERともに業界平均を下回っており、財務状況に対して株価が割安な状態です。投資タイミングとして魅力的な水準と考えられます。',
+      };
+    }
+    if (totalScore >= 2) {
+      return {
+        level: 'fair',
+        text: '適正水準',
+        description:
+          '財務指標が業界平均と比較してバランスの取れた状態です。企業の成長性や将来性を総合的に判断することが重要です。',
+      };
+    }
+    return {
+      level: 'overvalued',
+      text: '割高水準',
+      description:
+        'PBR・PERが業界平均を上回っており、財務状況に対して株価が割高な可能性があります。投資判断は慎重に行うことをお勧めします。',
+    };
   }, [pbrEvaluation, perEvaluation]);
 
   const getEvaluationColor = (level: string) => {
@@ -210,11 +231,16 @@ PBR（株価純資産倍率）とPER（株価収益率）の2つの指標を業�
 
       {/* 総合評価 */}
       <div className="text-center mb-8">
-        <div className={`text-2xl font-bold mb-2 ${getEvaluationColor(overallEvaluation.level)}`}>
+        <div className={`text-2xl font-bold mb-3 ${getEvaluationColor(overallEvaluation.level)}`}>
           現在の株価は【{overallEvaluation.text}】です
         </div>
-        <p className="text-sm text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)]">
-          財務状況から見た株価の妥当性を評価
+        <div className="bg-[var(--color-surface-alt)] dark:bg-[var(--color-surface-3)] rounded-lg p-4 mb-2">
+          <p className="text-sm text-[var(--color-gray-700)] dark:text-[var(--color-text-secondary)] leading-relaxed">
+            {overallEvaluation.description}
+          </p>
+        </div>
+        <p className="text-xs text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+          ※ この評価は財務指標に基づく参考情報です。投資判断は総合的に行ってください。
         </p>
       </div>
 
@@ -274,16 +300,53 @@ PER = 株価 ÷ 1株当たり利益（EPS）
       {/* 業界情報 */}
       {valuationData.industryName && (
         <div className="mt-6 bg-[var(--color-lp-mint)]/5 dark:bg-[var(--color-lp-mint)]/10 rounded-xl p-4 border border-[var(--color-lp-mint)]/20 dark:border-[var(--color-lp-mint)]/30">
-          <div className="flex items-center mb-2">
-            <TrendingUp className="w-4 h-4 text-[var(--color-lp-mint)] mr-2" />
-            <span className="text-sm font-medium text-[var(--color-gray-700)] dark:text-[var(--color-text-secondary)]">
-              業界比較
-            </span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <TrendingUp className="w-4 h-4 text-[var(--color-lp-mint)] mr-2" />
+              <span className="text-sm font-medium text-[var(--color-gray-700)] dark:text-[var(--color-text-secondary)]">
+                業界比較データ
+              </span>
+            </div>
+            {valuationData.sampleSize && (
+              <span className="text-xs bg-[var(--color-lp-mint)]/10 dark:bg-[var(--color-lp-mint)]/20 text-[var(--color-lp-mint)] px-2 py-1 rounded-full">
+                {valuationData.sampleSize}社のデータ
+              </span>
+            )}
           </div>
-          <p className="text-sm text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)]">
-            {valuationData.industryName}業界の平均的な水準と比較して評価しています。
-            同業他社との相対的な位置づけを確認することで、より適切な投資判断が可能になります。
-          </p>
+
+          <div className="space-y-2">
+            <p className="text-sm text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)]">
+              <span className="font-medium text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+                {valuationData.industryName}
+              </span>
+              業界の平均的な水準と比較して評価しています。
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 mt-3">
+              <div className="text-center p-3 bg-white/50 dark:bg-[var(--color-surface-3)]/50 rounded-lg">
+                <div className="text-xs text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)] mb-1">
+                  業界平均 PER
+                </div>
+                <div className="text-lg font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+                  {valuationData.industryAvgPer?.toFixed(1) || 'N/A'}倍
+                </div>
+              </div>
+              <div className="text-center p-3 bg-white/50 dark:bg-[var(--color-surface-3)]/50 rounded-lg">
+                <div className="text-xs text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)] mb-1">
+                  業界平均 PBR
+                </div>
+                <div className="text-lg font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+                  {valuationData.industryAvgPbr?.toFixed(1) || 'N/A'}倍
+                </div>
+              </div>
+            </div>
+
+            {valuationData.lastUpdated && (
+              <p className="text-xs text-[var(--color-gray-400)] mt-2">
+                データ更新日: {new Date(valuationData.lastUpdated).toLocaleDateString('ja-JP')}
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>

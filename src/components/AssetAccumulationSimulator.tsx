@@ -364,6 +364,34 @@ export default function AssetAccumulationSimulator({
     }
   };
 
+  // 補足情報の生成（total-assetsの場合のみ）
+  const getSupplementaryInfo = () => {
+    if (settings.questionType !== 'total-assets') return null;
+
+    const monthlyAmount = settings.monthlyAmount || 0;
+    const averageYield = settings.averageYield || 0;
+    const initialPrincipal = settings.initialPrincipal || 0;
+
+    let parts = [];
+
+    if (initialPrincipal > 0) {
+      parts.push(`初期投資${formatCurrency(initialPrincipal)}`);
+    }
+
+    if (monthlyAmount > 0) {
+      parts.push(`毎月${formatCurrency(monthlyAmount)}の積立`);
+    }
+
+    if (parts.length > 0) {
+      parts.push(
+        `年利${averageYield % 1 === 0 ? averageYield.toFixed(0) : averageYield.toFixed(1)}％で運用した場合`
+      );
+      return parts.join('、');
+    }
+
+    return null;
+  };
+
   return (
     <section className={`py-8 bg-[var(--color-lp-off-white)] ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -434,6 +462,13 @@ export default function AssetAccumulationSimulator({
                     />
                   )}
                 </div>
+
+                {/* 補足情報（total-assetsの場合のみ） */}
+                {getSupplementaryInfo() && (
+                  <div className="text-sm text-[var(--color-gray-600)] mb-4 px-4">
+                    {getSupplementaryInfo()}
+                  </div>
+                )}
 
                 {/* 詳細情報（total-assetsの場合のみ） */}
                 {settings.questionType === 'total-assets' && result.data.length > 0 && (
@@ -528,6 +563,13 @@ export default function AssetAccumulationSimulator({
                     />
                   )}
                 </div>
+
+                {/* 補足情報（total-assetsの場合のみ） */}
+                {getSupplementaryInfo() && (
+                  <div className="text-xs text-[var(--color-gray-600)] mb-4 px-2">
+                    {getSupplementaryInfo()}
+                  </div>
+                )}
 
                 {/* 詳細情報（total-assetsの場合のみ） */}
                 {settings.questionType === 'total-assets' && result.data.length > 0 && (

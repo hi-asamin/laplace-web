@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { useAssetDistributionSimulation } from '@/hooks/useSimulation';
 import {
@@ -155,42 +155,81 @@ export default function AssetDistributionSimulator({
     step: number;
     unit?: string;
     formatValue?: (value: number) => string;
-  }) => (
-    <div className="space-y-3">
-      <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-[var(--color-gray-700)]">{label}</label>
-        <span className="text-sm font-bold text-[var(--color-lp-navy)]">
-          {formatValue ? formatValue(value) : `${formatNumber(value)}${unit}`}
-        </span>
+  }) => {
+    const [localValue, setLocalValue] = useState<number>(value);
+    const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+    // デバウンス機能付きのonChange
+    const debouncedOnChange = useCallback(
+      (newValue: number) => {
+        setLocalValue(newValue);
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+          onChange(newValue);
+        }, 100); // 100msのデバウンス
+      },
+      [onChange]
+    );
+
+    // 即座に更新が必要な場合（number inputのonBlur）
+    const immediateOnChange = useCallback(
+      (newValue: number) => {
+        setLocalValue(newValue);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        onChange(newValue);
+      },
+      [onChange]
+    );
+
+    // 外部からの値変更に追随
+    if (value !== localValue && !timeoutRef.current) {
+      setLocalValue(value);
+    }
+
+    return (
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <label className="text-sm font-medium text-[var(--color-gray-700)]">{label}</label>
+          <span className="text-sm font-bold text-[var(--color-lp-navy)]">
+            {formatValue ? formatValue(localValue) : `${formatNumber(localValue)}${unit}`}
+          </span>
+        </div>
+        <div className="space-y-2">
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={localValue}
+            onInput={(e) => debouncedOnChange(Number(e.currentTarget.value))}
+            className="w-full h-2 bg-[var(--color-lp-mint)]/20 rounded-lg appearance-none cursor-pointer
+                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                       [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--color-lp-mint)]
+                       [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg
+                       [&::-webkit-slider-thumb]:transition-none"
+          />
+          <input
+            type="number"
+            min={min}
+            max={max}
+            step={step}
+            value={localValue}
+            onChange={(e) => setLocalValue(Number(e.target.value))}
+            onBlur={(e) => immediateOnChange(Number(e.target.value))}
+            className="w-full px-3 py-2 border border-[var(--color-lp-mint)]/30 rounded-lg
+                       focus:border-[var(--color-lp-mint)] focus:ring-2 focus:ring-[var(--color-lp-mint)]/20
+                       focus:outline-none transition-all text-sm"
+          />
+        </div>
       </div>
-      <div className="space-y-2">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full h-2 bg-[var(--color-lp-mint)]/20 rounded-lg appearance-none cursor-pointer
-                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--color-lp-mint)]
-                     [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg
-                     [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
-        />
-        <input
-          type="number"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full px-3 py-2 border border-[var(--color-lp-mint)]/30 rounded-lg
-                     focus:border-[var(--color-lp-mint)] focus:ring-2 focus:ring-[var(--color-lp-mint)]/20
-                     focus:outline-none transition-all text-sm"
-        />
-      </div>
-    </div>
-  );
+    );
+  };
 
   // 選択フィールドコンポーネント
   const SelectField = ({
@@ -590,42 +629,81 @@ export function AssetDistributionSettingsPanel({
     step: number;
     unit?: string;
     formatValue?: (value: number) => string;
-  }) => (
-    <div className="space-y-3">
-      <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-[var(--color-gray-700)]">{label}</label>
-        <span className="text-sm font-bold text-[var(--color-lp-navy)]">
-          {formatValue ? formatValue(value) : `${formatNumber(value)}${unit}`}
-        </span>
+  }) => {
+    const [localValue, setLocalValue] = useState<number>(value);
+    const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+    // デバウンス機能付きのonChange
+    const debouncedOnChange = useCallback(
+      (newValue: number) => {
+        setLocalValue(newValue);
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+          onChange(newValue);
+        }, 100); // 100msのデバウンス
+      },
+      [onChange]
+    );
+
+    // 即座に更新が必要な場合（number inputのonBlur）
+    const immediateOnChange = useCallback(
+      (newValue: number) => {
+        setLocalValue(newValue);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        onChange(newValue);
+      },
+      [onChange]
+    );
+
+    // 外部からの値変更に追随
+    if (value !== localValue && !timeoutRef.current) {
+      setLocalValue(value);
+    }
+
+    return (
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <label className="text-sm font-medium text-[var(--color-gray-700)]">{label}</label>
+          <span className="text-sm font-bold text-[var(--color-lp-navy)]">
+            {formatValue ? formatValue(localValue) : `${formatNumber(localValue)}${unit}`}
+          </span>
+        </div>
+        <div className="space-y-2">
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={localValue}
+            onInput={(e) => debouncedOnChange(Number(e.currentTarget.value))}
+            className="w-full h-2 bg-[var(--color-lp-mint)]/20 rounded-lg appearance-none cursor-pointer
+                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                       [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--color-lp-mint)]
+                       [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg
+                       [&::-webkit-slider-thumb]:transition-none"
+          />
+          <input
+            type="number"
+            min={min}
+            max={max}
+            step={step}
+            value={localValue}
+            onChange={(e) => setLocalValue(Number(e.target.value))}
+            onBlur={(e) => immediateOnChange(Number(e.target.value))}
+            className="w-full px-3 py-2 border border-[var(--color-lp-mint)]/30 rounded-lg
+                       focus:border-[var(--color-lp-mint)] focus:ring-2 focus:ring-[var(--color-lp-mint)]/20
+                       focus:outline-none transition-all text-sm"
+          />
+        </div>
       </div>
-      <div className="space-y-2">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full h-2 bg-[var(--color-lp-mint)]/20 rounded-lg appearance-none cursor-pointer
-                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--color-lp-mint)]
-                     [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg
-                     [&::-webkit-slider-thumb]:hover:scale-110 [&::-webkit-slider-thumb]:transition-transform"
-        />
-        <input
-          type="number"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full px-3 py-2 border border-[var(--color-lp-mint)]/30 rounded-lg
-                     focus:border-[var(--color-lp-mint)] focus:ring-2 focus:ring-[var(--color-lp-mint)]/20
-                     focus:outline-none transition-all text-sm"
-        />
-      </div>
-    </div>
-  );
+    );
+  };
 
   const SelectField = ({
     label,

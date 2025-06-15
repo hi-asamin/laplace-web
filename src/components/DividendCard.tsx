@@ -10,11 +10,27 @@ interface DividendHistoryData {
   isEstimate?: boolean;
 }
 
+interface DividendAnalysis {
+  totalYears: number;
+  dividendCutYears: {
+    year: string;
+    previousDividend: number;
+    currentDividend: number;
+    cutPercentage: number;
+  }[];
+  hasDividendCuts: boolean;
+  dividendCutCount: number;
+  consecutiveGrowthYears: number;
+  averageGrowthRate: number;
+  stability: 'excellent' | 'good' | 'stable' | 'moderate' | 'unstable' | 'insufficient-data';
+}
+
 interface DividendCardProps {
   currentYield: number; // パーセンテージ
   dividendHistory: DividendHistoryData[];
   nextExDate?: string; // 次の権利確定日 (YYYY-MM-DD)
   annualDividend?: number; // 年間配当額
+  dividendAnalysis?: DividendAnalysis; // 減配分析結果
   className?: string;
 }
 
@@ -23,6 +39,7 @@ export default function DividendCard({
   dividendHistory,
   nextExDate,
   annualDividend,
+  dividendAnalysis,
   className = '',
 }: DividendCardProps) {
   // 配当の傾向を分析（実績データのみで判定、予想値は除外）
@@ -201,6 +218,96 @@ export default function DividendCard({
           <p className="text-xs text-[var(--color-gray-400)] mt-2">* 予想値</p>
         )}
       </div>
+
+      {/* 減配分析結果 */}
+      {dividendAnalysis && dividendAnalysis.stability !== 'insufficient-data' && (
+        <div className="mb-6">
+          <h4 className="text-sm font-medium text-[var(--color-gray-700)] dark:text-[var(--color-text-secondary)] mb-4">
+            配当安定性分析（過去{dividendAnalysis.totalYears}年）
+          </h4>
+
+          {/* 安定性スコア */}
+          <div className="flex items-center justify-between mb-4 p-4 rounded-xl bg-[var(--color-lp-off-white)] dark:bg-[var(--color-surface-3)]">
+            <div className="flex items-center">
+              <div
+                className={`w-3 h-3 rounded-full mr-3 ${
+                  dividendAnalysis.stability === 'excellent'
+                    ? 'bg-green-500'
+                    : dividendAnalysis.stability === 'good'
+                      ? 'bg-blue-500'
+                      : dividendAnalysis.stability === 'stable'
+                        ? 'bg-[var(--color-lp-mint)]'
+                        : dividendAnalysis.stability === 'moderate'
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                }`}
+              />
+              <span className="text-sm font-medium text-[var(--color-gray-700)] dark:text-[var(--color-text-secondary)]">
+                {dividendAnalysis.stability === 'excellent'
+                  ? '優秀'
+                  : dividendAnalysis.stability === 'good'
+                    ? '良好'
+                    : dividendAnalysis.stability === 'stable'
+                      ? '安定'
+                      : dividendAnalysis.stability === 'moderate'
+                        ? '普通'
+                        : '不安定'}
+              </span>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+                平均成長率
+              </div>
+              <div
+                className={`text-sm font-semibold ${
+                  dividendAnalysis.averageGrowthRate > 0
+                    ? 'text-[var(--color-success)]'
+                    : dividendAnalysis.averageGrowthRate < 0
+                      ? 'text-[var(--color-danger)]'
+                      : 'text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)]'
+                }`}
+              >
+                {dividendAnalysis.averageGrowthRate > 0 ? '+' : ''}
+                {dividendAnalysis.averageGrowthRate}%
+              </div>
+            </div>
+          </div>
+
+          {/* 減配実績 */}
+          {dividendAnalysis.hasDividendCuts ? (
+            <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30">
+              <div className="flex items-center mb-2">
+                <TrendingUp className="w-4 h-4 text-red-500 rotate-180 mr-2" />
+                <span className="text-sm font-medium text-red-700 dark:text-red-400">
+                  減配実績あり（{dividendAnalysis.dividendCutCount}回）
+                </span>
+              </div>
+              <div className="space-y-2">
+                {dividendAnalysis.dividendCutYears.map((cut) => (
+                  <div key={cut.year} className="text-xs text-red-600 dark:text-red-400">
+                    {cut.year}年: ¥{cut.previousDividend} → ¥{cut.currentDividend}
+                    <span className="ml-2 font-medium">(-{cut.cutPercentage}%)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30">
+              <div className="flex items-center">
+                <TrendingUp className="w-4 h-4 text-green-500 mr-2" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                  減配実績なし
+                </span>
+                {dividendAnalysis.consecutiveGrowthYears > 0 && (
+                  <span className="ml-2 text-xs text-green-600 dark:text-green-400">
+                    （連続増配{dividendAnalysis.consecutiveGrowthYears}年）
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 次の権利確定日 */}
       {exDateInfo && (

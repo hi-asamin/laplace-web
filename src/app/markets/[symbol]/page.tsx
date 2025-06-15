@@ -312,6 +312,159 @@ export default function MarketDetailPage() {
     ];
   }, [chartData]);
 
+  // 減配分析関数
+  const analyzeDividendCuts = useCallback(
+    (history: { year: string; dividend: number; isEstimate?: boolean }[]) => {
+      if (history.length < 2) {
+        return {
+          totalYears: history.length,
+          dividendCutYears: [],
+          hasDividendCuts: false,
+          dividendCutCount: 0,
+          consecutiveGrowthYears: 0,
+          averageGrowthRate: 0,
+          stability: 'insufficient-data' as const,
+        };
+      }
+
+      // 実績データのみを対象とする（予想値は除外）
+      const actualHistory = history.filter((item) => !item.isEstimate);
+
+      if (actualHistory.length < 2) {
+        return {
+          totalYears: actualHistory.length,
+          dividendCutYears: [],
+          hasDividendCuts: false,
+          dividendCutCount: 0,
+          consecutiveGrowthYears: 0,
+          averageGrowthRate: 0,
+          stability: 'insufficient-data' as const,
+        };
+      }
+
+      // 年度順にソート（古い順）
+      const sortedHistory = [...actualHistory].sort((a, b) => parseInt(a.year) - parseInt(b.year));
+
+      // デバッグ用ログ（開発環境のみ）
+      if (process.env.NODE_ENV === 'development') {
+        console.log('配当分析デバッグ情報:', {
+          originalHistory: history,
+          actualHistory,
+          sortedHistory,
+          symbol: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+        });
+      }
+
+      const dividendCutYears: {
+        year: string;
+        previousDividend: number;
+        currentDividend: number;
+        cutPercentage: number;
+      }[] = [];
+      let consecutiveGrowthYears = 0;
+      let currentConsecutiveGrowth = 0;
+      const growthRates: number[] = [];
+
+      // 前年比較で減配を検出
+      for (let i = 1; i < sortedHistory.length; i++) {
+        const currentYear = sortedHistory[i];
+        const previousYear = sortedHistory[i - 1];
+
+        // 配当額が有効な数値かチェック
+        if (
+          !isFinite(currentYear.dividend) ||
+          !isFinite(previousYear.dividend) ||
+          previousYear.dividend <= 0 ||
+          currentYear.dividend < 0
+        ) {
+          // 無効なデータの場合はスキップ
+          continue;
+        }
+
+        const growthRate =
+          ((currentYear.dividend - previousYear.dividend) / previousYear.dividend) * 100;
+
+        // NaNや無限大でないことを確認
+        if (isFinite(growthRate)) {
+          growthRates.push(growthRate);
+        }
+
+        if (currentYear.dividend < previousYear.dividend) {
+          // 減配を検出
+          const cutPercentage =
+            ((previousYear.dividend - currentYear.dividend) / previousYear.dividend) * 100;
+
+          if (isFinite(cutPercentage)) {
+            dividendCutYears.push({
+              year: currentYear.year,
+              previousDividend: previousYear.dividend,
+              currentDividend: currentYear.dividend,
+              cutPercentage: Math.round(cutPercentage * 100) / 100, // 小数点第2位まで
+            });
+          }
+          currentConsecutiveGrowth = 0;
+        } else if (currentYear.dividend > previousYear.dividend) {
+          // 増配
+          currentConsecutiveGrowth++;
+          consecutiveGrowthYears = Math.max(consecutiveGrowthYears, currentConsecutiveGrowth);
+        } else {
+          // 据え置き
+          currentConsecutiveGrowth = 0;
+        }
+      }
+
+      // 平均成長率を計算
+      let averageGrowthRate = 0;
+      if (growthRates.length > 0) {
+        const sum = growthRates.reduce((acc, rate) => acc + rate, 0);
+        const average = sum / growthRates.length;
+
+        // NaNや無限大でないことを確認
+        if (isFinite(average)) {
+          averageGrowthRate = Math.round(average * 100) / 100;
+        }
+      }
+
+      // デバッグ用ログ（開発環境のみ）
+      if (process.env.NODE_ENV === 'development') {
+        console.log('成長率計算デバッグ:', {
+          growthRates,
+          averageGrowthRate,
+          isFinite: isFinite(averageGrowthRate),
+        });
+      }
+
+      // 配当安定性を評価
+      const getStability = () => {
+        const cutCount = dividendCutYears.length;
+        const totalYears = sortedHistory.length;
+
+        if (cutCount === 0) {
+          if (consecutiveGrowthYears >= 5) return 'excellent' as const;
+          if (consecutiveGrowthYears >= 3) return 'good' as const;
+          return 'stable' as const;
+        } else if (cutCount === 1 && totalYears >= 10) {
+          return 'moderate' as const;
+        } else if (cutCount <= 2 && totalYears >= 15) {
+          return 'moderate' as const;
+        } else {
+          return 'unstable' as const;
+        }
+      };
+
+      return {
+        totalYears: sortedHistory.length,
+        dividendCutYears,
+        hasDividendCuts: dividendCutYears.length > 0,
+        dividendCutCount: dividendCutYears.length,
+        consecutiveGrowthYears,
+        averageGrowthRate,
+        stability: getStability(),
+      };
+    },
+    []
+  );
+
   // 実際のAPIデータを使用した配当情報計算
   const dividendData = useMemo(() => {
     // デフォルト値（データがない場合）
@@ -323,7 +476,18 @@ export default function MarketDetailPage() {
     };
 
     if (!fundamentalData?.dividendData) {
-      return defaultData;
+      return {
+        ...defaultData,
+        dividendAnalysis: {
+          totalYears: 0,
+          dividendCutYears: [],
+          hasDividendCuts: false,
+          dividendCutCount: 0,
+          consecutiveGrowthYears: 0,
+          averageGrowthRate: 0,
+          stability: 'insufficient-data' as const,
+        },
+      };
     }
 
     const apiDividendData = fundamentalData.dividendData;
@@ -418,13 +582,17 @@ export default function MarketDetailPage() {
       dividendHistory = estimatedHistory;
     }
 
+    // 減配分析を実行
+    const dividendAnalysis = analyzeDividendCuts(dividendHistory);
+
     return {
       currentYield,
       dividendHistory,
       nextExDate: apiDividendData.exDividendDate,
       annualDividend,
+      dividendAnalysis,
     };
-  }, [fundamentalData]);
+  }, [fundamentalData, analyzeDividendCuts]);
 
   // 配当可視化用のデータ計算
   const dividendVisualizationData = useMemo(() => {
@@ -811,6 +979,7 @@ export default function MarketDetailPage() {
                 dividendHistory={dividendData.dividendHistory}
                 nextExDate={dividendData.nextExDate}
                 annualDividend={dividendData.annualDividend}
+                dividendAnalysis={dividendData.dividendAnalysis}
               />
             )}
           </div>

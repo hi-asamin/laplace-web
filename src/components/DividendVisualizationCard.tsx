@@ -68,29 +68,6 @@ export default function DividendVisualizationCard({
     };
   }, [currentPrice, dividendYield, annualDividend]);
 
-  // 月間配当の棒グラフデータ生成
-  const monthlyChartData = useMemo(() => {
-    const months = [
-      '1月',
-      '2月',
-      '3月',
-      '4月',
-      '5月',
-      '6月',
-      '7月',
-      '8月',
-      '9月',
-      '10月',
-      '11月',
-      '12月',
-    ];
-    return months.map((month, index) => ({
-      month,
-      amount: dividendCalculations.monthlyDividendAmount,
-      isCurrentMonth: new Date().getMonth() === index,
-    }));
-  }, [dividendCalculations.monthlyDividendAmount]);
-
   // 配当がない場合の表示
   if (dividendCalculations.annualDividendAmount === 0) {
     return (
@@ -198,54 +175,6 @@ export default function DividendVisualizationCard({
             ¥{dividendCalculations.quarterlyDividendAmount.toLocaleString()}
           </div>
           <div className="text-xs text-[var(--color-text-muted)] mt-1">3ヶ月ごとの収入</div>
-        </div>
-      </div>
-
-      {/* 月間配当の棒グラフ */}
-      <div className="mb-6">
-        <h4 className="text-md font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-4">
-          月間配当収入の推移
-        </h4>
-
-        <div className="relative">
-          {/* グラフエリア */}
-          <div className="flex items-end justify-between space-x-1 h-32 mb-4">
-            {monthlyChartData.map((data, index) => (
-              <div key={data.month} className="flex-1 flex flex-col items-center">
-                {/* 棒グラフ */}
-                <div className="w-full flex justify-center mb-2">
-                  <div
-                    className={`w-full max-w-8 rounded-t-md transition-all duration-500 ${
-                      data.isCurrentMonth
-                        ? 'bg-[var(--color-lp-mint)] shadow-lg'
-                        : 'bg-[var(--color-lp-blue)]/70 hover:bg-[var(--color-lp-blue)]'
-                    }`}
-                    style={{
-                      height: data.amount > 0 ? '80px' : '4px',
-                      animationDelay: `${index * 50}ms`,
-                    }}
-                  />
-                </div>
-
-                {/* 月ラベル */}
-                <div
-                  className={`text-xs font-medium ${
-                    data.isCurrentMonth
-                      ? 'text-[var(--color-lp-mint)]'
-                      : 'text-[var(--color-text-muted)]'
-                  }`}
-                >
-                  {data.month}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Y軸ラベル */}
-          <div className="absolute left-0 top-0 h-32 flex flex-col justify-between text-xs text-[var(--color-text-muted)]">
-            <span>¥{dividendCalculations.monthlyDividendAmount.toLocaleString()}</span>
-            <span>¥0</span>
-          </div>
         </div>
       </div>
 

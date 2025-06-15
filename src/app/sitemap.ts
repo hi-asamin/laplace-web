@@ -1,32 +1,11 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3000';
+  const baseUrl = 'https://laplace.jp';
+  const currentDate = new Date();
 
-  // 静的ページ
-  const staticPages = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/search`,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/start`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    },
-  ];
-
-  // 人気銘柄の動的ページ（SEO重要度の高い銘柄）
-  const popularSymbols = [
+  // 人気銘柄リスト（検索頻度の高い銘柄）
+  const popularStocks = [
     // 米国ETF
     'VOO',
     'VTI',
@@ -56,19 +35,48 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '4689',
   ];
 
-  const marketPages = popularSymbols.map((symbol) => ({
-    url: `${baseUrl}/markets/${encodeURIComponent(symbol)}`,
-    lastModified: new Date(),
-    changeFrequency: 'hourly' as const,
-    priority: 0.9,
-  }));
+  const staticPages = [
+    {
+      url: baseUrl,
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/start`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/markets/self/simulation`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/search`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    },
+  ];
 
-  const simulationPages = popularSymbols.map((symbol) => ({
-    url: `${baseUrl}/markets/${encodeURIComponent(symbol)}/simulation`,
-    lastModified: new Date(),
+  // 人気銘柄の個別シミュレーションページ
+  const stockPages = popularStocks.map((symbol) => ({
+    url: `${baseUrl}/markets/${symbol}/simulation`,
+    lastModified: currentDate,
     changeFrequency: 'daily' as const,
-    priority: 0.8,
+    priority: 0.6,
   }));
 
-  return [...staticPages, ...marketPages, ...simulationPages];
+  // 人気銘柄の個別詳細ページ
+  const stockDetailPages = popularStocks.map((symbol) => ({
+    url: `${baseUrl}/markets/${symbol}`,
+    lastModified: currentDate,
+    changeFrequency: 'daily' as const,
+    priority: 0.5,
+  }));
+
+  return [...staticPages, ...stockPages, ...stockDetailPages];
 }

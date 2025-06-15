@@ -1,27 +1,57 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3000';
-
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/_next/', '/private/', '*.json'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/*.json$',
+          '/tmp/',
+          '/private/',
+          '/_next/',
+          '/user/',
+          '/account/',
+          '/settings/',
+          '/auth/',
+          '/analytics/',
+        ],
       },
       {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/private/'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/tmp/',
+          '/private/',
+          '/_next/',
+          '/user/',
+          '/account/',
+          '/settings/',
+          '/auth/',
+        ],
       },
       {
         userAgent: 'Bingbot',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/private/'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/tmp/',
+          '/private/',
+          '/_next/',
+          '/user/',
+          '/account/',
+          '/settings/',
+          '/auth/',
+        ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
-    host: baseUrl,
+    sitemap: 'https://laplace.jp/sitemap.xml',
+    host: 'https://laplace.jp',
   };
 }

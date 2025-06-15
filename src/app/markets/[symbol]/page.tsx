@@ -347,19 +347,21 @@ export default function MarketDetailPage() {
 
     // 新しいAPI構造からdividendHistoryを取得
     if (fundamentalData.dividendHistory && fundamentalData.dividendHistory.length > 0) {
-      dividendHistory = fundamentalData.dividendHistory.map((item) => {
-        // 日本の会計年度を暦年に変換（例：「2025年3月期」→ 2024年）
+      // 1つ目の要素をスキップし、2つ目以降の要素のみを使用
+      const historyToUse = fundamentalData.dividendHistory.slice(1);
+
+      dividendHistory = historyToUse.map((item) => {
+        // fiscalYearから年度を直接取得（例：「2024年3月期」→ 2024年）
         const fiscalYearMatch = item.fiscalYear.match(/(\d{4})年/);
         const fiscalYear = fiscalYearMatch
           ? parseInt(fiscalYearMatch[1])
           : new Date().getFullYear();
-        const calendarYear = fiscalYear - 1; // 会計年度から暦年に変換
 
         // 配当額を数値に変換
         const dividendAmount = parseFloat(item.totalDividend.replace(/[¥$,]/g, ''));
 
         return {
-          year: calendarYear.toString(),
+          year: fiscalYear.toString(),
           dividend: dividendAmount,
           isEstimate: item.isForecast,
         };
@@ -369,7 +371,7 @@ export default function MarketDetailPage() {
       dividendHistory.sort((a, b) => parseInt(a.year) - parseInt(b.year));
     }
 
-    // 最新年度の予想値を追加（dividendData.dividendから取得）
+    // 最新年度の情報をdividendData.dividendから追加
     if (annualDividend > 0) {
       const currentYear = new Date().getFullYear();
       const currentYearStr = currentYear.toString();
@@ -378,15 +380,16 @@ export default function MarketDetailPage() {
       const existingCurrentYear = dividendHistory.find((item) => item.year === currentYearStr);
 
       if (!existingCurrentYear) {
-        // 現在年のデータがない場合、予想値として追加
+        // 現在年のデータがない場合、dividendData.dividendの値を追加
         dividendHistory.push({
           year: currentYearStr,
           dividend: annualDividend,
           isEstimate: true,
         });
-      } else if (existingCurrentYear.isEstimate) {
-        // 既存の予想値を更新
+      } else {
+        // 既存のデータがある場合、dividendData.dividendの値で更新
         existingCurrentYear.dividend = annualDividend;
+        existingCurrentYear.isEstimate = true;
       }
     }
 

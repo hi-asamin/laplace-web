@@ -482,7 +482,9 @@ export default function AssetDistributionSimulator({
   const resultDisplay = getResultDisplay();
 
   return (
-    <section className={`py-8 ${className}`}>
+    <section
+      className={`py-8 bg-[var(--color-surface)] dark:bg-[var(--color-surface-1)] ${className}`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* デスクトップレイアウト */}
         <div className="hidden lg:grid lg:grid-cols-2 gap-8">
@@ -492,7 +494,7 @@ export default function AssetDistributionSimulator({
           {/* チャート&サマリー */}
           <div className="space-y-6">
             {/* サマリー */}
-            <div className="bg-[var(--color-surface)] rounded-2xl p-6 shadow-lg">
+            <div className="bg-[var(--color-surface)] dark:bg-[var(--color-surface-2)] rounded-2xl p-6 shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)]">
               <div className="text-center">
                 <div className="text-4xl font-bold text-[var(--color-primary)] mb-2">
                   {resultDisplay.unit && (
@@ -533,7 +535,7 @@ export default function AssetDistributionSimulator({
             </div>
 
             {/* チャート */}
-            <div className="bg-[var(--color-surface)] rounded-2xl p-6 shadow-lg">
+            <div className="bg-[var(--color-surface)] dark:bg-[var(--color-surface-2)] rounded-2xl p-6 shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)]">
               {result.data.length > 0 ? (
                 <SimulationChart data={result.data} purpose="use" width={480} height={360} />
               ) : (
@@ -550,7 +552,7 @@ export default function AssetDistributionSimulator({
           {/* チャート&サマリー */}
           <div className="space-y-6 mb-6">
             {/* サマリー */}
-            <div className="bg-[var(--color-surface)] rounded-2xl p-6 shadow-lg">
+            <div className="bg-[var(--color-surface)] dark:bg-[var(--color-surface-2)] rounded-2xl p-6 shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)]">
               <div className="text-center">
                 <div className="text-3xl font-bold text-[var(--color-primary)] mb-2">
                   {resultDisplay.unit && (
@@ -597,7 +599,7 @@ export default function AssetDistributionSimulator({
             </div>
 
             {/* チャート */}
-            <div className="bg-[var(--color-surface)] rounded-2xl p-4 shadow-lg">
+            <div className="bg-[var(--color-surface)] dark:bg-[var(--color-surface-2)] rounded-2xl p-4 shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)]">
               {result.data.length > 0 ? (
                 <SimulationChart data={result.data} purpose="use" width={320} height={240} />
               ) : (

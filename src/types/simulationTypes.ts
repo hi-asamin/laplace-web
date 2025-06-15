@@ -31,6 +31,7 @@ export interface SimulationSettings {
   initialAssets?: number; // 初期資産額（円）
   withdrawalAmount?: number; // 月間取り崩し額（万円）
   withdrawalRate?: number; // 取り崩し率（%）
+  annualWithdrawalRate?: number; // 年間取り崩し率（%）- 定率取り崩し用
   withdrawalType?: 'fixed' | 'percentage'; // 取り崩しタイプ
 }
 
@@ -90,7 +91,7 @@ export const USE_QUESTIONS: QuestionOption[] = [
   },
   {
     value: 'withdrawal-amount',
-    label: 'いくら使える？',
+    label: '毎月いくら使える？',
     description: '保有資産でどれくらい取り崩せるかを計算します',
   },
   {

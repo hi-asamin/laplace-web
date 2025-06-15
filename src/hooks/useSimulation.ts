@@ -46,6 +46,7 @@ const DEFAULT_USE_SETTINGS: SimulationSettings = {
   initialAssets: 10000000,
   withdrawalAmount: 10,
   withdrawalType: 'fixed',
+  annualWithdrawalRate: 4,
 };
 
 export function useSimulation({
@@ -139,18 +140,21 @@ export function useSimulation({
                 // 資産寿命計算では初期資産と取り崩し額が必要
                 initialAssets: prev.initialAssets || 10000000,
                 withdrawalAmount: prev.withdrawalAmount || 10,
+                annualWithdrawalRate: prev.annualWithdrawalRate || 4,
               };
             case 'required-assets':
               return {
                 ...newSettings,
-                // 必要資産額計算では取り崩し額が必要
+                // 必要資産額計算では取り崩し額が必要、定額取り崩しのみ
                 withdrawalAmount: prev.withdrawalAmount || 10,
+                withdrawalType: 'fixed',
               };
             case 'withdrawal-amount':
               return {
                 ...newSettings,
-                // 取り崩し額計算では初期資産が必要
+                // 取り崩し額計算では初期資産が必要、定額取り崩しのみ
                 initialAssets: prev.initialAssets || 10000000,
+                withdrawalType: 'fixed',
               };
             default:
               return newSettings;

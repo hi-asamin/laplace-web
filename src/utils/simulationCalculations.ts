@@ -273,6 +273,7 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
       initialAssets = 10000000,
       withdrawalAmount = 10,
       withdrawalType = 'fixed',
+      annualWithdrawalRate = 4,
       questionType,
     } = settings;
 
@@ -298,7 +299,10 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
 
         // 運用利回りと取り崩し額の関係をチェック
         const annualYield = averageYield / 100;
-        const annualWithdrawal = monthlyWithdrawal * 12;
+        const annualWithdrawal =
+          withdrawalType === 'fixed'
+            ? monthlyWithdrawal * 12
+            : initialAssets * (annualWithdrawalRate / 100);
         const annualYieldAmount = initialAssets * annualYield;
         const isSustainable = annualYieldAmount >= annualWithdrawal;
 
@@ -316,7 +320,7 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
               const withdrawal =
                 withdrawalType === 'fixed'
                   ? monthlyWithdrawal
-                  : remainingAssets * (averageYield / 100 / 12);
+                  : remainingAssets * (annualWithdrawalRate / 100 / 12);
 
               remainingAssets -= withdrawal;
               yearlyWithdrawal += withdrawal;
@@ -343,7 +347,7 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
             const withdrawal =
               withdrawalType === 'fixed'
                 ? monthlyWithdrawal
-                : remainingAssets * (averageYield / 100 / 12);
+                : remainingAssets * (annualWithdrawalRate / 100 / 12);
 
             remainingAssets -= withdrawal;
 
@@ -368,7 +372,7 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
               const withdrawal =
                 withdrawalType === 'fixed'
                   ? monthlyWithdrawal
-                  : remainingAssets * (averageYield / 100 / 12);
+                  : remainingAssets * (annualWithdrawalRate / 100 / 12);
 
               remainingAssets -= withdrawal;
               yearlyWithdrawal += withdrawal;
@@ -464,10 +468,39 @@ export function calculateAssetDistribution(settings: SimulationSettings): {
 
       case 'withdrawal-amount': {
         // 可能取り崩し額を計算
-        // 安全な取り崩し率（4%ルール等）を基準に計算
-        const safeWithdrawalRate = averageYield / 100;
-        const optimalWithdrawal = (initialAssets * safeWithdrawalRate) / 12;
+        // 指定された期間で資産を使い切る前提で最適な月間取り崩し額を計算
 
+        // 二分探索で最適な月間取り崩し額を見つける
+        let low = 0;
+        let high = initialAssets / 12; // 最大でも全資産を12ヶ月で使い切る額
+        let optimalWithdrawal = 0;
+
+        for (let i = 0; i < 100; i++) {
+          const testWithdrawal = (low + high) / 2;
+          let remainingAssets = initialAssets;
+
+          // 指定期間での資産推移をシミュレーション
+          for (let month = 0; month < years * 12; month++) {
+            remainingAssets *= 1 + monthlyYield;
+            remainingAssets -= testWithdrawal;
+
+            if (remainingAssets < 0) break;
+          }
+
+          // 期間終了時の残高が0に近い場合が最適
+          if (Math.abs(remainingAssets) < 10000) {
+            optimalWithdrawal = testWithdrawal;
+            break;
+          }
+
+          if (remainingAssets < 0) {
+            high = testWithdrawal;
+          } else {
+            low = testWithdrawal;
+          }
+        }
+
+        // 計算結果でデータを生成
         let remainingAssets = initialAssets;
 
         data.push({

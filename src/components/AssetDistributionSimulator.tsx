@@ -59,13 +59,22 @@ export default function AssetDistributionSimulator({
   const isInputField = (field: string) => {
     switch (settings.questionType) {
       case 'asset-lifespan':
-        return ['initialAssets', 'averageYield', 'withdrawalAmount', 'withdrawalType'].includes(
-          field
-        );
+        // 何年でなくなる？の場合
+        if (field === 'withdrawalAmount') {
+          // 定額取り崩しの場合のみ月間取り崩し額を表示
+          return settings.withdrawalType === 'fixed';
+        }
+        if (field === 'annualWithdrawalRate') {
+          // 定率取り崩しの場合のみ年間取り崩し率を表示
+          return settings.withdrawalType === 'percentage';
+        }
+        return ['initialAssets', 'averageYield', 'withdrawalType'].includes(field);
       case 'required-assets':
-        return ['averageYield', 'years', 'withdrawalAmount', 'withdrawalType'].includes(field);
+        // いくら必要？の場合は定額取り崩しのみ（取り崩し方法選択なし）
+        return ['averageYield', 'years', 'withdrawalAmount'].includes(field);
       case 'withdrawal-amount':
-        return ['initialAssets', 'averageYield', 'years', 'withdrawalType'].includes(field);
+        // 毎月いくら使える？の場合は定額取り崩しのみ（取り崩し方法選択なし）
+        return ['initialAssets', 'averageYield', 'years'].includes(field);
       default:
         return false;
     }
@@ -100,7 +109,10 @@ export default function AssetDistributionSimulator({
         if (value === Infinity) {
           // 運用利回りが取り崩し額を上回る場合
           const annualYield = (settings.averageYield || 4) / 100;
-          const annualWithdrawal = (settings.withdrawalAmount || 10) * 10000 * 12;
+          const annualWithdrawal =
+            settings.withdrawalType === 'fixed'
+              ? (settings.withdrawalAmount || 10) * 10000 * 12
+              : (settings.initialAssets || 0) * ((settings.annualWithdrawalRate || 4) / 100);
           const annualYieldAmount = (settings.initialAssets || 0) * annualYield;
           const surplus = annualYieldAmount - annualWithdrawal;
 
@@ -113,10 +125,14 @@ export default function AssetDistributionSimulator({
         } else {
           const totalYears = Math.floor(value);
           const months = Math.round((value - totalYears) * 12);
+          const withdrawalDescription =
+            settings.withdrawalType === 'fixed'
+              ? `毎月${formatNumber(settings.withdrawalAmount || 0)}万円`
+              : `年率${settings.annualWithdrawalRate || 4}%`;
           return {
             main: `${totalYears}年${months > 0 ? `${months}ヶ月` : ''}`,
             unit: '資産が持続',
-            description: `毎月${formatNumber(settings.withdrawalAmount || 0)}万円の取り崩しが可能です`,
+            description: `${withdrawalDescription}の取り崩しが可能です`,
           };
         }
       case 'required-assets':
@@ -408,6 +424,19 @@ export default function AssetDistributionSimulator({
           />
         )}
 
+        {isInputField('annualWithdrawalRate') && (
+          <InputField
+            label="年間取り崩し率"
+            value={settings.annualWithdrawalRate || 4}
+            onChange={(value) => updateSetting('annualWithdrawalRate', value)}
+            min={1}
+            max={20}
+            step={0.1}
+            unit="%"
+            formatValue={(value) => `${value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}%`}
+          />
+        )}
+
         {isInputField('withdrawalType') && (
           <SelectField
             label="取り崩し方法"
@@ -441,7 +470,7 @@ export default function AssetDistributionSimulator({
 
         {isOutputField('withdrawalAmount') && (
           <OutputField
-            label="可能取り崩し額"
+            label="取り崩し可能額"
             value={result.calculatedValue}
             formatValue={(value) => `${formatNumber(value)}万円`}
           />
@@ -760,13 +789,22 @@ export function AssetDistributionSettingsPanel({
   const isInputField = (field: string) => {
     switch (settings.questionType) {
       case 'asset-lifespan':
-        return ['initialAssets', 'averageYield', 'withdrawalAmount', 'withdrawalType'].includes(
-          field
-        );
+        // 何年でなくなる？の場合
+        if (field === 'withdrawalAmount') {
+          // 定額取り崩しの場合のみ月間取り崩し額を表示
+          return settings.withdrawalType === 'fixed';
+        }
+        if (field === 'annualWithdrawalRate') {
+          // 定率取り崩しの場合のみ年間取り崩し率を表示
+          return settings.withdrawalType === 'percentage';
+        }
+        return ['initialAssets', 'averageYield', 'withdrawalType'].includes(field);
       case 'required-assets':
-        return ['averageYield', 'years', 'withdrawalAmount', 'withdrawalType'].includes(field);
+        // いくら必要？の場合は定額取り崩しのみ（取り崩し方法選択なし）
+        return ['averageYield', 'years', 'withdrawalAmount'].includes(field);
       case 'withdrawal-amount':
-        return ['initialAssets', 'averageYield', 'years', 'withdrawalType'].includes(field);
+        // 毎月いくら使える？の場合は定額取り崩しのみ（取り崩し方法選択なし）
+        return ['initialAssets', 'averageYield', 'years'].includes(field);
       default:
         return false;
     }
@@ -911,6 +949,19 @@ export function AssetDistributionSettingsPanel({
           />
         )}
 
+        {isInputField('annualWithdrawalRate') && (
+          <InputField
+            label="年間取り崩し率"
+            value={settings.annualWithdrawalRate || 4}
+            onChange={(value) => updateSetting('annualWithdrawalRate', value)}
+            min={1}
+            max={20}
+            step={0.1}
+            unit="%"
+            formatValue={(value) => `${value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}%`}
+          />
+        )}
+
         {isInputField('withdrawalType') && (
           <SelectField
             label="取り崩し方法"
@@ -944,7 +995,7 @@ export function AssetDistributionSettingsPanel({
 
         {isOutputField('withdrawalAmount') && (
           <OutputField
-            label="可能取り崩し額"
+            label="取り崩し可能額"
             value={result.calculatedValue}
             formatValue={(value) => `${formatNumber(value)}万円`}
           />

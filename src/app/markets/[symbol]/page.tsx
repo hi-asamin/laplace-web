@@ -19,6 +19,7 @@ import { useMarketDetailAnalytics } from '@/hooks/useMarketDetailAnalytics';
 import EnhancedStockChart from '@/components/EnhancedStockChart';
 import PerformanceCard from '@/components/PerformanceCard';
 import DividendCard from '@/components/DividendCard';
+import DividendVisualizationCard from '@/components/DividendVisualizationCard';
 import ValuationScoreCard from '@/components/ValuationScoreCard';
 import CompanyProfileCard from '@/components/CompanyProfileCard';
 import NewsCard from '@/components/NewsCard';
@@ -333,13 +334,7 @@ export default function MarketDetailPage() {
       const yieldStr = apiDividendData.dividendYield.replace('%', '');
       const yieldValue = parseFloat(yieldStr);
 
-      // APIから来る値が小数形式（例：0.0258）の場合は100倍してパーセンテージに変換
-      // すでにパーセンテージ形式（例：2.58）の場合はそのまま使用
-      if (yieldValue < 1 && yieldValue > 0) {
-        currentYield = yieldValue * 100;
-      } else {
-        currentYield = yieldValue;
-      }
+      currentYield = yieldValue;
     }
 
     // 年間配当額を取得
@@ -382,6 +377,48 @@ export default function MarketDetailPage() {
       annualDividend,
     };
   }, [fundamentalData]);
+
+  // 配当可視化用のデータ計算
+  const dividendVisualizationData = useMemo(() => {
+    if (!fundamentalData?.dividendData || !marketData?.price) {
+      return {
+        currentPrice: 0,
+        dividendYield: 0,
+        annualDividend: 0,
+      };
+    }
+
+    const apiDividendData = fundamentalData.dividendData;
+
+    // 現在の株価を取得（文字列から数値に変換）
+    const currentPrice = parseFloat(marketData.price.replace(/[¥$,]/g, ''));
+
+    // 配当利回りを取得（パーセンテージに変換）
+    let dividendYield = 0;
+    if (apiDividendData.dividendYield) {
+      const yieldStr = apiDividendData.dividendYield.replace('%', '');
+      const yieldValue = parseFloat(yieldStr);
+
+      // APIから来る値が小数形式（例：0.0258）の場合は100倍してパーセンテージに変換
+      // すでにパーセンテージ形式（例：2.58）の場合はそのまま使用
+      if (yieldValue < 1 && yieldValue > 0) {
+        dividendYield = yieldValue * 100;
+      } else {
+        dividendYield = yieldValue;
+      }
+    }
+
+    // 年間配当額を取得（1株あたり）
+    const annualDividend = apiDividendData.dividend
+      ? parseFloat(apiDividendData.dividend.replace(/[¥$,]/g, ''))
+      : 0;
+
+    return {
+      currentPrice,
+      dividendYield,
+      annualDividend,
+    };
+  }, [fundamentalData, marketData]);
 
   // 実際のAPIデータを使用したバリュエーション計算
   const valuationData = useMemo(() => {
@@ -757,6 +794,35 @@ export default function MarketDetailPage() {
               />
             )}
           </div>
+
+          {/* 配当シミュレーション */}
+          {loadingStates.fundamentalData ? (
+            <div className="bg-[var(--color-surface)] rounded-xl p-6 shadow-lg animate-pulse">
+              <div className="h-8 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded w-48 mb-6"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-gray-200 dark:bg-[var(--color-surface-3)] rounded-xl h-24"
+                  ></div>
+                ))}
+              </div>
+              <div className="h-32 bg-gray-200 dark:bg-[var(--color-surface-3)] rounded-lg mb-4"></div>
+              <div className="flex justify-center">
+                <div className="text-sm text-[var(--color-gray-500)] dark:text-[var(--color-text-muted)]">
+                  💰 配当シミュレーションを読み込み中...
+                </div>
+              </div>
+            </div>
+          ) : (
+            <DividendVisualizationCard
+              symbol={decodedSymbol}
+              marketName={marketData?.name}
+              currentPrice={dividendVisualizationData.currentPrice}
+              dividendYield={dividendVisualizationData.dividendYield}
+              annualDividend={dividendVisualizationData.annualDividend}
+            />
+          )}
 
           {/* バリュエーションと企業情報 */}
           <div

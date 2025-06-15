@@ -25,11 +25,15 @@ export default function DividendCard({
   annualDividend,
   className = '',
 }: DividendCardProps) {
-  // 配当の傾向を分析
+  // 配当の傾向を分析（実績データのみで判定、予想値は除外）
   const dividendTrend = useMemo(() => {
     if (dividendHistory.length < 2) return 'stable';
 
-    const recent = dividendHistory.slice(-3);
+    // 実績データのみを抽出（予想値を除外）
+    const actualData = dividendHistory.filter((item) => !item.isEstimate);
+    if (actualData.length < 2) return 'stable';
+
+    const recent = actualData.slice(-3); // 最新3年の実績データ
     const isIncreasing = recent.every(
       (item, index) => index === 0 || item.dividend >= recent[index - 1].dividend
     );
@@ -47,6 +51,7 @@ export default function DividendCard({
 
   // 最大配当額を取得してスケールを計算
   const maxDividend = useMemo(() => {
+    if (dividendHistory.length === 0) return 0;
     return Math.max(...dividendHistory.map((data) => data.dividend));
   }, [dividendHistory]);
 
@@ -147,11 +152,11 @@ export default function DividendCard({
       {/* 配当推移棒グラフ */}
       <div className="mb-6">
         <h4 className="text-sm font-medium text-[var(--color-gray-700)] dark:text-[var(--color-text-secondary)] mb-4">
-          配当推移（過去5年）
+          配当推移（最新5年）
         </h4>
         <div className="flex items-end justify-between space-x-2 h-[120px] mb-4">
           {dividendHistory.slice(-5).map((data, index) => {
-            const height = (data.dividend / maxDividend) * 70 + 15; // 最小15px、最大85px（高さを調整）
+            const height = maxDividend > 0 ? (data.dividend / maxDividend) * 70 + 15 : 15; // 最小15px、最大85px（高さを調整）
 
             return (
               <div key={data.year} className="flex flex-col items-center flex-1">
@@ -176,7 +181,10 @@ export default function DividendCard({
         <div className="flex justify-between space-x-2 mb-2">
           {dividendHistory.slice(-5).map((data) => (
             <div key={`year-${data.year}`} className="flex-1 text-center">
-              <div className="text-xs text-[var(--color-gray-400)]">{data.year}</div>
+              <div className="text-xs text-[var(--color-gray-400)]">
+                {data.year}
+                {data.isEstimate && <span className="text-[var(--color-lp-blue)] ml-1">*</span>}
+              </div>
             </div>
           ))}
         </div>
@@ -185,7 +193,6 @@ export default function DividendCard({
             <div key={`amount-${data.year}`} className="flex-1 text-center">
               <div className="text-xs font-medium text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
                 ¥{data.dividend}
-                {data.isEstimate && <span className="text-[var(--color-lp-blue)] ml-1">*</span>}
               </div>
             </div>
           ))}

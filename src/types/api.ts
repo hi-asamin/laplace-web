@@ -115,11 +115,11 @@ export interface IndustryAverages {
 export interface KeyMetrics {
   eps?: string;
   peRatio?: string;
-  forwardPE?: string;
+  forwardPe?: string;
   priceToSales?: string;
   priceToBook?: string;
   roe?: string;
-  roa?: string;
+  roa?: string | null;
   debtToEquity?: string;
   currentRatio?: string;
   operatingMargin?: string;
@@ -128,7 +128,26 @@ export interface KeyMetrics {
 }
 
 /**
- * 配当履歴データのインターフェース
+ * 四半期配当データのインターフェース
+ */
+export interface QuarterlyDividend {
+  quarter: string;
+  amount: string | null;
+}
+
+/**
+ * API配当履歴データのインターフェース（APIレスポンス用）
+ */
+export interface ApiDividendHistoryItem {
+  fiscalYear: string;
+  totalDividend: string;
+  isForecast: boolean;
+  quarterlyDividends: QuarterlyDividend[];
+  announcementDate: string;
+}
+
+/**
+ * 配当履歴データのインターフェース（UI表示用）
  */
 export interface DividendHistoryItem {
   year: string;
@@ -154,7 +173,7 @@ export interface DividendData {
 export interface ValuationGrowth {
   revenueGrowth?: string;
   earningsGrowth?: string;
-  epsTTM?: string;
+  epsTtm?: string;
   epsGrowth?: string;
   estimatedEpsGrowth?: string;
 }
@@ -167,6 +186,7 @@ export interface FundamentalData {
   quarterlyEarnings?: QuarterlyEarning[];
   keyMetrics?: KeyMetrics;
   dividendData?: DividendData;
+  dividendHistory?: ApiDividendHistoryItem[];
   valuationGrowth?: ValuationGrowth;
 }
 

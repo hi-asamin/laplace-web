@@ -1,4 +1,3 @@
-import { apiGet } from '@/lib/api-client';
 import { FundamentalData } from '@/types/api';
 import { apiConfig } from '@/lib/config';
 
@@ -17,8 +16,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ symbol:
     // バックエンドAPIエンドポイント
     const endpoint = `${apiConfig.host}/v1/fundamentals/${encodeURIComponent(symbol)}`;
 
-    // APIからデータを取得
-    const data = await apiGet<FundamentalData>(endpoint);
+    // APIからデータを取得（サーバーサイドでは直接fetchを使用）
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        ...apiConfig.defaultHeaders,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`APIエラー: ${response.status}`);
+    }
+
+    const data = (await response.json()) as FundamentalData;
 
     return Response.json(data);
   } catch (error) {

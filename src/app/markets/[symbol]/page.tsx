@@ -342,8 +342,53 @@ export default function MarketDetailPage() {
       ? parseFloat(apiDividendData.dividend.replace(/[¥$,]/g, ''))
       : 0;
 
-    // 配当履歴を取得（APIから提供される場合）
-    let dividendHistory = apiDividendData.dividendHistory || [];
+    // 配当履歴を取得（新しいAPI構造に対応）
+    let dividendHistory: { year: string; dividend: number; isEstimate?: boolean }[] = [];
+
+    // 新しいAPI構造からdividendHistoryを取得
+    if (fundamentalData.dividendHistory && fundamentalData.dividendHistory.length > 0) {
+      dividendHistory = fundamentalData.dividendHistory.map((item) => {
+        // 日本の会計年度を暦年に変換（例：「2025年3月期」→ 2024年）
+        const fiscalYearMatch = item.fiscalYear.match(/(\d{4})年/);
+        const fiscalYear = fiscalYearMatch
+          ? parseInt(fiscalYearMatch[1])
+          : new Date().getFullYear();
+        const calendarYear = fiscalYear - 1; // 会計年度から暦年に変換
+
+        // 配当額を数値に変換
+        const dividendAmount = parseFloat(item.totalDividend.replace(/[¥$,]/g, ''));
+
+        return {
+          year: calendarYear.toString(),
+          dividend: dividendAmount,
+          isEstimate: item.isForecast,
+        };
+      });
+
+      // 年度順にソート（古い順）
+      dividendHistory.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+    }
+
+    // 最新年度の予想値を追加（dividendData.dividendから取得）
+    if (annualDividend > 0) {
+      const currentYear = new Date().getFullYear();
+      const currentYearStr = currentYear.toString();
+
+      // 既に同じ年のデータがあるかチェック
+      const existingCurrentYear = dividendHistory.find((item) => item.year === currentYearStr);
+
+      if (!existingCurrentYear) {
+        // 現在年のデータがない場合、予想値として追加
+        dividendHistory.push({
+          year: currentYearStr,
+          dividend: annualDividend,
+          isEstimate: true,
+        });
+      } else if (existingCurrentYear.isEstimate) {
+        // 既存の予想値を更新
+        existingCurrentYear.dividend = annualDividend;
+      }
+    }
 
     // 配当履歴がない場合、現在の配当額から過去5年分を推定
     if (dividendHistory.length === 0 && annualDividend > 0) {

@@ -54,7 +54,10 @@ export async function fetchApi<T>(url: string, options: RequestInit = {}): Promi
  * @returns レスポンス
  */
 export async function apiGet<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-  const url = new URL(getFullUrl(endpoint), window.location.origin);
+  // サーバーサイドとクライアントサイドの環境を判定
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'; // サーバーサイドでのデフォルトURL
+
+  const url = new URL(getFullUrl(endpoint), baseUrl);
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {

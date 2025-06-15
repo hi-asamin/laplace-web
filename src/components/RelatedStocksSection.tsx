@@ -1,91 +1,51 @@
 'use client';
 
 import React from 'react';
-import { TrendingUp, TrendingDown, BarChart3, ExternalLink } from 'lucide-react';
-
-interface Stock {
-  symbol: string;
-  name: string;
-  nameEn?: string;
-  price: number;
-  change: number;
-  changePercent: number;
-  marketCap?: string;
-  sector?: string;
-}
+import {
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  ExternalLink,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
+import { RelatedMarketItem } from '@/types/api';
 
 interface RelatedStocksSectionProps {
   currentSymbol?: string;
   className?: string;
+  relatedMarkets?: RelatedMarketItem[];
+  isLoading?: boolean;
+  error?: string | null;
+  dividendYield?: number;
   onStockClick?: (clickedSymbol: string, currentSymbol: string, positionInList: number) => void;
 }
 
-// モックデータ
-const mockRelatedStocks: Stock[] = [
-  {
-    symbol: 'AAPL',
-    name: 'アップル',
-    nameEn: 'Apple Inc.',
-    price: 185.92,
-    change: 2.34,
-    changePercent: 1.28,
-    marketCap: '2.9T',
-    sector: 'テクノロジー',
-  },
-  {
-    symbol: 'MSFT',
-    name: 'マイクロソフト',
-    nameEn: 'Microsoft Corporation',
-    price: 384.52,
-    change: -1.87,
-    changePercent: -0.48,
-    marketCap: '2.8T',
-    sector: 'テクノロジー',
-  },
-  {
-    symbol: 'GOOGL',
-    name: 'アルファベット',
-    nameEn: 'Alphabet Inc.',
-    price: 138.21,
-    change: 0.95,
-    changePercent: 0.69,
-    marketCap: '1.7T',
-    sector: 'テクノロジー',
-  },
-  {
-    symbol: 'AMZN',
-    name: 'アマゾン',
-    nameEn: 'Amazon.com Inc.',
-    price: 151.94,
-    change: -2.41,
-    changePercent: -1.56,
-    marketCap: '1.6T',
-    sector: 'Eコマース',
-  },
-  {
-    symbol: 'TSLA',
-    name: 'テスラ',
-    nameEn: 'Tesla Inc.',
-    price: 248.5,
-    change: 8.72,
-    changePercent: 3.64,
-    marketCap: '790B',
-    sector: '自動車',
-  },
-  {
-    symbol: 'NVDA',
-    name: 'エヌビディア',
-    nameEn: 'NVIDIA Corporation',
-    price: 875.28,
-    change: 15.33,
-    changePercent: 1.78,
-    marketCap: '2.2T',
-    sector: '半導体',
-  },
-];
+const StockCard: React.FC<{ stock: RelatedMarketItem; onClick: () => void }> = ({
+  stock,
+  onClick,
+}) => {
+  // 文字列から数値を抽出してchange_percentを計算
+  const parseChangePercent = (changePercentStr?: string): number => {
+    if (!changePercentStr) return 0;
+    // "0.0%" -> 0.0 の形で数値を抽出
+    const numStr = changePercentStr.replace('%', '');
+    const num = parseFloat(numStr);
+    return isNaN(num) ? 0 : num;
+  };
 
-const StockCard: React.FC<{ stock: Stock; onClick: () => void }> = ({ stock, onClick }) => {
-  const isPositive = stock.change >= 0;
+  // 文字列から価格を抽出
+  const parsePrice = (priceStr?: string): number => {
+    if (!priceStr) return 0;
+    // "$60.10" -> 60.10 の形で数値を抽出
+    const numStr = priceStr.replace(/[$,]/g, '');
+    const num = parseFloat(numStr);
+    return isNaN(num) ? 0 : num;
+  };
+
+  const changePercent = parseChangePercent(stock.changePercent);
+  const price = parsePrice(stock.price);
+  const isPositive = changePercent >= 0;
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;
 
   return (
@@ -106,11 +66,6 @@ const StockCard: React.FC<{ stock: Stock; onClick: () => void }> = ({ stock, onC
           <h3 className="font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] text-base leading-snug">
             {stock.name}
           </h3>
-          {stock.nameEn && (
-            <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)] truncate">
-              {stock.nameEn}
-            </p>
-          )}
         </div>
         <div className="flex flex-col items-end">
           <div className="flex items-center gap-1">
@@ -125,7 +80,7 @@ const StockCard: React.FC<{ stock: Stock; onClick: () => void }> = ({ stock, onC
               }`}
             >
               {isPositive ? '+' : ''}
-              {stock.changePercent.toFixed(2)}%
+              {changePercent.toFixed(2)}%
             </span>
           </div>
         </div>
@@ -134,33 +89,71 @@ const StockCard: React.FC<{ stock: Stock; onClick: () => void }> = ({ stock, onC
       {/* 価格情報 */}
       <div className="mb-4">
         <div className="text-2xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-1">
-          ${stock.price.toFixed(2)}
-        </div>
-        <div
-          className={`text-sm font-medium ${
-            isPositive ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'
-          }`}
-        >
-          {isPositive ? '+' : ''}${stock.change.toFixed(2)}
+          {stock.price || '$0.00'}
         </div>
       </div>
 
-      {/* メタデータ */}
-      <div className="flex items-center justify-between text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
-        {stock.sector && (
-          <span className="bg-[var(--color-lp-blue)]/10 dark:bg-[var(--color-lp-blue)]/20 text-[var(--color-lp-blue)] px-2 py-1 rounded-full">
-            {stock.sector}
+      {/* 配当利回り情報 */}
+      {stock.dividendYield && (
+        <div className="flex items-center justify-between text-sm">
+          <span className="bg-[var(--color-lp-mint)]/10 dark:bg-[var(--color-lp-mint)]/20 text-[var(--color-lp-mint)] px-3 py-1 rounded-full font-medium">
+            配当利回り {stock.dividendYield}
           </span>
-        )}
-        {stock.marketCap && <span>時価総額: ${stock.marketCap}</span>}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
 
+const EmptyState: React.FC = () => (
+  <div className="text-center py-12">
+    <div className="w-20 h-20 bg-[var(--color-lp-mint)]/10 dark:bg-[var(--color-lp-mint)]/15 rounded-full flex items-center justify-center mx-auto mb-6">
+      <BarChart3 className="w-10 h-10 text-[var(--color-lp-mint)]" />
+    </div>
+    <h3 className="text-xl font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-2">
+      関連銘柄が見つかりませんでした
+    </h3>
+    <p className="text-slate-600 dark:text-[var(--color-text-secondary)] max-w-md mx-auto">
+      同水準の配当利回りを持つ銘柄が見つからないか、データが不足している可能性があります。
+    </p>
+  </div>
+);
+
+const ErrorState: React.FC<{ error: string }> = ({ error }) => (
+  <div className="text-center py-12">
+    <div className="w-20 h-20 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+      <AlertCircle className="w-10 h-10 text-red-500 dark:text-red-400" />
+    </div>
+    <h3 className="text-xl font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-2">
+      データの取得に失敗しました
+    </h3>
+    <p className="text-slate-600 dark:text-[var(--color-text-secondary)] max-w-md mx-auto">
+      {error}
+    </p>
+  </div>
+);
+
+const LoadingState: React.FC = () => (
+  <div className="text-center py-12">
+    <div className="w-20 h-20 bg-[var(--color-lp-mint)]/10 dark:bg-[var(--color-lp-mint)]/15 rounded-full flex items-center justify-center mx-auto mb-6">
+      <Loader2 className="w-10 h-10 text-[var(--color-lp-mint)] animate-spin" />
+    </div>
+    <h3 className="text-xl font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-2">
+      関連銘柄を取得中...
+    </h3>
+    <p className="text-slate-600 dark:text-[var(--color-text-secondary)] max-w-md mx-auto">
+      利回りが同水準の銘柄を検索しています
+    </p>
+  </div>
+);
+
 const RelatedStocksSection: React.FC<RelatedStocksSectionProps> = ({
   currentSymbol,
   className = '',
+  relatedMarkets = [],
+  isLoading = false,
+  error = null,
+  dividendYield,
   onStockClick,
 }) => {
   const handleStockClick = (symbol: string, index: number) => {
@@ -173,9 +166,16 @@ const RelatedStocksSection: React.FC<RelatedStocksSectionProps> = ({
     window.location.href = `/markets/${symbol.toLowerCase()}/simulation`;
   };
 
-  const displayStocks = mockRelatedStocks.filter(
-    (stock) => stock.symbol.toLowerCase() !== currentSymbol?.toLowerCase()
+  // 現在の銘柄を除外し、必要な最小限のデータが揃っている銘柄のみをフィルタリング
+  const displayStocks = relatedMarkets.filter(
+    (stock) =>
+      stock.symbol && stock.name && stock.symbol.toLowerCase() !== currentSymbol?.toLowerCase()
   );
+
+  // 自分の資産シミュレーションの場合は表示しない
+  if (currentSymbol === 'self') {
+    return null;
+  }
 
   return (
     <section
@@ -190,38 +190,60 @@ const RelatedStocksSection: React.FC<RelatedStocksSectionProps> = ({
               関連銘柄
             </h2>
           </div>
+
+          {/* 補足情報 */}
+          {dividendYield && dividendYield > 0 && (
+            <div className="mb-6">
+              <div className="inline-flex items-center gap-2 bg-[var(--color-lp-mint)]/10 dark:bg-[var(--color-lp-mint)]/15 text-[var(--color-lp-mint)] px-4 py-2 rounded-full text-sm font-medium">
+                <TrendingUp className="w-4 h-4" />
+                利回り {dividendYield.toFixed(2)}% 同水準の銘柄
+              </div>
+            </div>
+          )}
+
           <p className="text-xl text-slate-600 dark:text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-            他の人気銘柄もシミュレーションしてみませんか？同様の投資パターンで比較検討できます。
+            配当利回りが同水準の銘柄で比較検討できます。同じ条件でシミュレーションを開始できます。
           </p>
         </div>
 
-        {/* 関連銘柄グリッド */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {displayStocks.slice(0, 6).map((stock, index) => (
-            <StockCard
-              key={stock.symbol}
-              stock={stock}
-              onClick={() => handleStockClick(stock.symbol, index)}
-            />
-          ))}
-        </div>
-
-        {/* 追加情報 */}
-        <div className="text-center">
-          <div
-            className="bg-gradient-to-br from-[var(--color-lp-mint)]/10 to-[var(--color-lp-blue)]/10 
-                          dark:from-[var(--color-lp-mint)]/15 dark:to-[var(--color-lp-blue)]/15
-                          rounded-2xl p-6 max-w-2xl mx-auto"
-          >
-            <p className="text-slate-600 dark:text-[var(--color-text-secondary)] mb-4">
-              気になる銘柄をクリックすると、同じ条件でシミュレーションを開始できます
-            </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
-              <TrendingUp className="w-4 h-4 text-[var(--color-success)]" />
-              <span>リアルタイム価格データを使用</span>
+        {/* コンテンツ表示 */}
+        {isLoading ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorState error={error} />
+        ) : displayStocks.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <>
+            {/* 関連銘柄グリッド */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {displayStocks.slice(0, 6).map((stock, index) => (
+                <StockCard
+                  key={stock.symbol}
+                  stock={stock}
+                  onClick={() => handleStockClick(stock.symbol, index)}
+                />
+              ))}
             </div>
-          </div>
-        </div>
+
+            {/* 追加情報 */}
+            <div className="text-center">
+              <div
+                className="bg-gradient-to-br from-[var(--color-lp-mint)]/10 to-[var(--color-lp-blue)]/10 
+                              dark:from-[var(--color-lp-mint)]/15 dark:to-[var(--color-lp-blue)]/15
+                              rounded-2xl p-6 max-w-2xl mx-auto"
+              >
+                <p className="text-slate-600 dark:text-[var(--color-text-secondary)] mb-4">
+                  気になる銘柄をクリックすると、同じ条件でシミュレーションを開始できます
+                </p>
+                <div className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
+                  <TrendingUp className="w-4 h-4 text-[var(--color-success)]" />
+                  <span>配当利回りを基準に選定</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

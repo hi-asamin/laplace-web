@@ -198,14 +198,35 @@ export interface RelatedMarket {
   name: string;
   price: string;
   changePercent: string;
-  logoUrl: string | null;
+  isPositive: boolean;
+  logoUrl?: string;
+  miniChartData?: number[];
 }
 
 /**
- * 関連銘柄レスポンスのインターフェース
+ * 関連銘柄取得APIレスポンスのインターフェース
  */
 export interface RelatedMarketsResponse {
   items: RelatedMarket[];
+}
+
+/**
+ * 新しい関連銘柄取得APIアイテムのインターフェース
+ */
+export interface RelatedMarketItem {
+  symbol: string;
+  name: string;
+  price?: string; // 文字列形式（例: "$60.10"）
+  changePercent?: string; // 文字列形式（例: "0.0%"）
+  logoUrl?: string | null; // キャメルケース
+  dividendYield?: string;
+}
+
+/**
+ * 新しい関連銘柄取得APIレスポンスのインターフェース
+ */
+export interface RelatedMarketsApiResponse {
+  items: RelatedMarketItem[];
 }
 
 /**

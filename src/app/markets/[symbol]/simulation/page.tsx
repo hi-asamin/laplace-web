@@ -21,8 +21,8 @@ import { useSimulationAnalytics } from '@/hooks/useSimulationAnalytics';
 import { SlidersHorizontal, X } from 'lucide-react';
 import SimulationSettingsBottomSheet from '@/components/SimulationSettingsBottomSheet';
 import { SimulationSettings, SimulationResult } from '@/types/simulationTypes';
-import { MarketDetails } from '@/types/api';
-import { getMarketDetails } from '@/lib/api';
+import { MarketDetails, RelatedMarketsApiResponse } from '@/types/api';
+import { getMarketDetails, getRelatedMarketsByDividendYield } from '@/lib/api';
 
 interface PageParams {
   symbol: string;
@@ -39,6 +39,11 @@ export default function SimulationPage() {
   const [marketData, setMarketData] = useState<MarketDetails | null>(null);
   const [isLoadingMarketData, setIsLoadingMarketData] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  // 関連銘柄の状態
+  const [relatedMarkets, setRelatedMarkets] = useState<RelatedMarketsApiResponse | null>(null);
+  const [isLoadingRelatedMarkets, setIsLoadingRelatedMarkets] = useState(false);
+  const [relatedMarketsError, setRelatedMarketsError] = useState<string | null>(null);
 
   // URL パラメータから初期設定を取得
   const initialQuestionType = searchParams.get('q') || 'total-assets';
@@ -78,6 +83,52 @@ export default function SimulationPage() {
       setIsSimulationReady(true);
     }
   }, [symbol, hasRateQuery]);
+
+  // 関連銘柄データを取得
+  useEffect(() => {
+    if (symbol && symbol !== 'self' && marketData?.dividendYield) {
+      setIsLoadingRelatedMarkets(true);
+      setRelatedMarketsError(null);
+
+      // 配当利回りを取得（数値型に変換）
+      const dividendYield =
+        typeof marketData.dividendYield === 'number'
+          ? marketData.dividendYield
+          : parseFloat(String(marketData.dividendYield));
+
+      if (!isNaN(dividendYield) && dividendYield > 0) {
+        // 配当利回りが有効な場合、同水準の銘柄を取得
+        const minYield = Math.max(0.5, dividendYield - 1); // 最低0.5%、現在より1%低い水準
+
+        getRelatedMarketsByDividendYield(symbol, minYield, 6)
+          .then((data) => {
+            // データの妥当性をチェック
+            if (data && Array.isArray(data.items)) {
+              setRelatedMarkets(data);
+            } else {
+              console.warn('関連銘柄データの形式が不正です:', data);
+              setRelatedMarkets({ items: [] });
+            }
+          })
+          .catch((error) => {
+            console.error('関連銘柄取得エラー:', error);
+            setRelatedMarketsError('関連銘柄の取得に失敗しました');
+            setRelatedMarkets({ items: [] });
+          })
+          .finally(() => {
+            setIsLoadingRelatedMarkets(false);
+          });
+      } else {
+        // 配当利回りが無効な場合は空のリストを設定
+        setRelatedMarkets({ items: [] });
+        setIsLoadingRelatedMarkets(false);
+      }
+    } else if (symbol === 'self') {
+      // 自分の資産シミュレーションの場合は関連銘柄を表示しない
+      setRelatedMarkets({ items: [] });
+      setIsLoadingRelatedMarkets(false);
+    }
+  }, [symbol, marketData?.dividendYield]);
 
   // 戻るボタンのハンドラー
   const handleGoBack = () => {
@@ -545,6 +596,10 @@ export default function SimulationPage() {
       {/* 関連銘柄セクション */}
       <RelatedStocksSection
         currentSymbol={symbol}
+        relatedMarkets={relatedMarkets?.items || []}
+        isLoading={isLoadingRelatedMarkets}
+        error={relatedMarketsError}
+        dividendYield={marketData?.dividendYield}
         onStockClick={(clickedSymbol, currentSymbol, positionInList) => {
           analytics.trackRelatedStockClick(clickedSymbol, currentSymbol, positionInList);
         }}

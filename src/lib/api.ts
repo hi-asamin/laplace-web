@@ -4,6 +4,7 @@ import {
   FundamentalData,
   RelatedMarket,
   RelatedMarketsResponse,
+  RelatedMarketsApiResponse,
   SearchResponse,
   SearchResult,
   ApiErrorResponse,
@@ -14,6 +15,7 @@ import { getChartData as fetchChartData } from '@/lib/api/chart';
 import { getFundamentalData as fetchFundamentalData } from '@/lib/api/fundamentals';
 import { getRelatedMarkets as fetchRelatedMarkets } from '@/lib/api/related';
 import { searchMarkets as fetchSearchMarkets } from '@/lib/api/search';
+import { getRelatedMarketsByDividendYield as fetchRelatedMarketsByDividendYield } from '@/lib/api/related';
 
 // API呼び出し関数 - 検索
 export async function searchMarkets(query: string): Promise<SearchResponse> {
@@ -72,6 +74,20 @@ export async function getRelatedMarkets(
   }
 }
 
+// API呼び出し関数 - 関連銘柄（利回り基準）
+export async function getRelatedMarketsByDividendYield(
+  symbol: string,
+  minDividendYield: number,
+  limit = 5
+): Promise<RelatedMarketsApiResponse> {
+  try {
+    return await fetchRelatedMarketsByDividendYield(symbol, minDividendYield, limit);
+  } catch (error) {
+    console.error('Error fetching related markets by dividend yield:', error);
+    throw error;
+  }
+}
+
 // 型をエクスポートして後方互換性を維持
 export type {
   MarketDetails,
@@ -79,6 +95,7 @@ export type {
   FundamentalData,
   RelatedMarket,
   RelatedMarketsResponse,
+  RelatedMarketsApiResponse,
   SearchResponse,
   SearchResult,
   ApiErrorResponse,

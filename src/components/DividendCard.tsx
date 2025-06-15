@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { Calendar, TrendingUp, DollarSign } from 'lucide-react';
 import Tooltip from '@/components/tooltip';
+import { formatCurrencyPrice } from '@/utils/currency';
 
 interface DividendHistoryData {
   year: string;
@@ -31,6 +32,7 @@ interface DividendCardProps {
   nextExDate?: string; // 次の権利確定日 (YYYY-MM-DD)
   annualDividend?: number; // 年間配当額
   dividendAnalysis?: DividendAnalysis; // 減配分析結果
+  currency?: 'USD' | 'JPY'; // 通貨
   className?: string;
 }
 
@@ -40,6 +42,7 @@ export default function DividendCard({
   nextExDate,
   annualDividend,
   dividendAnalysis,
+  currency = 'JPY',
   className = '',
 }: DividendCardProps) {
   // 配当の傾向を分析（実績データのみで判定、予想値は除外）
@@ -209,7 +212,7 @@ export default function DividendCard({
           {dividendHistory.slice(-5).map((data) => (
             <div key={`amount-${data.year}`} className="flex-1 text-center">
               <div className="text-xs font-medium text-[var(--color-gray-900)] dark:text-[var(--color-text-primary)]">
-                ¥{data.dividend}
+                {formatCurrencyPrice(data.dividend, currency)}
               </div>
             </div>
           ))}
@@ -285,7 +288,8 @@ export default function DividendCard({
               <div className="space-y-2">
                 {dividendAnalysis.dividendCutYears.map((cut) => (
                   <div key={cut.year} className="text-xs text-red-600 dark:text-red-400">
-                    {cut.year}年: ¥{cut.previousDividend} → ¥{cut.currentDividend}
+                    {cut.year}年: {formatCurrencyPrice(cut.previousDividend, currency)} →{' '}
+                    {formatCurrencyPrice(cut.currentDividend, currency)}
                     <span className="ml-2 font-medium">(-{cut.cutPercentage}%)</span>
                   </div>
                 ))}
@@ -344,7 +348,7 @@ export default function DividendCard({
           </p>
           {annualDividend && (
             <p className="text-sm text-[var(--color-gray-600)] dark:text-[var(--color-text-muted)] mt-1">
-              年間配当予想: ¥{annualDividend}
+              年間配当予想: {formatCurrencyPrice(annualDividend, currency)}
             </p>
           )}
           {exDateInfo.isPast && (

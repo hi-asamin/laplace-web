@@ -13,6 +13,7 @@ import {
 } from '@/types/api';
 
 import { getFlagIcon } from '@/utils';
+import { getCurrencyFromSymbol } from '@/utils/currency';
 import { useMarketDetailAnalytics } from '@/hooks/useMarketDetailAnalytics';
 
 // 新しいダッシュボードコンポーネントのインポート
@@ -467,12 +468,16 @@ export default function MarketDetailPage() {
 
   // 実際のAPIデータを使用した配当情報計算
   const dividendData = useMemo(() => {
+    // 通貨判定
+    const currency = getCurrencyFromSymbol(decodedSymbol);
+
     // デフォルト値（データがない場合）
     const defaultData = {
       currentYield: 0,
       dividendHistory: [] as { year: string; dividend: number; isEstimate?: boolean }[],
       nextExDate: undefined as string | undefined,
       annualDividend: 0,
+      currency,
     };
 
     if (!fundamentalData?.dividendData) {
@@ -591,6 +596,7 @@ export default function MarketDetailPage() {
       nextExDate: apiDividendData.exDividendDate,
       annualDividend,
       dividendAnalysis,
+      currency,
     };
   }, [fundamentalData, analyzeDividendCuts]);
 
@@ -980,6 +986,7 @@ export default function MarketDetailPage() {
                 nextExDate={dividendData.nextExDate}
                 annualDividend={dividendData.annualDividend}
                 dividendAnalysis={dividendData.dividendAnalysis}
+                currency={dividendData.currency}
               />
             )}
           </div>

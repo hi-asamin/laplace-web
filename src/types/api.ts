@@ -196,8 +196,8 @@ export interface FundamentalData {
 export interface RelatedMarket {
   symbol: string;
   name: string;
-  price: string;
-  changePercent: string;
+  price: string | number;
+  changePercent: string | number;
   isPositive: boolean;
   logoUrl?: string;
   miniChartData?: number[];
@@ -216,10 +216,10 @@ export interface RelatedMarketsResponse {
 export interface RelatedMarketItem {
   symbol: string;
   name: string;
-  price?: string; // 文字列形式（例: "$60.10"）
-  changePercent?: string; // 文字列形式（例: "0.0%"）
+  price?: string | number; // 文字列形式（例: "$60.10"）または数値形式
+  changePercent?: string | number; // 文字列形式（例: "0.0%"）または数値形式
   logoUrl?: string | null; // キャメルケース
-  dividendYield?: string;
+  dividendYield?: string | number | null;
 }
 
 /**

@@ -94,17 +94,29 @@ export default function PeersCard({ peers, industryName, className = '' }: Peers
                     </div>
                     <div
                       className={`flex items-center text-xs ${
-                        !peer.changePercent.startsWith('-')
+                        (typeof peer.changePercent === 'number'
+                          ? peer.changePercent
+                          : parseFloat(peer.changePercent)) >= 0
                           ? 'text-[var(--color-success)]'
                           : 'text-[var(--color-danger)]'
                       }`}
                     >
-                      {!peer.changePercent.startsWith('-') ? (
+                      {(typeof peer.changePercent === 'number'
+                        ? peer.changePercent
+                        : parseFloat(peer.changePercent)) >= 0 ? (
                         <TrendingUp className="w-3 h-3 mr-1" />
                       ) : (
                         <TrendingDown className="w-3 h-3 mr-1" />
                       )}
-                      <span>{peer.changePercent}</span>
+                      <span>
+                        {(() => {
+                          const changeValue =
+                            typeof peer.changePercent === 'number'
+                              ? peer.changePercent
+                              : parseFloat(peer.changePercent);
+                          return `${changeValue > 0 ? '+' : ''}${changeValue}%`;
+                        })()}
+                      </span>
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-[var(--color-gray-400)] group-hover:text-[var(--color-lp-mint)] transition-colors" />

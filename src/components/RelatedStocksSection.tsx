@@ -26,8 +26,15 @@ const StockCard: React.FC<{ stock: RelatedMarketItem; onClick: () => void }> = (
   onClick,
 }) => {
   // 文字列から数値を抽出してchange_percentを計算
-  const parseChangePercent = (changePercentStr?: string): number => {
-    if (!changePercentStr) return 0;
+  const parseChangePercent = (changePercentStr?: string | number): number => {
+    if (changePercentStr === undefined || changePercentStr === null) return 0;
+
+    // 既に数値の場合はそのまま返す
+    if (typeof changePercentStr === 'number') {
+      return changePercentStr;
+    }
+
+    // 文字列の場合は処理して数値に変換
     // "0.0%" -> 0.0 の形で数値を抽出
     const numStr = changePercentStr.replace('%', '');
     const num = parseFloat(numStr);
@@ -35,8 +42,15 @@ const StockCard: React.FC<{ stock: RelatedMarketItem; onClick: () => void }> = (
   };
 
   // 文字列から価格を抽出
-  const parsePrice = (priceStr?: string): number => {
-    if (!priceStr) return 0;
+  const parsePrice = (priceStr?: string | number): number => {
+    if (priceStr === undefined || priceStr === null) return 0;
+
+    // 既に数値の場合はそのまま返す
+    if (typeof priceStr === 'number') {
+      return priceStr;
+    }
+
+    // 文字列の場合は処理して数値に変換
     // "$60.10" -> 60.10 の形で数値を抽出
     const numStr = priceStr.replace(/[$,]/g, '');
     const num = parseFloat(numStr);

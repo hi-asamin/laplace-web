@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, BarChart3, Shield, CheckCircle, AlertTriangle } from 'lucide-react';
+import { TrendingUp, BarChart3, Shield, CheckCircle, AlertTriangle, PieChart } from 'lucide-react';
 
 // ワンクリック自動入力デモ
 export const AutoInputDemo = () => {
@@ -438,6 +438,199 @@ export const RiskVisualizationDemo = () => {
               <span>期待リターン: 年率7%の複利成長</span>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ポートフォリオ円グラフ可視化デモ
+export const PortfolioVisualizationDemo = () => {
+  const [hoveredSegment, setHoveredSegment] = useState<number | null>(null);
+  const [animationProgress, setAnimationProgress] = useState(0);
+
+  // ポートフォリオデータ
+  const portfolioData = [
+    { name: '米国株式', value: 35, color: '#00d4a1', darkColor: '#00ffc4' },
+    { name: '先進国株式', value: 25, color: '#4a90e2', darkColor: '#60a5fa' },
+    { name: '新興国株式', value: 15, color: '#f39c12', darkColor: '#fb923c' },
+    { name: '国内株式', value: 10, color: '#9b59b6', darkColor: '#c084fc' },
+    { name: 'その他', value: 15, color: '#95a5a6', darkColor: '#94a3b8' },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimationProgress((prev) => {
+        if (prev >= 100) return 0;
+        return prev + 2;
+      });
+    }, 50);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // 円グラフのSVGパスを生成する関数
+  const createPieSlice = (
+    startAngle: number,
+    endAngle: number,
+    innerRadius: number,
+    outerRadius: number,
+    progress: number = 1
+  ) => {
+    const actualEndAngle = startAngle + (endAngle - startAngle) * progress;
+
+    if (actualEndAngle <= startAngle) return '';
+
+    const x1 = Math.cos(startAngle) * outerRadius;
+    const y1 = Math.sin(startAngle) * outerRadius;
+    const x2 = Math.cos(actualEndAngle) * outerRadius;
+    const y2 = Math.sin(actualEndAngle) * outerRadius;
+
+    const x3 = Math.cos(actualEndAngle) * innerRadius;
+    const y3 = Math.sin(actualEndAngle) * innerRadius;
+    const x4 = Math.cos(startAngle) * innerRadius;
+    const y4 = Math.sin(startAngle) * innerRadius;
+
+    const largeArcFlag = actualEndAngle - startAngle > Math.PI ? 1 : 0;
+
+    return `M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4} Z`;
+  };
+
+  const totalValue = portfolioData.reduce((sum, item) => sum + item.value, 0);
+  let currentAngle = -Math.PI / 2; // 12時方向から開始
+
+  const segments = portfolioData.map((item, index) => {
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + (item.value / totalValue) * 2 * Math.PI;
+    const midAngle = (startAngle + endAngle) / 2;
+
+    // アニメーション進行率に基づく進行
+    const segmentProgress = Math.max(0, Math.min(1, (animationProgress - index * 10) / 20));
+
+    const path = createPieSlice(startAngle, endAngle, 40, 80, segmentProgress);
+
+    currentAngle = endAngle;
+
+    return {
+      ...item,
+      path,
+      startAngle,
+      endAngle,
+      midAngle,
+      index,
+    };
+  });
+
+  return (
+    <div className="h-64 bg-white dark:bg-[var(--color-surface-1)] rounded-2xl shadow-inner p-6">
+      {/* ヘッダー */}
+      <div className="flex items-center gap-2 mb-4">
+        <PieChart className="w-5 h-5 text-[var(--color-lp-mint)]" />
+        <span className="text-sm font-medium text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+          資産配分の可視化
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 h-44">
+        {/* 左側: 円グラフ */}
+        <div className="relative w-40 h-40 flex-shrink-0">
+          <svg viewBox="-100 -100 200 200" className="w-full h-full">
+            {segments.map((segment) => (
+              <g key={segment.index}>
+                <path
+                  d={segment.path}
+                  fill={segment.color}
+                  stroke="white"
+                  strokeWidth="1"
+                  style={{
+                    filter:
+                      hoveredSegment === segment.index
+                        ? 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2))'
+                        : 'none',
+                    transform: hoveredSegment === segment.index ? 'scale(1.05)' : 'scale(1)',
+                    transformOrigin: 'center',
+                    transition: 'all 0.2s ease-in-out',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={() => setHoveredSegment(segment.index)}
+                  onMouseLeave={() => setHoveredSegment(null)}
+                />
+                {/* 中央の値表示 */}
+                {hoveredSegment === segment.index && (
+                  <text
+                    x="0"
+                    y="0"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="text-xs font-bold fill-[var(--color-lp-navy)] dark:fill-[var(--color-text-primary)]"
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    {segment.value}%
+                  </text>
+                )}
+              </g>
+            ))}
+
+            {/* 中央の円 */}
+            <circle
+              cx="0"
+              cy="0"
+              r="35"
+              fill="var(--color-lp-off-white)"
+              className="dark:fill-[var(--color-surface-2)]"
+            />
+
+            {/* 中央のラベル */}
+            {hoveredSegment === null && (
+              <g>
+                <text
+                  x="0"
+                  y="-6"
+                  textAnchor="middle"
+                  className="text-xs font-bold fill-[var(--color-lp-navy)] dark:fill-[var(--color-text-primary)]"
+                  fontSize="10"
+                >
+                  総資産
+                </text>
+                <text
+                  x="0"
+                  y="8"
+                  textAnchor="middle"
+                  className="text-xs fill-[var(--color-lp-mint)]"
+                  fontSize="11"
+                >
+                  1,540万円
+                </text>
+              </g>
+            )}
+          </svg>
+        </div>
+
+        {/* 右側: 凡例 */}
+        <div className="flex-1 ml-6 space-y-1">
+          {portfolioData.map((item, index) => (
+            <div
+              key={index}
+              className={`flex items-center gap-3 p-2 rounded-lg transition-all cursor-pointer ${
+                hoveredSegment === index
+                  ? 'bg-gray-50 dark:bg-[var(--color-surface-2)] scale-105'
+                  : 'hover:bg-gray-50 dark:hover:bg-[var(--color-surface-2)]'
+              }`}
+              onMouseEnter={() => setHoveredSegment(index)}
+              onMouseLeave={() => setHoveredSegment(null)}
+            >
+              <div
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <div className="flex-1">
+                <div className="font-medium text-xs text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)]">
+                  {item.name}
+                </div>
+                <div className="text-[var(--color-lp-mint)] font-bold text-sm">{item.value}%</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -33,6 +33,7 @@ import {
   AutoInputDemo,
   ScenarioComparisonDemo,
   RiskVisualizationDemo,
+  PortfolioVisualizationDemo,
 } from '@/components/FeatureDemoCharts';
 import ThemeColorManager from '@/components/ThemeColorManager';
 
@@ -535,7 +536,7 @@ export default function LandingPage() {
                   <div className="flex-1">
                     <div className="bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5 rounded-3xl p-8 border border-slate-200 dark:border-[var(--color-surface-3)]">
                       {/* 機能別デモコンポーネント */}
-                      {index === 0 && <ScenarioComparisonDemo />}
+                      {index === 0 && <PortfolioVisualizationDemo />}
                       {index === 1 && <RiskVisualizationDemo />}
                       {index === 2 && <AutoInputDemo />}
                     </div>

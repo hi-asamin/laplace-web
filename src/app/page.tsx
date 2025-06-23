@@ -15,6 +15,9 @@ import {
   TrendingDown,
   Building2,
   Sprout,
+  Eye,
+  Target,
+  Brain,
 } from 'lucide-react';
 
 // クライアントコンポーネントのインポート
@@ -35,11 +38,11 @@ import ThemeColorManager from '@/components/ThemeColorManager';
 
 // SEO メタデータ
 export const metadata: Metadata = {
-  title: 'Laplace - その積立設定、最適ですか？｜資産シミュレーター',
+  title: 'Laplace - あなたの投資の知的副操縦士｜ポートフォリオ管理・What-Ifシミュレーション',
   description:
-    'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。初心者でも迷わない資産形成ツール。',
+    '投資中級者向けの知的副操縦士。保有資産を統合可視化し、What-Ifシミュレーションで将来の不確実性を戦略に変える。リバランス提案で「何をすべきか」が明確に。',
   keywords:
-    'NISA, 投資信託, 資産シミュレーション, 配当, 株式投資, ETF, インデックスファンド, 積立投資, 資産形成, 金融リテラシー, 投資教育, つみたてNISA, iDeCo, 資産運用',
+    'ポートフォリオ管理, 資産統合, What-Ifシミュレーション, リバランス, NISA, iDeCo, 投資中級者, 資産配分, 長期投資, 知的副操縦士',
   authors: [{ name: 'Laplace', url: 'https://laplace.jp' }],
   creator: 'Laplace',
   publisher: 'Laplace',
@@ -59,11 +62,11 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Laplace - その積立設定、最適ですか？｜初心者向け資産シミュレーター',
+    title: 'Laplace - あなたの投資の知的副操縦士｜ポートフォリオ管理・What-Ifシミュレーション',
     description:
-      'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。投資初心者でも迷わない資産形成ツール。',
+      '投資中級者向けの知的副操縦士。保有資産を統合可視化し、What-Ifシミュレーションで将来の不確実性を戦略に変える。リバランス提案で「何をすべきか」が明確に。',
     url: 'https://laplace.jp',
-    siteName: 'Laplace - 資産シミュレーター',
+    siteName: 'Laplace - 投資の知的副操縦士',
     locale: 'ja_JP',
     type: 'website',
     images: [
@@ -71,14 +74,14 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Laplace - 資産シミュレーター | NISA・投資信託の将来シミュレーション',
+        alt: 'Laplace - 投資の知的副操縦士｜ポートフォリオ管理・What-Ifシミュレーション',
         type: 'image/png',
       },
       {
         url: '/og-image-square.png',
         width: 600,
         height: 600,
-        alt: 'Laplace - 資産シミュレーター',
+        alt: 'Laplace - 投資の知的副操縦士',
         type: 'image/png',
       },
     ],
@@ -87,12 +90,12 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@laplace_jp',
     creator: '@laplace_jp',
-    title: 'Laplace - その積立設定、最適ですか？｜初心者向け資産シミュレーター',
+    title: 'Laplace - あなたの投資の知的副操縦士｜ポートフォリオ管理・What-Ifシミュレーション',
     description:
-      'NISAや投資信託のシミュレーションを簡単に。ワンクリック自動入力でシナリオ比較、将来の配当キャッシュフローまで可視化。',
+      '投資中級者向けの知的副操縦士。保有資産を統合可視化し、What-Ifシミュレーションで将来の不確実性を戦略に変える。',
     images: {
       url: '/og-image.png',
-      alt: 'Laplace - 資産シミュレーター | NISA・投資信託の将来シミュレーション',
+      alt: 'Laplace - 投資の知的副操縦士｜ポートフォリオ管理・What-Ifシミュレーション',
     },
   },
   robots: {
@@ -128,21 +131,22 @@ const structuredData = {
   '@type': 'WebApplication',
   name: 'Laplace',
   alternateName: 'ラプラス',
-  description: '初心者でもワンクリックで意味のある将来比較ができる唯一の資産シミュレーター',
+  description:
+    '投資中級者向けの知的副操縦士。ポートフォリオ管理の複雑性を解決し、将来への不安を自信に変える。',
   url: 'https://laplace.jp',
   applicationCategory: 'FinanceApplication',
-  applicationSubCategory: 'Investment Simulator',
+  applicationSubCategory: 'Portfolio Management',
   operatingSystem: 'Web',
   browserRequirements: 'HTML5, CSS3, JavaScript',
   permissions: 'free',
   softwareVersion: '1.0.0',
   featureList: [
-    'NISA積立シミュレーション',
+    '統合ポートフォリオダッシュボード',
+    'What-Ifシミュレーションエンジン',
+    'リバランス・シミュレーター',
+    'ゴールベース・プランニング',
     'ワンクリック自動データ入力',
     'シナリオ横並び比較',
-    'リスク可視化',
-    'モンテカルロシミュレーション',
-    '配当キャッシュフロー分析',
   ],
   offers: {
     '@type': 'Offer',
@@ -168,34 +172,34 @@ const structuredData = {
   inLanguage: 'ja-JP',
   isAccessibleForFree: true,
   keywords: [
+    'ポートフォリオ管理',
+    'What-Ifシミュレーション',
+    'リバランス',
+    '投資中級者',
     'NISA',
-    '資産シミュレーション',
-    '投資',
-    '資産形成',
-    '初心者',
-    'ETF',
-    'インデックスファンド',
+    'iDeCo',
+    '資産配分',
   ],
   audience: {
     '@type': 'Audience',
-    audienceType: '投資初心者',
+    audienceType: '投資中級者',
     geographicArea: 'Japan',
   },
   about: [
     {
       '@type': 'Thing',
-      name: 'NISA',
-      description: '少額投資非課税制度',
+      name: 'ポートフォリオ管理',
+      description: '保有資産を統合して管理する機能',
     },
     {
       '@type': 'Thing',
-      name: '資産形成',
-      description: '長期的な資産運用による財産形成',
+      name: 'What-Ifシミュレーション',
+      description: '様々なシナリオでの将来予測機能',
     },
     {
       '@type': 'Thing',
-      name: 'ETF',
-      description: '上場投資信託',
+      name: 'リバランス',
+      description: '最適な資産配分への調整提案',
     },
   ],
 };
@@ -207,42 +211,42 @@ const faqStructuredData = {
   mainEntity: [
     {
       '@type': 'Question',
+      name: '投資中級者向けとはどのような人ですか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'NISAやiDeCoなどで実際に資産運用を開始しているが、ポートフォリオの最適化や将来計画に課題を感じている30代〜50代の投資家の方々です。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'What-Ifシミュレーションとは何ですか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '「もし積立額を増やしたら？」「もし市場が暴落したら？」といった様々な仮説を設定し、将来の資産額への影響をリアルタイムでシミュレーションできる機能です。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'リバランス提案はどのようなものですか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '目標とする資産配分と現在のポートフォリオを比較し、「どの銘柄をいくら売却し、何を購入すべきか」という具体的な売買アクションを提案します。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '分散した保有資産を統合できますか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'はい。証券会社、銀行、iDeCo、確定拠出年金など、分散した保有資産を一元管理できる統合ダッシュボードを提供します。',
+      },
+    },
+    {
+      '@type': 'Question',
       name: '利用料金はかかりますか？',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: '完全無料でご利用いただけます。登録も不要で、すべての機能を無料でお使いいただけます。',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: '投資の知識がなくても使えますか？',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'はい。初心者の方でも簡単にシミュレーションができるよう設計されています。銘柄を選ぶだけで、必要なデータは自動で入力されます。',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'データの精度はどの程度ですか？',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: '複数のデータソースから最新の市場データを取得し、高い精度を保っています。株価、配当、PER/PBRなどの指標をリアルタイムで更新しています。',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'NISAのシミュレーションはできますか？',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'はい。つみたてNISAや一般NISAでの積立投資、一括投資のシミュレーションが可能です。非課税効果も含めて将来の資産額を計算できます。',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'どのような投資商品に対応していますか？',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: '米国株、日本株、ETF、投資信託など幅広い投資商品に対応しています。人気のS&P500連動ETFや高配当ETFなども簡単にシミュレーションできます。',
+        text: '基本機能は完全無料でご利用いただけます。高度なシミュレーション機能は有料プランで提供予定です。',
       },
     },
   ],
@@ -265,61 +269,76 @@ const breadcrumbStructuredData = {
 // 静的データ定義
 const features = [
   {
-    icon: Zap,
-    title: 'ワンクリック自動入力',
-    description: '銘柄を選択するだけで、株価・配当履歴・PER/PBRを自動取得',
-    benefit: '面倒な入力はゼロに',
+    icon: Eye,
+    title: 'ポートフォリオの完全な可視化',
+    description:
+      '分散した保有資産を統合し、あなただけの統合ダッシュボードを構築。全体像を一目で把握できます。',
+    benefit: '不安を「自信」へ変える',
+    valueProposition:
+      '銀行、証券、iDeCo、DC口座の保有資産を自動で一元管理し、「全体を把握できている」というコントロール感と安心感を提供します。',
   },
   {
-    icon: BarChart3,
-    title: 'シナリオ横並び比較',
-    description: 'カードUIで複数の投資シナリオを同時表示・比較',
-    benefit: '投資の優劣が、一目でわかる',
+    icon: Brain,
+    title: 'インタラクティブな未来予測',
+    description:
+      'What-Ifシミュレーションエンジンで、様々なシナリオを試せます。「もし市場が暴落したら？」「積立額を増やしたら？」といった疑問に答えます。',
+    benefit: '不確実性を「戦略」へ変える',
+    valueProposition:
+      '将来の不確実性を恐れる対象から、戦略を立てるための「サンドボックス」へと変えます。',
   },
   {
-    icon: Shield,
-    title: 'リスクの可視化',
-    description: 'モンテカルロシミュレーションで最悪ケースまで可視化',
-    benefit: '最悪のケースまでわかるから、安心できる',
+    icon: Target,
+    title: '実行可能なアクションプラン',
+    description:
+      '目標ポートフォリオに基づき、次に取るべき具体的なアクションを提案。「何をすべきか」が明確になります。',
+    benefit: '躊躇を「次の一手」へ変える',
+    valueProposition: '複雑な意思決定プロセスを肩代わりし、自信を持って次の一歩を踏み出せます。',
   },
 ];
 
 const problems = [
   {
     icon: AlertCircle,
-    title: '比較不能',
-    description: '情報が多すぎて、結局何がベストかわからない',
+    title: '「これで合っているのか？」という不安',
+    description: '現在の資産配分が自分のリスク許容度やライフプランに対して最適なのか自信がない',
+    detail: '分散した保有資産により、全体像の把握に手間がかかる',
   },
   {
     icon: PieChart,
-    title: '判断不能',
-    description: 'NISAの残り9割の枠をどう埋めるか決めきれない',
+    title: 'リバランスの躊躇',
+    description: '市場変動時にリバランスすべきとわかっていても、具体的な行動に移せない',
+    detail: '「いつ、何を、どれくらい売買すれば良いのか」がわからない',
   },
   {
-    icon: Calendar,
-    title: '将来不安',
-    description: 'このままで、10年後・20年後本当に大丈夫？',
+    icon: TrendingDown,
+    title: '将来の不確実性への不安',
+    description: '「もし大暴落が来たら？」「もう少し積極的にリスクを取ったら？」',
+    detail: 'シナリオを具体的にイメージできず、不安が増している',
   },
 ];
 
 const benefits = [
-  '漠然としたお金の不安から解放される',
-  '自信を持って、自分だけの資産プランを描ける',
-  '10年後の配当生活が、リアルに想像できる',
+  '保有資産の状況を一目で把握し、コントロール感を得る',
+  '様々なシナリオを事前に体験し、市場変動時も冷静に対応できる',
+  '具体的なアクションプランで、自信を持って次の一歩を踏み出せる',
 ];
 
 const faqItems = [
   {
-    q: '利用料金はかかりますか？',
-    a: '完全無料でご利用いただけます。',
+    q: '投資中級者向けとはどのような人ですか？',
+    a: 'NISAやiDeCoなどで実際に資産運用を開始しているが、ポートフォリオの最適化や将来計画に課題を感じている30代〜50代の投資家の方々です。',
   },
   {
-    q: '投資の知識がなくても使えますか？',
-    a: 'はい。初心者の方でも簡単にシミュレーションができるよう設計されています。',
+    q: 'What-Ifシミュレーションとは何ですか？',
+    a: '「もし積立額を増やしたら？」「もし市場が暴落したら？」といった様々な仮説を設定し、将来の資産額への影響をリアルタイムでシミュレーションできる機能です。',
   },
   {
-    q: 'データの精度はどの程度ですか？',
-    a: '複数のデータソースから最新の市場データを取得し、高い精度を保っています。',
+    q: 'リバランス提案はどのようなものですか？',
+    a: '目標とする資産配分と現在のポートフォリオを比較し、「どの銘柄をいくら売却し、何を購入すべきか」という具体的な売買アクションを提案します。',
+  },
+  {
+    q: '分散した保有資産を統合できますか？',
+    a: 'はい。証券会社、銀行、iDeCo、確定拠出年金など、分散した保有資産を一元管理できる統合ダッシュボードを提供します。',
   },
 ];
 
@@ -355,18 +374,20 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center">
               <div className="transition-all duration-1000 opacity-100 translate-y-0">
+                <div className="inline-flex items-center gap-2 bg-[var(--color-lp-mint)]/10 text-[var(--color-lp-mint)] px-4 py-2 rounded-full text-sm font-semibold mb-6">
+                  <Brain className="w-4 h-4" />
+                  あなたの投資の知的副操縦士
+                </div>
                 <h1 className="text-5xl md:text-7xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-6 font-[var(--font-poppins)]">
-                  その積立設定、
+                  <span className="text-[var(--color-lp-mint)]">自信を持って</span>、
                   <br />
-                  <span className="text-[var(--color-lp-mint)] dark:text-[var(--color-lp-mint)]">
-                    最適
-                  </span>
-                  ですか？
+                  投資を続けよう。
                 </h1>
                 <p className="text-xl md:text-2xl text-slate-600 dark:text-[var(--color-text-secondary)] mb-8 max-w-3xl mx-auto font-[var(--font-noto-sans-jp)]">
-                  資産形成を簡単に、
+                  ポートフォリオ管理の複雑性を解決し、
+                  <br />
                   <span className="text-[var(--color-lp-blue)] dark:text-[var(--color-lp-blue)] font-semibold">
-                    "そして賢く"
+                    将来への不安を戦略に変える
                   </span>
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -375,10 +396,10 @@ export default function LandingPage() {
                     className="bg-[var(--color-lp-mint)] text-white dark:text-slate-900 px-8 py-4 rounded-full text-lg font-semibold hover:bg-[var(--color-lp-mint)]/90 transition-all hover:scale-105 flex items-center gap-2 shadow-xl dark:shadow-[0_20px_25px_-5px_rgba(0,255,196,0.3)]"
                   >
                     <Play className="w-5 h-5" />
-                    無料でシミュレーションを始める
+                    無料で統合ダッシュボードを試す
                   </Link>
                   <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)]">
-                    ✓ 登録不要 ✓ 1分で完了
+                    ✓ 登録不要 ✓ 資産一元管理
                   </p>
                 </div>
               </div>
@@ -394,10 +415,12 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-6 font-[var(--font-poppins)]">
-                NISAを始めたものの...
+                投資中級者が抱える
+                <br />
+                <span className="text-red-500 dark:text-red-400">3つの悩み</span>
               </h2>
               <p className="text-xl text-slate-600 dark:text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-                20〜40代のNISAユーザーが抱える3つの"もやもや"
+                NISAやiDeCoを始めたものの、次のステップで立ち止まっていませんか？
               </p>
             </div>
 
@@ -414,8 +437,11 @@ export default function LandingPage() {
                     <h3 className="text-xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-4">
                       {problem.title}
                     </h3>
-                    <p className="text-slate-600 dark:text-[var(--color-text-secondary)] leading-relaxed">
+                    <p className="text-slate-600 dark:text-[var(--color-text-secondary)] leading-relaxed mb-4">
                       {problem.description}
+                    </p>
+                    <p className="text-sm text-slate-500 dark:text-[var(--color-text-muted)] leading-relaxed">
+                      {problem.detail}
                     </p>
                   </div>
                 </div>
@@ -424,10 +450,11 @@ export default function LandingPage() {
 
             <div className="text-center mt-12">
               <div className="inline-flex items-center gap-3 bg-white dark:bg-[var(--color-surface-1)] rounded-full px-8 py-4 shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)]">
-                <PieChart className="w-6 h-6 text-[var(--color-lp-blue)]" />
+                <Building2 className="w-6 h-6 text-[var(--color-lp-blue)]" />
                 <span className="text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] font-semibold">
-                  NISA非課税枠の<span className="text-[var(--color-lp-mint)] text-xl">88%</span>
-                  が未使用
+                  分散した保有資産の
+                  <span className="text-[var(--color-lp-mint)] text-xl">全体像</span>
+                  が見えない
                 </span>
               </div>
             </div>
@@ -439,19 +466,48 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-6 font-[var(--font-poppins)]">
-                <span className="text-red-500 dark:text-red-400">"わからない"</span>を<br />
-                <span className="text-[var(--color-lp-mint)]">"わかる"</span>に変える
+                Laplaceの
+                <br />
+                <span className="text-[var(--color-lp-mint)]">4つの価値</span>
               </h2>
               <p className="text-xl text-slate-600 dark:text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-                Laplaceの3つの体験
+                あなたの投資の知的副操縦士として、意思決定を力づけます
               </p>
             </div>
 
             <div className="space-y-16">
+              {/* ワンクリック自動入力 */}
+              <div className="bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5 rounded-3xl p-8 border border-slate-200 dark:border-[var(--color-surface-3)]">
+                <div className="flex flex-col lg:flex-row items-center gap-12">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-16 h-16 bg-[var(--color-lp-mint)]/10 rounded-2xl flex items-center justify-center">
+                        <Zap className="w-8 h-8 text-[var(--color-lp-mint)]" />
+                      </div>
+                      <div>
+                        <h3 className="text-3xl font-bold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] font-[var(--font-poppins)]">
+                          ワンクリック自動入力
+                        </h3>
+                        <p className="text-[var(--color-lp-blue)] dark:text-[var(--color-lp-blue)] font-semibold text-lg">
+                          → 面倒な入力はゼロに
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-lg text-slate-600 dark:text-[var(--color-text-secondary)] leading-relaxed">
+                      銘柄を選択するだけで、株価・配当履歴・PER/PBRを自動取得。
+                      API冗長化により、データ欠損時も自動フェイルオーバーで完結。
+                    </p>
+                  </div>
+                  <div className="flex-1">
+                    <AutoInputDemo />
+                  </div>
+                </div>
+              </div>
+
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className={`flex flex-col lg:flex-row items-center gap-12 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}
+                  className={`flex flex-col lg:flex-row items-center gap-12 ${index % 2 === 0 ? 'lg:flex-row-reverse' : ''}`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-6">
@@ -467,16 +523,21 @@ export default function LandingPage() {
                         </p>
                       </div>
                     </div>
-                    <p className="text-lg text-slate-600 dark:text-[var(--color-text-secondary)] leading-relaxed">
+                    <p className="text-lg text-slate-600 dark:text-[var(--color-text-secondary)] leading-relaxed mb-4">
                       {feature.description}
                     </p>
+                    <div className="bg-[var(--color-lp-mint)]/5 rounded-lg p-4">
+                      <p className="text-sm text-slate-700 dark:text-[var(--color-text-secondary)] font-medium">
+                        <strong>価値:</strong> {feature.valueProposition}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex-1">
                     <div className="bg-gradient-to-br from-[var(--color-lp-mint)]/5 to-[var(--color-lp-blue)]/5 rounded-3xl p-8 border border-slate-200 dark:border-[var(--color-surface-3)]">
                       {/* 機能別デモコンポーネント */}
-                      {index === 0 && <AutoInputDemo />}
-                      {index === 1 && <ScenarioComparisonDemo />}
-                      {index === 2 && <RiskVisualizationDemo />}
+                      {index === 0 && <ScenarioComparisonDemo />}
+                      {index === 1 && <RiskVisualizationDemo />}
+                      {index === 2 && <AutoInputDemo />}
                     </div>
                   </div>
                 </div>
@@ -496,10 +557,15 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-6 font-[var(--font-poppins)]">
-                Laplaceで変わる
+                知的副操縦士として
                 <br />
-                あなたの<span className="text-[var(--color-lp-mint)]">未来</span>
+                あなたの<span className="text-[var(--color-lp-mint)]">投資</span>を支える
               </h2>
+              <p className="text-xl opacity-90 max-w-2xl mx-auto">
+                ロボアドバイザーのようにあなたに代わるのではなく、
+                <br />
+                あなたの意思決定を力づける存在
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
@@ -518,11 +584,9 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-full px-8 py-4">
                 <Star className="w-6 h-6 text-[var(--color-lp-mint)]" />
                 <span className="text-lg">
-                  自信を持って、
                   <span className="text-[var(--color-lp-mint)] font-bold">
-                    自分だけの資産プラン
+                    自信を持って、投資を続けよう。
                   </span>
-                  を描ける
                 </span>
               </div>
             </div>
@@ -537,28 +601,28 @@ export default function LandingPage() {
                 なぜ<span className="text-[var(--color-lp-mint)]">今</span>なのか？
               </h2>
               <p className="text-xl text-slate-600 dark:text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-                今、行動すべき3つの理由
+                投資中級者が行動すべき3つの理由
               </p>
             </div>
 
             {/* 上段：NISA拡大と非課税枠の統計 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
               <div className="bg-white dark:bg-[var(--color-surface-1)] rounded-2xl p-8 shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)] text-center hover:shadow-xl dark:hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)] transition-all duration-300 hover:scale-105">
-                <div className="text-4xl font-bold text-[var(--color-lp-mint)] mb-2">+235%</div>
+                <div className="text-4xl font-bold text-[var(--color-lp-mint)] mb-2">+130万</div>
                 <div className="text-lg font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-4">
-                  NISA拡大
+                  NISA口座増加
                 </div>
                 <p className="text-slate-600 dark:text-[var(--color-text-secondary)]">
-                  年間買付額の増加
+                  半期での新規開設数
                 </p>
               </div>
               <div className="bg-white dark:bg-[var(--color-surface-1)] rounded-2xl p-8 shadow-lg dark:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.5)] text-center hover:shadow-xl dark:hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.6)] transition-all duration-300 hover:scale-105">
                 <div className="text-4xl font-bold text-[var(--color-lp-mint)] mb-2">88%</div>
                 <div className="text-lg font-semibold text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] mb-4">
-                  非課税枠
+                  非課税枠未使用
                 </div>
                 <p className="text-slate-600 dark:text-[var(--color-text-secondary)]">
-                  が未使用のまま
+                  最適配分の検討が必要
                 </p>
               </div>
             </div>
@@ -570,7 +634,7 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-3 bg-gradient-to-r from-[var(--color-lp-mint)] to-[var(--color-lp-blue)] text-white rounded-full px-8 py-4 shadow-lg">
                 <TrendingUp className="w-6 h-6" />
                 <span className="font-semibold">
-                  現金は毎年<span className="text-xl">2.5%</span>目減りしています
+                  現金は毎年<span className="text-xl">2.5%</span>ずつ価値が減少
                 </span>
               </div>
             </div>
@@ -608,20 +672,22 @@ export default function LandingPage() {
         <section className="py-20 bg-gradient-to-br from-[var(--color-lp-mint)] to-[var(--color-lp-blue)] text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl md:text-6xl font-bold mb-6 font-[var(--font-poppins)]">
-              さあ、あなたの
+              あなたの投資の
               <br />
-              <span className="text-yellow-300">未来</span>を、見に行こう。
+              <span className="text-yellow-300">知的副操縦士</span>
+              <br />
+              になります。
             </h2>
-            <p className="text-xl mb-8 opacity-90">ワンクリックで始める、新しい資産形成体験</p>
+            <p className="text-xl mb-8 opacity-90">自信を持って、投資を続けよう。</p>
             <Link
               href="/start"
               className="inline-flex items-center gap-3 bg-white dark:bg-[var(--color-surface-1)] text-[var(--color-lp-navy)] dark:text-[var(--color-text-primary)] px-10 py-5 rounded-full text-xl font-bold hover:bg-slate-100 dark:hover:bg-[var(--color-surface-2)] transition-all hover:scale-105 shadow-2xl dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
             >
-              <Play className="w-6 h-6" />
-              無料でシミュレーションを始める
+              <Brain className="w-6 h-6" />
+              統合ダッシュボードを始める
               <ArrowRight className="w-6 h-6" />
             </Link>
-            <p className="text-sm mt-4 opacity-75">✓ 登録不要 ✓ 1分で完了</p>
+            <p className="text-sm mt-4 opacity-75">✓ 登録不要 ✓ 資産一元管理</p>
           </div>
         </section>
 
@@ -631,7 +697,9 @@ export default function LandingPage() {
             <div className="text-center">
               <div className="text-3xl font-bold mb-4 font-[var(--font-poppins)]">Laplace</div>
               <p className="text-slate-300 dark:text-[var(--color-text-muted)] max-w-2xl mx-auto mb-8">
-                初心者でもワンクリックで"意味のある"将来比較ができる唯一の資産シミュレーター
+                あなたの投資の知的副操縦士（インテリジェント・コパイロット）
+                <br />
+                ポートフォリオ管理の複雑性を解決し、将来への不安を自信に変える。
               </p>
               <div className="border-t border-slate-700 dark:border-[var(--color-surface-4)] pt-8">
                 <p className="text-slate-400 dark:text-[var(--color-text-muted)] text-sm">

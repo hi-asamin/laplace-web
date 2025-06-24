@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://laplace.jp';
+  const baseUrl = 'https://wwwlaplace.com';
   const currentDate = new Date();
 
   // 人気銘柄リスト（検索頻度の高い銘柄）

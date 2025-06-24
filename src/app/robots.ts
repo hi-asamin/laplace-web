@@ -51,7 +51,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://laplace.jp/sitemap.xml',
-    host: 'https://laplace.jp',
+    sitemap: 'https://wwwlaplace.com/sitemap.xml',
+    host: 'https://wwwlaplace.com',
   };
 }

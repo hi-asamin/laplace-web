@@ -35,46 +35,52 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '4689',
   ];
 
-  const staticPages = [
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: currentDate,
-      changeFrequency: 'weekly' as const,
+      changeFrequency: 'weekly',
       priority: 1,
     },
     {
       url: `${baseUrl}/start`,
       lastModified: currentDate,
-      changeFrequency: 'weekly' as const,
+      changeFrequency: 'weekly',
       priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/dashboard`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/markets/self/simulation`,
       lastModified: currentDate,
-      changeFrequency: 'weekly' as const,
+      changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/search`,
       lastModified: currentDate,
-      changeFrequency: 'weekly' as const,
+      changeFrequency: 'weekly',
       priority: 0.7,
     },
   ];
 
   // 人気銘柄の個別シミュレーションページ
-  const stockPages = popularStocks.map((symbol) => ({
+  const stockPages: MetadataRoute.Sitemap = popularStocks.map((symbol) => ({
     url: `${baseUrl}/markets/${symbol}/simulation`,
     lastModified: currentDate,
-    changeFrequency: 'daily' as const,
+    changeFrequency: 'daily',
     priority: 0.6,
   }));
 
   // 人気銘柄の個別詳細ページ
-  const stockDetailPages = popularStocks.map((symbol) => ({
+  const stockDetailPages: MetadataRoute.Sitemap = popularStocks.map((symbol) => ({
     url: `${baseUrl}/markets/${symbol}`,
     lastModified: currentDate,
-    changeFrequency: 'daily' as const,
+    changeFrequency: 'daily',
     priority: 0.5,
   }));
 

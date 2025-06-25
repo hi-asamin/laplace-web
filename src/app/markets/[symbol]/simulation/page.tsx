@@ -38,7 +38,6 @@ export default function SimulationPage() {
   // 銘柄データの状態
   const [marketData, setMarketData] = useState<MarketDetails | null>(null);
   const [isLoadingMarketData, setIsLoadingMarketData] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
 
   // 関連銘柄の状態
   const [relatedMarkets, setRelatedMarkets] = useState<RelatedMarketsApiResponse | null>(null);
@@ -145,13 +144,6 @@ export default function SimulationPage() {
     if (symbol && symbol !== 'self') {
       router.push(`/markets/${symbol}`);
     }
-  };
-
-  // ブックマークの切り替え
-  const toggleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    // 実際の実装ではここでブックマークの保存処理を行う
-    // 例: localStorage や API 呼び出しなど
   };
 
   // URLパラメータから初期設定を構築
@@ -399,13 +391,11 @@ export default function SimulationPage() {
         isPositive={marketData?.isPositive}
         showPriceInfo={!!marketData && symbol !== 'self'}
         customTitle={symbol === 'self' ? '資産シミュレーション' : undefined}
-        isBookmarked={isBookmarked}
-        onToggleBookmark={toggleBookmark}
         onGoBack={handleGoBack}
         onNavigateToMarketDetail={handleNavigateToMarketDetail}
         onSearch={handleSearch}
-        showAddButton={true}
-        showBookmarkButton={true}
+        showAddButton={false}
+        showBookmarkButton={false}
         showSearchButton={true}
       />
 

@@ -33,7 +33,6 @@ export default function MarketDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isChartLoading, setIsChartLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('1Y');
-  const [isBookmarked, setIsBookmarked] = useState(false);
 
   // 個別ローディング状態
   const [loadingStates, setLoadingStates] = useState({
@@ -55,20 +54,6 @@ export default function MarketDetailPage() {
 
   // アナリティクス
   const analytics = useMarketDetailAnalytics();
-
-  // ブックマークの切り替え
-  const toggleBookmark = () => {
-    const newBookmarkState = !isBookmarked;
-    setIsBookmarked(newBookmarkState);
-
-    // アナリティクス追跡
-    if (analytics) {
-      analytics.trackBookmarkToggle(decodedSymbol, newBookmarkState ? 'add' : 'remove');
-    }
-
-    // 実際の実装ではここでブックマークの保存処理を行う
-    // 例: localStorage や API 呼び出しなど
-  };
 
   // 各APIのデータを個別に取得する関数
   const loadMarketDetails = useCallback(async () => {
@@ -901,10 +886,8 @@ export default function MarketDetailPage() {
         changePercent={marketData?.changePercent}
         isPositive={marketData?.isPositive}
         showPriceInfo={true}
-        isBookmarked={isBookmarked}
-        onToggleBookmark={toggleBookmark}
-        showAddButton={true}
-        showBookmarkButton={true}
+        showAddButton={false}
+        showBookmarkButton={false}
         showSearchButton={true}
       />
 

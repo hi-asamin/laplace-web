@@ -16,6 +16,13 @@ export default function NavigationClient() {
             </div>
           </div>
           <div className="hidden md:flex items-center space-x-8">
+            <Link
+              href="/dashboard"
+              onClick={() => trackNavigationClick('ダッシュボード', '/dashboard')}
+              className="text-slate-600 dark:text-[var(--color-text-secondary)] hover:text-slate-900 dark:hover:text-[var(--color-text-primary)] transition-colors"
+            >
+              ダッシュボード
+            </Link>
             <a
               href="#features"
               onClick={() => trackNavigationClick('機能', '#features')}

@@ -7,6 +7,16 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
         disallow: [
+          // アプリケーションページ（LP以外）
+          '/dashboard',
+          '/dashboard/',
+          '/markets',
+          '/markets/',
+          '/search',
+          '/search/',
+          '/start',
+          '/start/',
+          // システムページ
           '/api/',
           '/admin/',
           '/*.json$',
@@ -24,6 +34,16 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: 'Googlebot',
         allow: '/',
         disallow: [
+          // アプリケーションページ（LP以外）
+          '/dashboard',
+          '/dashboard/',
+          '/markets',
+          '/markets/',
+          '/search',
+          '/search/',
+          '/start',
+          '/start/',
+          // システムページ
           '/api/',
           '/admin/',
           '/tmp/',
@@ -39,6 +59,16 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: 'Bingbot',
         allow: '/',
         disallow: [
+          // アプリケーションページ（LP以外）
+          '/dashboard',
+          '/dashboard/',
+          '/markets',
+          '/markets/',
+          '/search',
+          '/search/',
+          '/start',
+          '/start/',
+          // システムページ
           '/api/',
           '/admin/',
           '/tmp/',

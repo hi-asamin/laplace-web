@@ -163,6 +163,21 @@ export default function CompanyProfileCard({
             </div>
           </div>
         )}
+
+        {/* データが不足している場合の情報表示 */}
+        {!companyData.employees &&
+          !companyData.founded &&
+          !companyData.headquarters &&
+          !companyData.ceo && (
+            <div className="col-span-2 text-center py-4">
+              <div className="text-[var(--color-gray-400)] text-xs">
+                詳細な企業情報が利用できません
+              </div>
+              <div className="text-[var(--color-gray-400)] text-xs mt-1">
+                最新情報は公式サイトをご確認ください
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

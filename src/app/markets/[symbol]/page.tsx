@@ -731,39 +731,54 @@ export default function MarketDetailPage() {
     // APIから取得したcompanyProfileデータを優先的に使用
     const profile = marketData?.companyProfile;
 
-    // デフォルト値（APIデータがない場合のフォールバック）
-    const defaultData = {
-      name: marketData?.name || 'トヨタ自動車',
+    // 基本情報のみ（誤情報を避けるためデフォルト値は最小限に）
+    const baseData = {
+      name: marketData?.name || `${decodedSymbol} 銘柄`,
       logoUrl: marketData?.logoUrl,
-      website: marketData?.website || 'https://www.toyota.co.jp',
+      website: marketData?.website,
       description:
         marketData?.description ||
-        '世界最大級の自動車メーカーとして、ハイブリッド技術のパイオニアであり、持続可能なモビリティソリューションを提供しています。レクサスブランドも展開し、グローバルに事業を展開しています。',
-      industry: marketData?.industry || '自動車',
-      sector: marketData?.sector || '輸送用機器',
-      employees: 375235,
-      founded: '1937',
-      headquarters: '愛知県豊田市',
-      marketCap: marketData?.tradingInfo?.marketCap || '35.2兆円',
+        '企業情報が利用できません。最新の情報は公式サイトをご確認ください。',
+      industry: marketData?.industry || '業種情報なし',
+      sector: marketData?.sector,
+      marketCap: marketData?.tradingInfo?.marketCap,
     };
 
-    // APIデータがある場合は、それを使用してデフォルト値を上書き
+    // APIデータがある場合のみ、詳細情報を追加
     if (profile) {
       return {
-        name: profile.companyName || profile.name || defaultData.name,
-        logoUrl: profile.logoUrl || defaultData.logoUrl,
-        website: profile.website || defaultData.website,
-        description: profile.businessSummary || profile.description || defaultData.description,
-        industry: profile.industryTags?.[0] || profile.industry || defaultData.industry,
-        sector: profile.industryTags?.[1] || profile.sector || defaultData.sector,
-        employees: profile.fullTimeEmployees || profile.employees || defaultData.employees,
-        founded: profile.foundationYear?.toString() || profile.founded || defaultData.founded,
-        headquarters: profile.headquarters || defaultData.headquarters,
-        marketCap: profile.marketCapFormatted || profile.marketCap || defaultData.marketCap,
+        name: profile.companyName || profile.name || baseData.name,
+        logoUrl: profile.logoUrl || baseData.logoUrl,
+        website: profile.website || baseData.website,
+        description: profile.businessSummary || profile.description || baseData.description,
+        industry: profile.industryTags?.[0] || profile.industry || baseData.industry,
+        sector: profile.industryTags?.[1] || profile.sector || baseData.sector,
+        employees: profile.fullTimeEmployees || profile.employees,
+        founded: profile.foundationYear?.toString() || profile.founded,
+        headquarters: profile.headquarters,
+        marketCap: profile.marketCapFormatted || profile.marketCap || baseData.marketCap,
+        ceo: profile.ceo,
+        address: profile.address,
+        phone: profile.phone,
       };
     }
 
-    return defaultData;
+    // APIデータがない場合は基本情報のみ返す（誤情報を避ける）
+    return {
+      name: baseData.name,
+      logoUrl: baseData.logoUrl,
+      website: baseData.website,
+      description: baseData.description,
+      industry: baseData.industry,
+      sector: baseData.sector,
+      marketCap: baseData.marketCap,
+      employees: undefined,
+      founded: undefined,
+      headquarters: undefined,
+      ceo: undefined,
+      address: undefined,
+      phone: undefined,
+    };
   }, [marketData]);
 
   const mockNewsData = useMemo(
